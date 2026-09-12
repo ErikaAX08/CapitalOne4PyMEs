@@ -22,6 +22,7 @@ import {
   ExpenseFeedback,
   useExpenses,
 } from "@features/expense-simulation";
+import { Badge, Button } from "@shared";
 type BusinessDataState =
   | { status: "loading" }
   | {
@@ -71,20 +72,23 @@ function useBusinessData(): BusinessDataState {
 }
 function Logo() {
   return (
-    <div className="flex items-center text-[30px] font-bold tracking-[-1.5px] max-[700px]:text-[26px]">
-      <span className="mr-[9px] grid h-[39px] w-[36px] place-items-center rounded-[11px] bg-[#2364ce] text-white max-[700px]:h-[33px] max-[700px]:w-[32px]">
+    <div className="font-title flex items-center text-[30px] font-semibold tracking-[-0.06em] max-[700px]:text-[26px]">
+      <span className="mr-[9px] grid h-[39px] w-[36px] place-items-center bg-brand-blue text-on-brand max-[700px]:h-[33px] max-[700px]:w-[32px]">
         <Layers3 size={23} />
       </span>
-      resilia<span className="text-[#3779dc]">.</span>
+      resilia<span className="text-brand-blue">.</span>
     </div>
   );
 }
 function DemoBadge() {
   return (
-    <span className="inline-flex items-center gap-[7px] rounded-md border border-[#e7ecf1] bg-[#f5f7fa] p-[8px_11px] text-[12px] text-[#67788d] max-[700px]:p-[7px_8px] max-[700px]:text-[11px]">
-      <span className="h-[5px] w-[5px] rounded-full bg-[#8292a7]" />
+    <Badge
+      variant="neutral"
+      className="h-auto gap-[7px] px-[11px] py-[8px] text-[12px] max-[700px]:px-[8px] max-[700px]:py-[7px] max-[700px]:text-[11px]"
+    >
+      <span className="h-[5px] w-[5px] rounded-full bg-body-subtle" />
       Demo con datos simulados
-    </span>
+    </Badge>
   );
 }
 export default function App() {
@@ -150,7 +154,7 @@ export default function App() {
   if (data.status !== "ready") {
     return (
       <div>
-        <header className="flex h-[87px] items-center justify-between border-b border-[#e6ebf2] bg-white p-[0_max(5vw,24px)] max-[700px]:h-[70px] max-[700px]:p-[0_20px]">
+        <header className="flex h-[87px] items-center justify-between border-b border-hairline bg-canvas p-[0_max(5vw,24px)] max-[700px]:h-[70px] max-[700px]:p-[0_20px]">
           <Logo />
           <div className="flex items-center gap-[13px]">
             <DemoBadge />
@@ -213,17 +217,17 @@ export default function App() {
             : "Sin liquidez, la estructura pierde su soporte";
   return (
     <div>
-      <header className="flex h-[87px] items-center justify-between border-b border-[#e6ebf2] bg-white p-[0_max(5vw,24px)] max-[700px]:h-[70px] max-[700px]:p-[0_20px]">
+      <header className="flex h-[87px] items-center justify-between border-b border-hairline bg-canvas p-[0_max(5vw,24px)] max-[700px]:h-[70px] max-[700px]:p-[0_20px]">
         <Logo />
         <div className="flex items-center gap-[13px]">
           <DemoBadge />
-          <span className="mx-[9px] h-[27px] w-px bg-[#e7ecf2] max-[700px]:hidden" />
-          <div className="grid h-[35px] w-[35px] place-items-center rounded-full bg-[#e9effa] text-[12px] font-semibold text-[#40608e] max-[700px]:hidden">
+          <span className="mx-[9px] h-[27px] w-px bg-hairline max-[700px]:hidden" />
+          <div className="grid h-[35px] w-[35px] place-items-center bg-brand-blue-soft text-[12px] font-semibold text-brand-blue max-[700px]:hidden">
             ML
           </div>
           <span className="text-[12px] font-semibold max-[700px]:hidden">
             Mariana Luna
-            <small className="mt-1 block text-[11px] font-normal text-[#8995a5]">
+            <small className="mt-1 block text-[11px] font-normal text-body-subtle">
               Administradora
             </small>
           </span>
@@ -245,25 +249,26 @@ export default function App() {
           >
             <div className="mb-[30px] flex items-center justify-between min-[1550px]:mb-[35px] max-[700px]:block max-[700px]:mb-[17px]">
               <div>
-                <div className="mb-3 flex items-center gap-[9px] text-[12px] font-semibold tracking-[1.2px] text-[#65778e] max-[700px]:text-[10px]">
-                  MI NEGOCIO <ChevronRight size={12} /> ESTABILIDAD FINANCIERA
+                <div className="font-title mb-3 flex items-center gap-[9px] text-[12px] font-semibold tracking-[0.08em] text-body-muted uppercase max-[700px]:text-[10px]">
+                  Mi negocio <ChevronRight size={12} /> Estabilidad financiera
                 </div>
-                <h1 className="text-[27px] font-semibold tracking-[-1px] min-[701px]:max-[1000px]:text-[23px] max-[700px]:text-[21px]">
+                <h1 className="font-title text-[27px] font-semibold tracking-[-0.06em] min-[701px]:max-[1000px]:text-[23px] max-[700px]:text-[21px]">
                   Una visión clara.{" "}
-                  <span className="font-normal text-[#8090a5] min-[701px]:max-[1000px]:mt-1 min-[701px]:max-[1000px]:block max-[700px]:inline">
+                  <span className="font-subtitle font-light text-body-subtle min-[701px]:max-[1000px]:mt-1 min-[701px]:max-[1000px]:block max-[700px]:inline">
                     Mejores decisiones.
                   </span>
                 </h1>
-                <p className="mt-[9px] text-[13px] text-[#65778e] max-[700px]:text-[11px] max-[700px]:leading-[1.7]">
+                <p className="mt-[9px] text-[13px] text-body-muted max-[700px]:text-[11px] max-[700px]:leading-[1.7]">
                   Hola, Mariana. Así se ve el futuro de Distribuidora Luna.
                 </p>
               </div>
-              <button
-                className="inline-flex items-center gap-[7px] border-0 bg-transparent py-[10px] text-[12px] text-[#60758e] max-[700px]:mt-[6px] max-[700px]:pb-0 max-[700px]:text-[11px]"
+              <Button
+                variant="tertiary"
+                className="inline-flex items-center gap-[7px] py-[10px] text-[12px] no-underline hover:underline max-[700px]:mt-[6px] max-[700px]:pb-0 max-[700px]:text-[11px]"
                 onClick={() => setTechnical(true)}
               >
                 <CircleHelp size={17} /> ¿Cómo lo calculamos?
-              </button>
+              </Button>
             </div>
             <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-6 min-[701px]:max-[1000px]:grid-cols-2 min-[701px]:max-[1000px]:gap-[18px] max-[700px]:grid-cols-1 max-[700px]:gap-[19px]">
               <FinancialOverview
@@ -309,14 +314,14 @@ export default function App() {
                 )}
                 <div className="mb-4 flex items-end justify-between">
                   <div>
-                    <span className="text-[11px] font-semibold tracking-[1.4px] text-[#467dd0] max-[700px]:text-[10px]">
-                      EXPLORA ANTES DE ACTUAR
+                    <span className="font-title text-[11px] font-semibold tracking-[0.12em] text-brand-blue uppercase max-[700px]:text-[10px]">
+                      Explora antes de actuar
                     </span>
-                    <h2 className="mt-[6px] text-[21px] font-semibold tracking-[-0.5px] max-[700px]:text-[22px]">
+                    <h2 className="font-title mt-[6px] text-[21px] font-semibold tracking-[-0.06em] max-[700px]:text-[22px]">
                       Prueba una decisión
                     </h2>
                   </div>
-                  <span className="text-[11px] font-normal text-[#65778e]">
+                  <span className="text-[11px] font-normal text-body-muted">
                     Sin afectar tu negocio real
                   </span>
                 </div>
@@ -375,7 +380,7 @@ export default function App() {
                 )}
               </section>
             </div>
-            <footer className="mt-3 flex justify-between border-t border-[#e7ecf3] p-[23px_0] text-[11px] text-[#65778e] max-[700px]:p-[18px_0] max-[700px]:leading-[1.7]">
+            <footer className="mt-3 flex justify-between border-t border-hairline p-[23px_0] text-[11px] text-body-muted max-[700px]:p-[18px_0] max-[700px]:leading-[1.7]">
               <span className="flex items-center gap-[6px]">
                 <ShieldCheck size={14} /> Un espacio seguro para explorar tus
                 decisiones.

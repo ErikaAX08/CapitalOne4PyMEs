@@ -1,4 +1,5 @@
 import { TriangleAlert } from "lucide-react";
+import { Alert, AlertDescription } from "@shared";
 export function ExpenseFeedback({
   isCritical,
   recommendation,
@@ -7,16 +8,18 @@ export function ExpenseFeedback({
   recommendation: string;
 }) {
   return (
-    <div
-      className={`-mt-[10px] mb-[23px] flex gap-[10px] rounded-[9px] border p-[13px] ${
-        isCritical
-          ? "border-[#f0d7cd] bg-[#fff3ef] text-[#b66d56]"
-          : "border-[#dce8f4] bg-[#eff6fe] text-[#6382a8]"
-      }`}
+    <Alert
+      variant={isCritical ? "destructive" : "info"}
+      className="-mt-[10px] mb-[23px]"
       role="status"
     >
-      <TriangleAlert size={18} className="mt-[2px] shrink-0" />
-      <p className="text-[12px] leading-[1.8]">{recommendation}</p>
-    </div>
+      <TriangleAlert
+        size={18}
+        className={`mt-[2px] shrink-0 ${isCritical ? "text-danger" : "text-info"}`}
+      />
+      <AlertDescription className="text-[12px] leading-[1.8]">
+        {recommendation}
+      </AlertDescription>
+    </Alert>
   );
 }

@@ -6,7 +6,14 @@ import {
   Sparkles,
   TriangleAlert,
 } from "lucide-react";
-import { formatMoney } from "@shared";
+import {
+  formatMoney,
+  Card,
+  Badge,
+  Button,
+  Alert,
+  AlertDescription,
+} from "@shared";
 export function SimulationResult({
   recovered,
   isContract,
@@ -43,99 +50,103 @@ export function SimulationResult({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl border p-[23px] max-[700px]:p-[18px] ${
-        isRecoveredLook
-          ? "border-[#bddccc] bg-[#fbfefc]"
-          : "border-[#efcec6] bg-[#fffcfb]"
-      }`}
       aria-live="polite"
     >
-      <div
-        className={`flex items-center gap-[9px] max-[700px]:flex-wrap max-[700px]:gap-[8px] ${recovered ? "text-[#458c70]" : "text-[#c7705e]"}`}
+      <Card
+        className={`gap-0 p-[23px] max-[700px]:p-[18px] ${
+          isRecoveredLook ? "border-success" : "border-danger"
+        }`}
       >
-        {recovered ? <ShieldCheck size={22} /> : <TriangleAlert size={22} />}
-        <h3 className="text-[17px] font-semibold text-[#314862] max-[700px]:max-w-[85%] max-[700px]:text-[16px] max-[700px]:leading-[1.5]">
-          {recovered
-            ? minimumProjectedBalance < 0
-              ? "El anticipo aún no cubre tus gastos"
-              : "Una decisión más resiliente"
-            : isContract
-              ? "Rentable no siempre significa sostenible"
-              : "Así cambia tu estabilidad"}
-        </h3>
-        <span
-          className={`inline-flex items-center gap-[6px] rounded-[20px] px-[10px] py-[6px] text-[12px] font-medium whitespace-nowrap ${status === "Crítico" ? "bg-[#fceae7] text-[#b95243]" : "bg-[#fff3d8] text-[#916713]"}`}
+        <div
+          className={`flex items-center gap-[9px] max-[700px]:flex-wrap max-[700px]:gap-[8px] ${recovered ? "text-success" : "text-danger"}`}
         >
-          {status}
-        </span>
-      </div>
-      <p className="mt-[13px] text-[13px] leading-[1.8] text-[#7b8596]">
-        {recovered
-          ? recommendation
-          : isContract
-            ? "El contrato es rentable, pero tu negocio podría quedarse sin efectivo antes de cobrarlo."
-            : recommendation}
-      </p>
-      <div className="my-1 grid grid-cols-2 gap-5 p-[18px_0] text-[12px] text-[#8b97a8]">
-        <span>
-          Fragilidad
-          <strong className="mt-[7px] block text-[16px] font-semibold text-[#536b89] max-[700px]:text-[14px]">
-            {fragilityBefore} → {fragilityAfter}
-          </strong>
-        </span>
-        <span>
-          Supervivencia
-          <strong className="mt-[7px] block text-[16px] font-semibold text-[#536b89] max-[700px]:text-[14px]">
-            {survivalBefore} → {survivalAfter} semanas
-          </strong>
-        </span>
-        <span>
-          {recovered ? "Buffer restante" : "Saldo mínimo proyectado"}
-          <strong className="mt-[7px] block text-[16px] font-semibold text-[#536b89] max-[700px]:text-[14px]">
-            {formatMoney(
-              recovered ? recommendedBuffer : minimumProjectedBalance,
-            )}{" "}
-            MXN
-          </strong>
-        </span>
-        {criticalWeek && (
+          {recovered ? <ShieldCheck size={22} /> : <TriangleAlert size={22} />}
+          <h3 className="font-title max-w-[85%] text-[17px] font-semibold text-ink">
+            {recovered
+              ? minimumProjectedBalance < 0
+                ? "El anticipo aún no cubre tus gastos"
+                : "Una decisión más resiliente"
+              : isContract
+                ? "Rentable no siempre significa sostenible"
+                : "Así cambia tu estabilidad"}
+          </h3>
+          <Badge
+            variant={status === "Crítico" ? "danger" : "warning"}
+            className="h-auto px-[10px] py-[6px] text-[12px] font-medium"
+          >
+            {status}
+          </Badge>
+        </div>
+        <p className="mt-[13px] text-[13px] leading-[1.8] text-body-muted">
+          {recovered
+            ? recommendation
+            : isContract
+              ? "El contrato es rentable, pero tu negocio podría quedarse sin efectivo antes de cobrarlo."
+              : recommendation}
+        </p>
+        <div className="my-1 grid grid-cols-2 gap-5 p-[18px_0] text-[12px] text-body-subtle">
           <span>
-            Semana crítica
-            <strong className="mt-[7px] block text-[16px] font-semibold text-[#536b89] max-[700px]:text-[14px]">
-              Semana {criticalWeek}
+            Fragilidad
+            <strong className="mt-[7px] block text-[16px] font-semibold text-body max-[700px]:text-[14px]">
+              {fragilityBefore} → {fragilityAfter}
             </strong>
           </span>
-        )}
-      </div>
-      {!recovered && (
-        <div className="flex gap-[11px] rounded-lg bg-[#f3f6fc] p-[15px] text-[#5180bf]">
-          <Sparkles size={19} className="shrink-0" />
-          <div>
-            <strong className="text-[12px] font-semibold">
-              Tu siguiente mejor paso
+          <span>
+            Supervivencia
+            <strong className="mt-[7px] block text-[16px] font-semibold text-body max-[700px]:text-[14px]">
+              {survivalBefore} → {survivalAfter} semanas
             </strong>
-            <p className="mt-[5px] text-[12px] leading-[1.8] text-[#6e8199]">
-              {recommendation}
-            </p>
-          </div>
+          </span>
+          <span>
+            {recovered ? "Buffer restante" : "Saldo mínimo proyectado"}
+            <strong className="mt-[7px] block text-[16px] font-semibold text-body max-[700px]:text-[14px]">
+              {formatMoney(
+                recovered ? recommendedBuffer : minimumProjectedBalance,
+              )}{" "}
+              MXN
+            </strong>
+          </span>
+          {criticalWeek && (
+            <span>
+              Semana crítica
+              <strong className="mt-[7px] block text-[16px] font-semibold text-body max-[700px]:text-[14px]">
+                Semana {criticalWeek}
+              </strong>
+            </span>
+          )}
         </div>
-      )}
-      <div className="mt-[18px] flex flex-col gap-3">
-        {canMitigate && (
-          <button
-            className="inline-flex items-center justify-center gap-3 rounded-lg border border-[#296bd5] bg-[#296bd5] px-[18px] py-[14px] text-[13px] font-medium text-white shadow-[0_4px_9px_#296bd51a] hover:bg-[#205cbd] max-[700px]:min-h-[46px]"
-            onClick={onMitigate}
-          >
-            Aplicar anticipo del 40% <ArrowRight size={17} />
-          </button>
+        {!recovered && (
+          <Alert variant="info">
+            <Sparkles size={19} className="shrink-0 text-info" />
+            <div>
+              <strong className="text-[12px] font-semibold">
+                Tu siguiente mejor paso
+              </strong>
+              <p className="mt-[5px] text-[12px] leading-[1.8] text-body-muted">
+                {recommendation}
+              </p>
+            </div>
+          </Alert>
         )}
-        <button
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#dce5ef] bg-white px-[17px] py-[13px] text-[12px] text-[#667b95] max-[700px]:min-h-[46px]"
-          onClick={onReset}
-        >
-          <RotateCcw size={16} /> Reiniciar simulación
-        </button>
-      </div>
+        <div className="mt-[18px] flex flex-col gap-3">
+          {canMitigate && (
+            <Button
+              variant="primary"
+              className="gap-3 max-[700px]:min-h-[46px]"
+              onClick={onMitigate}
+            >
+              Aplicar anticipo del 40% <ArrowRight size={17} />
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            className="gap-2 max-[700px]:min-h-[46px]"
+            onClick={onReset}
+          >
+            <RotateCcw size={16} /> Reiniciar simulación
+          </Button>
+        </div>
+      </Card>
     </motion.div>
   );
 }

@@ -1,5 +1,9 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Dialog as DialogPrimitive } from "radix-ui";
 import { X } from "lucide-react";
+import { DialogPortal, DialogOverlay, DialogTitle } from "./dialog";
+import { Button } from "./button";
+
 export function Modal({
   title,
   onClose,
@@ -9,46 +13,40 @@ export function Modal({
   onClose: () => void;
   children: ReactNode;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    const previous = document.activeElement as HTMLElement;
-    el?.showModal();
-    return () => {
-      el?.close();
-      previous?.focus();
-    };
-  }, []);
   return (
-    <dialog
-      ref={ref}
-      onCancel={(e) => {
-        e.preventDefault();
-        onClose();
+    <DialogPrimitive.Root
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
       }}
-      onClick={(e) => {
-        if (e.target === ref.current) onClose();
-      }}
-      className="m-auto w-[min(470px,calc(100%-30px))] max-h-[90dvh] rounded-[18px] border border-[#e3e9f1] bg-white p-0 text-[#233b5a] shadow-[0_28px_100px_#172c4933] backdrop:bg-[#253b5866] backdrop:backdrop-blur-sm max-[700px]:m-[auto_0_0] max-[700px]:w-full max-[700px]:max-w-none max-[700px]:rounded-[20px_20px_0_0] max-[700px]:border-b-0 min-[701px]:m-[20px_20px_20px_auto] min-[701px]:h-[calc(100dvh-40px)] min-[701px]:max-h-none min-[701px]:rounded-2xl"
     >
-      <div className="p-[28px] max-[700px]:p-[23px] min-[701px]:p-[30px]">
-        <div className="mb-4 flex items-center justify-between">
-          <span className="text-[11px] font-semibold tracking-[1.4px] text-[#8a9aae] max-[700px]:text-[10px]">
-            RESILIA · EXPLORA UNA POSIBILIDAD
-          </span>
-          <button
-            className="grid h-[34px] w-[34px] place-items-center rounded-lg border border-[#dce4ed] bg-[#ffffffad] text-[#73849a] max-[700px]:min-h-[42px] max-[700px]:min-w-[42px]"
-            aria-label="Cerrar panel"
-            onClick={onClose}
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <h2 className="text-[25px] font-semibold tracking-[-0.8px] max-[700px]:text-[23px]">
-          {title}
-        </h2>
-        {children}
-      </div>
-    </dialog>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogPrimitive.Content
+          onEscapeKeyDown={onClose}
+          className="fixed inset-x-0 bottom-0 top-auto z-50 flex max-h-[90dvh] flex-col gap-4 overflow-y-auto border border-hairline-strong bg-canvas p-6 text-body shadow-[0_0.75rem_2rem_rgba(16,42,58,0.14)] outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 sm:right-5 sm:top-5 sm:left-auto sm:bottom-5 sm:h-[calc(100dvh-2.5rem)] sm:w-[min(29.375rem,calc(100%-1.875rem))]"
+        >
+          <div className="flex items-center justify-between">
+            <span className="font-title text-[0.6875rem] font-semibold tracking-[0.12em] text-body-subtle uppercase">
+              Resilia · Explora una posibilidad
+            </span>
+            <DialogPrimitive.Close asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Cerrar panel"
+                onClick={onClose}
+              >
+                <X size={20} />
+              </Button>
+            </DialogPrimitive.Close>
+          </div>
+          <DialogTitle className="text-[1.5rem] tracking-[-0.06em]">
+            {title}
+          </DialogTitle>
+          {children}
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </DialogPrimitive.Root>
   );
 }

@@ -103,22 +103,22 @@ export function ResilienceTower({
         </TowerFallback>
       )}
       {selected !== null && (
-        <div className="absolute right-[15px] bottom-[42px] left-[15px] z-[3] rounded-[10px] border border-[#d5e0ed] bg-[#fffffff5] p-4 shadow-[0_8px_30px_#263c541a]">
+        <div className="absolute right-[15px] bottom-[42px] left-[15px] z-[3] border border-hairline-strong bg-canvas p-4 shadow-[0_0.5rem_1.5rem_rgba(16,42,58,0.10)]">
           <button
             aria-label="Cerrar detalle de bloque"
             onClick={() => setSelected(null)}
-            className="float-right min-h-[30px] min-w-[30px] border-0 bg-transparent text-[20px] text-[#718198]"
+            className="float-right min-h-[30px] min-w-[30px] border-0 bg-transparent text-[20px] text-body-muted"
           >
             ×
           </button>
-          <span className="block text-[11px] tracking-[1px] text-[#5a85b9]">
-            SEMANA {Math.floor(selected / 3) + 1}
+          <span className="font-title block text-[11px] tracking-[0.08em] text-brand-blue uppercase">
+            Semana {Math.floor(selected / 3) + 1}
           </span>
           <strong className="my-[7px] block text-[12px]">
             {BLOCK_LABELS[viewModel.blockColors[selected]]} ·{" "}
             {formatMoney(BLOCK_VALUES[viewModel.blockColors[selected]])}
           </strong>
-          <small className="mt-[5px] block text-[12px] text-[#7c8ca1]">
+          <small className="mt-[5px] block text-[12px] text-body-subtle">
             Estado:{" "}
             {viewModel.blockColors[selected] === 4
               ? "Retrasado"
@@ -126,7 +126,7 @@ export function ResilienceTower({
                 ? "Esperado"
                 : "Confirmado"}
           </small>
-          <small className="mt-[5px] block text-[12px] text-[#7c8ca1]">
+          <small className="mt-[5px] block text-[12px] text-body-subtle">
             Bloque ilustrativo · datos simulados
           </small>
         </div>
