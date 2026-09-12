@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronRight, CircleHelp, Layers3, ShieldCheck } from "lucide-react";
+import {
+  ChevronRight,
+  CircleHelp,
+  Layers3,
+  ScanSearch,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { scenarios } from "@entities/scenario";
 import type { Business, FinancialTransaction } from "@entities/business";
 import { mockFinancialDataSource } from "@entities/business";
@@ -100,6 +107,7 @@ export default function App() {
     reset: resetExpenses,
   } = useExpenses();
   const [technical, setTechnical] = useState(false);
+  const [simulationWeeks, setSimulationWeeks] = useState(12);
   const reduced = !!useReducedMotion();
   const [flow, dispatch] = useSimulationFlow(reduced);
   const mitigated = flow.state === "mitigating" || flow.state === "recovered";
@@ -119,7 +127,7 @@ export default function App() {
             data.business,
             data.transactions,
             active ? flow.scenario : null,
-            mitigated ? ["advance40"] : [],
+            mitigated ? ["advance25"] : [],
             expenses,
           )
         : EMPTY_OUTPUT,
@@ -207,14 +215,14 @@ export default function App() {
       : output;
   const phase =
     flow.progress < 0.2
-      ? "Aplicamos la inversión inicial"
+      ? "El nuevo proyecto entra a la estructura"
       : flow.progress < 0.4
-        ? "El efectivo sale hoy. El ingreso llega después."
+        ? "Los costos comienzan antes de recibir el pago"
         : flow.progress < 0.58
-          ? "Los cobros futuros no cubren los pagos de hoy"
+          ? "Cuentas por cobrar pierde alineación con la base"
           : flow.progress < 0.78
-            ? "Tu cliente principal retrasó su pago 30 días"
-            : "Sin liquidez, la estructura pierde su soporte";
+            ? "El cliente retrasa el pago 20 días"
+            : "Día 75: faltan $40,000 para cubrir la nómina";
   return (
     <div>
       <header className="flex h-[87px] items-center justify-between border-b border-hairline bg-canvas p-[0_max(5vw,24px)] max-[700px]:h-[70px] max-[700px]:p-[0_20px]">
@@ -247,19 +255,17 @@ export default function App() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="mb-[30px] flex items-center justify-between min-[1550px]:mb-[35px] max-[700px]:block max-[700px]:mb-[17px]">
+            <div className="mb-[22px] flex items-end justify-between gap-8 max-[700px]:block max-[700px]:mb-[17px]">
               <div>
-                <div className="font-title mb-3 flex items-center gap-[9px] text-[12px] font-semibold tracking-[0.08em] text-body-muted uppercase max-[700px]:text-[10px]">
-                  Mi negocio <ChevronRight size={12} /> Estabilidad financiera
+                <div className="font-title mb-3 flex items-center gap-[9px] text-[12px] font-medium text-body-muted max-[700px]:text-[10px]">
+                  Mi negocio <ChevronRight size={12} /> Diagnóstico de liquidez
                 </div>
-                <h1 className="font-title text-[27px] font-semibold tracking-[-0.06em] min-[701px]:max-[1000px]:text-[23px] max-[700px]:text-[21px]">
-                  Una visión clara.{" "}
-                  <span className="font-subtitle font-light text-body-subtle min-[701px]:max-[1000px]:mt-1 min-[701px]:max-[1000px]:block max-[700px]:inline">
-                    Mejores decisiones.
-                  </span>
+                <h1 className="font-title max-w-[720px] text-[30px] font-semibold leading-[1.08] tracking-[-0.055em] min-[701px]:max-[1000px]:text-[25px] max-[700px]:text-[23px]">
+                  Entiende qué sostiene tu negocio antes de decidir
                 </h1>
-                <p className="mt-[9px] text-[13px] text-body-muted max-[700px]:text-[11px] max-[700px]:leading-[1.7]">
-                  Hola, Mariana. Así se ve el futuro de Distribuidora Luna.
+                <p className="mt-[10px] max-w-[660px] text-[13px] leading-[1.6] text-body-muted max-[700px]:text-[11px]">
+                  Compara tu operación actual con decisiones simuladas y observa
+                  dónde podría aparecer la primera presión de liquidez.
                 </p>
               </div>
               <Button
@@ -269,6 +275,44 @@ export default function App() {
               >
                 <CircleHelp size={17} /> ¿Cómo lo calculamos?
               </Button>
+            </div>
+            <div className="mb-6 grid border border-hairline bg-canvas min-[701px]:grid-cols-3 max-[700px]:divide-y max-[700px]:divide-hairline min-[701px]:divide-x min-[701px]:divide-hairline">
+              {[
+                {
+                  icon: ScanSearch,
+                  title: "1. Revisa tu base",
+                  copy: "Saldo, fragilidad y obligaciones próximas.",
+                },
+                {
+                  icon: Layers3,
+                  title: "2. Lee la estructura",
+                  copy: "La torre conecta liquidez, cobros y compromisos.",
+                },
+                {
+                  icon: Sparkles,
+                  title: "3. Prueba una decisión",
+                  copy: "Compara el impacto antes de actuar.",
+                },
+              ].map(({ icon: Icon, title, copy }, index) => (
+                <div
+                  key={title}
+                  className={`flex items-center gap-3 p-[13px_16px] ${
+                    index === 1 ? "bg-brand-blue-soft/55" : ""
+                  }`}
+                >
+                  <span className="grid h-8 w-8 shrink-0 place-items-center bg-surface-subtle text-brand-blue">
+                    <Icon size={16} />
+                  </span>
+                  <span>
+                    <strong className="block text-[12px] font-semibold text-body">
+                      {title}
+                    </strong>
+                    <small className="mt-0.5 block text-[10px] leading-[1.45] text-body-muted">
+                      {copy}
+                    </small>
+                  </span>
+                </div>
+              ))}
             </div>
             <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-6 min-[701px]:max-[1000px]:grid-cols-2 min-[701px]:max-[1000px]:gap-[18px] max-[700px]:grid-cols-1 max-[700px]:gap-[19px]">
               <FinancialOverview
@@ -295,6 +339,7 @@ export default function App() {
                 output={output}
                 resetKey={flow.resetKey}
                 reduced={reduced}
+                simulationWeeks={simulationWeeks}
                 onReset={reset}
               />
               <section className="pt-[2px] pb-[10px] min-[701px]:col-start-1 min-[701px]:row-start-2 max-[700px]:pt-[5px]">
@@ -332,6 +377,7 @@ export default function App() {
                     isContract={flow.scenario?.id === "contract"}
                     phase={phase}
                     progress={flow.progress}
+                    simulationWeeks={simulationWeeks}
                     onSkip={() =>
                       dispatch({
                         type:
@@ -363,6 +409,7 @@ export default function App() {
                     }
                     survivalAfter={output.survivalWeeks}
                     criticalWeek={output.criticalWeek}
+                    simulationWeeks={simulationWeeks}
                     canMitigate={
                       flow.scenario?.id === "contract" &&
                       flow.state === "result"
@@ -395,6 +442,8 @@ export default function App() {
       {flow.state === "scenarioSelected" && flow.scenario && (
         <ScenarioDialog
           scenario={flow.scenario}
+          simulationWeeks={simulationWeeks}
+          onSimulationWeeksChange={setSimulationWeeks}
           onClose={() => dispatch({ type: "CLOSE_SCENARIO" })}
           onSimulate={simulate}
         />

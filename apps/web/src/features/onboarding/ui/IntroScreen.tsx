@@ -85,7 +85,7 @@ export function IntroScreen({
         <div className="intro-scene-note pointer-events-none absolute right-[25px] bottom-[25px] left-[25px] flex items-center gap-3 border border-hairline bg-canvas/85 p-4 text-[12px] text-body max-[700px]:right-[18px] max-[700px]:bottom-[18px] max-[700px]:left-[18px]">
           <Layers3 size={20} />
           <span>
-            Cada semana cuenta.
+            Cada capacidad cuenta.
             <small className="mt-1 block text-[12px] text-body-subtle">
               Descubre qué sostiene tu negocio.
             </small>

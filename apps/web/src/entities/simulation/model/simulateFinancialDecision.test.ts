@@ -14,7 +14,7 @@ test("contract cash gap and advance mitigation remain deterministic", () => {
     business,
     transactions,
     scenarios[0],
-    ["advance40"],
+    ["advance25"],
   );
   assert.deepEqual(
     [stable.fragilityScore, stable.survivalWeeks, stable.recommendedBuffer],
@@ -28,7 +28,7 @@ test("contract cash gap and advance mitigation remain deterministic", () => {
       contract.criticalWeek,
       contract.recommendedBuffer,
     ],
-    [78, 7, -96000, 7, 96000],
+    [78, 11, -40000, 11, 40000],
   );
   assert.deepEqual(
     [
@@ -37,7 +37,7 @@ test("contract cash gap and advance mitigation remain deterministic", () => {
       recovered.recommendedBuffer,
       recovered.minimumProjectedBalance,
     ],
-    [43, 12, 18000, 32000],
+    [36, 14, 18000, 32000],
   );
   assert.ok(recovered.weeklyProjections.every((w) => w.balance > 0));
   assert.deepEqual(

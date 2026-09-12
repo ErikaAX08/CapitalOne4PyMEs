@@ -4,17 +4,53 @@ export const BLOCK_HEX_COLORS = [
   "#4389dc",
   "#58b69b",
   "#afbac9",
-  "#e48b7d",
-  "#e3bd56",
+  "#df6b35",
 ];
-export const BLOCK_LABELS = [
-  "Liquidez disponible",
-  "Cobro esperado",
-  "Gasto operativo",
-  "Nómina",
-  "Cobro retrasado",
+export const TOWER_LEVELS = [
+  ["Efectivo", "Crédito disponible", "Reservas"],
+  ["Cuentas por cobrar", "Efectivo", "Reservas"],
+  ["Crédito disponible", "Cuentas por cobrar", "Efectivo"],
+  ["Nómina", "Proveedores", "Inventario"],
+  ["Capacidad", "Nómina", "Proveedores"],
+  ["Inventario", "Capacidad", "Nómina"],
+  ["Proveedores", "Inventario", "Capacidad"],
+  ["Contratos", "Proyectos", "Cliente principal"],
+  ["Cumplimiento fiscal", "Contratos", "Proyectos"],
+  ["Cliente principal", "Cumplimiento fiscal", "Contratos"],
+  ["Proyectos", "Cliente principal", "Cumplimiento fiscal"],
+  ["Contratos", "Proyectos", "Cliente principal"],
 ];
-export const BLOCK_VALUES = [24000, 68000, 24000, 72000, 160000];
+export const TOWER_TIERS = [
+  {
+    name: "Base",
+    levels: "Niveles 1–3",
+    area: "Finanzas y liquidez",
+    role: "Los soportes",
+  },
+  {
+    name: "Centro",
+    levels: "Niveles 4–7",
+    area: "Operaciones y personas",
+    role: "El motor",
+  },
+  {
+    name: "Cima",
+    levels: "Niveles 8–12",
+    area: "Ventas, clientes y entorno",
+    role: "La exposición",
+  },
+] as const;
+
+export function getBlockStructure(index: number) {
+  const level = Math.floor(index / 3) + 1;
+  const tier =
+    level <= 3 ? TOWER_TIERS[0] : level <= 7 ? TOWER_TIERS[1] : TOWER_TIERS[2];
+  return {
+    level,
+    label: TOWER_LEVELS[level - 1][index % 3],
+    tier,
+  };
+}
 export interface TowerViewModel {
   lost: number;
   collapsed: boolean;
@@ -22,6 +58,9 @@ export interface TowerViewModel {
   risk: boolean;
   description: string;
   blockColors: number[];
+  blockOffsets: number[];
+  expandedBlocks: boolean[];
+  crackedBlocks: boolean[];
 }
 export function computeTowerViewModel({
   state,
@@ -60,15 +99,65 @@ export function computeTowerViewModel({
   const hasAddIncome = output.towerBlockChanges.some(
     (c) => c.action === "addIncome",
   );
+  const hasLiquidityMitigation = output.towerBlockChanges.some(
+    (c) => c.action === "addLiquidity",
+  );
+  const isCreditProject = hasDelay && hasAddIncome;
+  const isRecovering = hasLiquidityMitigation && state === "mitigating";
+  const stressProgress =
+    state === "result"
+      ? 1
+      : isRecovering
+        ? 1 - progress
+        : state === "simulating"
+          ? progress
+          : 0;
+  const receivableStress = isCreditProject || isRecovering;
+  const payrollStress = isCreditProject || isRecovering;
+
   function colorFor(index: number): number {
-    const week = Math.floor(index / 3) + 1;
-    if (hasDelay && progress > 0.58 && week >= 6 && week <= 8) return 4;
-    if (hasAddIncome && progress > 0.35 && week >= 9) return 1;
-    if ((state === "mitigating" || state === "recovered") && week <= 4)
+    const level = Math.floor(index / 3) + 1;
+    if (
+      ((index === 7 && receivableStress && stressProgress > 0.34) ||
+        (index === 9 && payrollStress && stressProgress > 0.68)) &&
+      !(isRecovering && progress > 0.58)
+    )
+      return 3;
+    if ((state === "mitigating" || state === "recovered") && level <= 3)
       return 0;
-    return index % 3 === 0 ? 0 : (index + Math.floor(index / 6)) % 4;
+    if (level <= 3) return 0;
+    if (level <= 7) return 1;
+    return isCreditProject && index === 22 ? 1 : 2;
   }
   const blockColors = Array.from({ length: 36 }, (_, i) => colorFor(i));
-  const description = `Torre 3D: ${collapsed ? "colapsada" : output.status.toLowerCase()}. ${lost} bloques retirados. ${output.survivalWeeks} semanas de supervivencia.`;
-  return { lost, collapsed, staticFall, risk, description, blockColors };
+  const blockOffsets = Array.from({ length: 36 }, (_, index) => {
+    if (index === 7 && receivableStress)
+      return 0.65 * Math.max(0, Math.min(1, (stressProgress - 0.28) / 0.35));
+    if (index === 9 && payrollStress)
+      return 0.82 * Math.max(0, Math.min(1, (stressProgress - 0.66) / 0.2));
+    return 0;
+  });
+  const expandedBlocks = Array.from(
+    { length: 36 },
+    (_, index) =>
+      index === 22 &&
+      (isCreditProject || isRecovering) &&
+      stressProgress > 0.12,
+  );
+  const crackedBlocks = Array.from(
+    { length: 36 },
+    (_, index) => index === 9 && payrollStress && stressProgress > 0.68,
+  );
+  const description = `Estructura 3D de la PyME: ${collapsed ? "colapsada" : output.status.toLowerCase()}. ${lost} bloques retirados. Base financiera, motor operativo y cima comercial.`;
+  return {
+    lost,
+    collapsed,
+    staticFall,
+    risk,
+    description,
+    blockColors,
+    blockOffsets,
+    expandedBlocks,
+    crackedBlocks,
+  };
 }

@@ -27,7 +27,7 @@ export function ScenarioList({
           onClick={() => onSelect(s)}
           className={`min-h-[175px] border p-[17px_19px] text-left text-inherit transition-colors min-[701px]:grid min-[701px]:min-h-0 min-[701px]:grid-cols-[42px_1fr_auto] min-[701px]:items-start min-[701px]:gap-x-3 min-[701px]:p-[15px_17px] ${
             i === 0
-              ? "border-brand-blue bg-brand-blue-soft hover:border-brand-blue-hover"
+              ? "border-brand-blue bg-brand-blue-soft/70 shadow-[inset_3px_0_0_var(--color-brand-blue)] hover:border-brand-blue-hover"
               : "border-hairline bg-canvas hover:border-brand-blue"
           }`}
         >

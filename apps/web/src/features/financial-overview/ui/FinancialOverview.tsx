@@ -33,7 +33,9 @@ export function FinancialOverview({
         </span>
       </div>
       <div className="p-[22px_0_23px] max-[700px]:p-[12px_0] min-[701px]:p-[17px_0]">
-        <span className="text-[12px] text-body-muted">Saldo disponible</span>
+        <span className="text-[12px] text-body-muted">
+          Efectivo disponible hoy
+        </span>
         <div className="font-title my-[5px] mb-[9px] text-[35px] font-semibold tracking-[-0.06em] max-[700px]:my-[4px] max-[700px]:text-[27px]">
           {formatMoney(availableBalance)}{" "}
           <small className="text-[12px] font-medium tracking-normal text-body-subtle">
@@ -50,7 +52,7 @@ export function FinancialOverview({
       <div className="grid grid-cols-2 gap-[12px] max-[700px]:grid-cols-[1.1fr_1fr_1fr] max-[700px]:gap-[7px]">
         <div className="col-span-2 min-w-0 border border-hairline bg-surface-subtle p-3 max-[700px]:col-span-1 max-[700px]:p-[10px]">
           <div className="flex items-center justify-between gap-[6px] text-[11px] text-body-muted max-[700px]:min-h-[28px] max-[700px]:gap-1 max-[700px]:text-[10px] max-[700px]:leading-[1.4]">
-            Índice de Fragilidad{" "}
+            Fragilidad de la operación{" "}
             <CircleHelp size={14} className="max-[700px]:hidden" />
           </div>
           <div className="my-[5px] mb-3 flex items-center justify-between max-[700px]:my-[2px] max-[700px]:mb-[9px] max-[700px]:block">
@@ -83,13 +85,13 @@ export function FinancialOverview({
             />
           </div>
           <div className="flex justify-between text-[11px] text-body-muted max-[700px]:hidden">
-            <span>Menor fragilidad</span>
-            <span>Mayor fragilidad</span>
+            <span>Más resistente</span>
+            <span>Más vulnerable</span>
           </div>
         </div>
         <div className="min-w-0 border border-hairline p-3 max-[700px]:p-[10px]">
           <span className="flex items-center gap-[6px] text-[11px] text-body-muted">
-            <Clock3 size={16} /> Supervivencia
+            <Clock3 size={16} /> Tiempo de cobertura
           </span>
           <strong className="font-title my-[11px] mb-[7px] block text-[26px] font-semibold tracking-[-0.06em] max-[700px]:my-[6px] max-[700px]:text-[23px]">
             {survivalWeeks}{" "}
@@ -98,18 +100,18 @@ export function FinancialOverview({
             </small>
           </strong>
           <span className="text-[12px] text-body-muted max-[700px]:hidden">
-            Horizonte de operación
+            Antes de agotar liquidez
           </span>
         </div>
         <div className="min-w-0 border border-hairline p-3 max-[700px]:p-[10px]">
           <span className="flex items-center gap-[6px] text-[11px] text-body-muted">
-            <ShieldCheck size={16} /> Buffer recomendado
+            <ShieldCheck size={16} /> Reserva sugerida
           </span>
           <strong className="font-title my-[11px] mb-[7px] block text-[25px] font-semibold tracking-[-0.06em] max-[700px]:my-[6px] max-[700px]:text-[17px] max-[700px]:tracking-[-0.04em]">
             {formatMoney(recommendedBuffer)}
           </strong>
           <span className="text-[12px] text-body-muted max-[700px]:hidden">
-            Capital de trabajo · MXN
+            Para absorber imprevistos · MXN
           </span>
         </div>
       </div>

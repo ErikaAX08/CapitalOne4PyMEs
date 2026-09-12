@@ -2,14 +2,14 @@ import type { Scenario } from "../model/types";
 export const scenarios: Scenario[] = [
   {
     id: "contract",
-    title: "Aceptar nuevo contrato",
-    description: "Crece hoy. Cobra en 60 días.",
-    amount: 180000,
+    title: "Aceptar proyecto a crédito",
+    description: "El cliente paga 20 días después de la fecha acordada.",
+    amount: 800000,
     details: [
-      ["Inversión inicial", "$180,000"],
-      ["Ingreso esperado", "$320,000"],
-      ["Fecha de cobro", "60 días"],
-      ["Margen estimado", "28%"],
+      ["Valor del proyecto", "$800,000"],
+      ["Costos comprometidos", "$560,000"],
+      ["Retraso del cobro", "20 días"],
+      ["Futuros simulados", "20,000"],
     ],
   },
   {

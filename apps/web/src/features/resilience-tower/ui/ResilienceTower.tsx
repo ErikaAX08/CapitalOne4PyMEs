@@ -7,11 +7,9 @@ import {
 } from "react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
-import { formatMoney } from "@shared";
 import {
   computeTowerViewModel,
-  BLOCK_LABELS,
-  BLOCK_VALUES,
+  getBlockStructure,
 } from "../model/towerPresentation";
 import { TowerScene } from "./TowerScene";
 import { TowerFallback } from "./TowerFallback";
@@ -72,6 +70,7 @@ export function ResilienceTower({
     reduced,
     instantResult,
   });
+  const selectedBlock = selected === null ? null : getBlockStructure(selected);
   return (
     <div
       className="tower-3d relative h-full w-full overflow-hidden [&_canvas]:touch-none"
@@ -91,6 +90,9 @@ export function ResilienceTower({
               lost={viewModel.lost}
               risk={viewModel.risk}
               blockColors={viewModel.blockColors}
+              blockOffsets={viewModel.blockOffsets}
+              expandedBlocks={viewModel.expandedBlocks}
+              crackedBlocks={viewModel.crackedBlocks}
               onSelect={setSelected}
               reduced={reduced}
             />
@@ -102,7 +104,7 @@ export function ResilienceTower({
           simulando gastos y consultar las métricas.
         </TowerFallback>
       )}
-      {selected !== null && (
+      {selectedBlock && selected !== null && (
         <div className="absolute right-[15px] bottom-[42px] left-[15px] z-[3] border border-hairline-strong bg-canvas p-4 shadow-[0_0.5rem_1.5rem_rgba(16,42,58,0.10)]">
           <button
             aria-label="Cerrar detalle de bloque"
@@ -111,23 +113,24 @@ export function ResilienceTower({
           >
             ×
           </button>
-          <span className="font-title block text-[11px] tracking-[0.08em] text-brand-blue uppercase">
-            Semana {Math.floor(selected / 3) + 1}
+          <span className="font-title block text-[11px] font-medium text-brand-blue">
+            {selectedBlock.tier.name} · Nivel {selectedBlock.level}
           </span>
-          <strong className="my-[7px] block text-[12px]">
-            {BLOCK_LABELS[viewModel.blockColors[selected]]} ·{" "}
-            {formatMoney(BLOCK_VALUES[viewModel.blockColors[selected]])}
+          <strong className="my-[7px] block text-[14px]">
+            {selectedBlock.label}
           </strong>
-          <small className="mt-[5px] block text-[12px] text-body-subtle">
-            Estado:{" "}
-            {viewModel.blockColors[selected] === 4
-              ? "Retrasado"
-              : viewModel.blockColors[selected] === 1
-                ? "Esperado"
-                : "Confirmado"}
+          <small className="mt-[5px] block text-[11px] leading-[1.5] text-body-muted">
+            {selectedBlock.tier.area} · {selectedBlock.tier.role}
+          </small>
+          <small className="mt-[5px] block text-[11px] leading-[1.5] text-body-subtle">
+            {selectedBlock.level <= 3
+              ? "Sostiene directamente las capacidades de los niveles superiores."
+              : selectedBlock.level <= 7
+                ? "Depende de la base financiera y mantiene la operación diaria."
+                : "Depende del motor operativo y está expuesto al entorno."}
           </small>
           <small className="mt-[5px] block text-[12px] text-body-subtle">
-            Bloque ilustrativo · datos simulados
+            Bloque estructural ilustrativo · datos simulados
           </small>
         </div>
       )}

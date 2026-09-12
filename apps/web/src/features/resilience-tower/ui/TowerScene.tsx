@@ -10,6 +10,9 @@ function PhysicsGroup({
   lost,
   risk,
   blockColors,
+  blockOffsets,
+  expandedBlocks,
+  crackedBlocks,
   onSelect,
   reduced,
 }: {
@@ -18,6 +21,9 @@ function PhysicsGroup({
   lost: number;
   risk: boolean;
   blockColors: number[];
+  blockOffsets: number[];
+  expandedBlocks: boolean[];
+  crackedBlocks: boolean[];
   onSelect: (index: number) => void;
   reduced: boolean;
 }) {
@@ -50,6 +56,9 @@ function PhysicsGroup({
               key={index}
               index={index}
               color={blockColors[index]}
+              offset={blockOffsets[index]}
+              expanded={expandedBlocks[index]}
+              cracked={crackedBlocks[index]}
               collapsed={collapsed}
               staticFall={staticFall}
               lost={lost}
@@ -75,6 +84,9 @@ export function TowerScene({
   lost,
   risk,
   blockColors,
+  blockOffsets,
+  expandedBlocks,
+  crackedBlocks,
   onSelect,
   reduced,
 }: {
@@ -85,6 +97,9 @@ export function TowerScene({
   lost: number;
   risk: boolean;
   blockColors: number[];
+  blockOffsets: number[];
+  expandedBlocks: boolean[];
+  crackedBlocks: boolean[];
   onSelect: (index: number) => void;
   reduced: boolean;
 }) {
@@ -115,6 +130,9 @@ export function TowerScene({
         lost={lost}
         risk={risk}
         blockColors={blockColors}
+        blockOffsets={blockOffsets}
+        expandedBlocks={expandedBlocks}
+        crackedBlocks={crackedBlocks}
         onSelect={onSelect}
         reduced={reduced}
       />
