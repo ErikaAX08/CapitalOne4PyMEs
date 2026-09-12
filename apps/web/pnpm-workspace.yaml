@@ -1,6 +1,9 @@
+# Single-package root. pnpm 11 reads settings from this file, not from the
+# "pnpm" field in package.json.
 allowBuilds:
   "@tailwindcss/oxide": true
   esbuild: true
+
 overrides:
   motion-dom: 12.23.12
   motion-utils: 12.23.6
