@@ -10,7 +10,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, RoundedBox } from "@react-three/drei";
 import { Physics, RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import type { Group } from "three";
-import type { AppState } from "../data/types";
+import type { SimulationFlowState } from "../features/scenario-simulation";
 import type { SimulationOutput } from "../entities/simulation";
 import { formatMoney } from "../shared";
 const colors = ["#4389dc", "#58b69b", "#afbac9", "#e48b7d", "#e3bd56"];
@@ -23,7 +23,7 @@ const labels = [
 ];
 const values = [24000, 68000, 24000, 72000, 160000];
 interface Props {
-  state: AppState;
+  state: SimulationFlowState;
   progress: number;
   output: SimulationOutput;
   resetKey: number;
@@ -223,14 +223,14 @@ export function ResilienceTower({
   const removed =
     state === "simulating"
       ? Math.floor(scenarioLoss * Math.min(progress / 0.45, 1))
-      : state === "critical"
+      : state === "result"
         ? scenarioLoss
         : 0;
   const lost = Math.min(35, expenseBlocks + removed);
   const collapsed =
     (expenseBlocks > 0 && output.minimumProjectedBalance < 0) ||
     (output.status === "Crítico" &&
-      (state === "critical" || (state === "simulating" && progress >= 0.78)));
+      (state === "result" || (state === "simulating" && progress >= 0.78)));
   const staticFall = collapsed && (reduced || instantResult);
   function color(index: number) {
     const week = Math.floor(index / 3) + 1;

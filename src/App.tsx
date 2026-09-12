@@ -18,16 +18,12 @@ import {
   Truck,
 } from "lucide-react";
 import { scenarios } from "./entities/scenario";
-import type { AppState } from "./data/types";
-import type { Scenario } from "./entities/scenario";
-import type {
-  Business,
-  FinancialTransaction,
-} from "./entities/business";
+import type { Business, FinancialTransaction } from "./entities/business";
 import { mockFinancialDataSource } from "./entities/business";
 import type { SimulatedExpense, SimulationOutput } from "./entities/simulation";
 import { simulateFinancialDecision } from "./entities/simulation";
 import { formatMoney } from "./shared";
+import { useSimulationFlow } from "./features/scenario-simulation";
 import { ResilienceTower } from "./components/ResilienceTower";
 import { ExpensePanel } from "./components/ExpensePanel";
 import { Modal } from "./components/Modal";
@@ -95,15 +91,12 @@ function DemoBadge() {
 export default function App() {
   const data = useBusinessData();
   const [expenses, setExpenses] = useState<SimulatedExpense[]>([]);
-  const [skipAnimation, setSkipAnimation] = useState(false);
-  const [state, setState] = useState<AppState>("intro");
-  const [scenario, setScenario] = useState<Scenario | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [resetKey, setResetKey] = useState(0);
   const [technical, setTechnical] = useState(false);
   const reduced = !!useReducedMotion();
-  const mitigated = state === "mitigating" || state === "recovered";
-  const active = state === "simulating" || state === "critical" || mitigated;
+  const [flow, dispatch] = useSimulationFlow(reduced);
+  const mitigated = flow.state === "mitigating" || flow.state === "recovered";
+  const active =
+    flow.state === "simulating" || flow.state === "result" || mitigated;
   const baseline = useMemo(
     () =>
       data.status === "ready"
@@ -117,12 +110,12 @@ export default function App() {
         ? simulateFinancialDecision(
             data.business,
             data.transactions,
-            active ? scenario : null,
+            active ? flow.scenario : null,
             mitigated ? ["advance40"] : [],
             expenses,
           )
         : EMPTY_OUTPUT,
-    [data, scenario, active, mitigated, expenses],
+    [data, flow.scenario, active, mitigated, expenses],
   );
   const starting = useMemo(
     () =>
@@ -143,37 +136,13 @@ export default function App() {
         ? simulateFinancialDecision(
             data.business,
             data.transactions,
-            scenario,
+            flow.scenario,
             [],
             expenses,
           )
         : EMPTY_OUTPUT,
-    [data, scenario, expenses],
+    [data, flow.scenario, expenses],
   );
-  useEffect(() => {
-    if (state !== "simulating" && state !== "mitigating") return;
-    const started = performance.now();
-    const duration = reduced ? 100 : state === "mitigating" ? 1800 : 8000;
-    const timer = setInterval(() => {
-      const p = Math.min((performance.now() - started) / duration, 1);
-      setProgress(p);
-      if (p === 1) {
-        clearInterval(timer);
-        setState(state === "mitigating" ? "recovered" : "critical");
-      }
-    }, 40);
-    return () => clearInterval(timer);
-  }, [state, reduced]);
-  useEffect(() => {
-    if (
-      window.innerWidth <= 700 &&
-      (state === "simulating" || state === "mitigating")
-    )
-      document.querySelector(".tower-card")?.scrollIntoView({
-        behavior: reduced ? "instant" : "smooth",
-        block: "start",
-      });
-  }, [state, reduced]);
   if (data.status !== "ready") {
     return (
       <div className="app">
@@ -195,18 +164,14 @@ export default function App() {
   }
   function reset() {
     setExpenses([]);
-    setSkipAnimation(false);
-    setScenario(null);
-    setProgress(0);
-    setState("stable");
-    setResetKey((k) => k + 1);
+    dispatch({ type: "RESET" });
   }
   function addExpense(category: string, amount: number) {
     setExpenses((current) => [
       ...current,
       { id: crypto.randomUUID(), category, amount },
     ]);
-    setSkipAnimation(false);
+    dispatch({ type: "CLEAR_SKIP" });
     if (window.innerWidth <= 700)
       document.querySelector(".tower-card")?.scrollIntoView({
         behavior: reduced ? "instant" : "smooth",
@@ -214,38 +179,36 @@ export default function App() {
       });
   }
   function simulate() {
-    setSkipAnimation(false);
-    setProgress(0);
-    setState("simulating");
-    setResetKey((k) => k + 1);
+    dispatch({ type: "START_SIMULATION" });
   }
   const shown =
-    state === "simulating"
+    flow.state === "simulating"
       ? {
           ...output,
           fragilityScore: Math.round(
             starting.fragilityScore +
-              (output.fragilityScore - starting.fragilityScore) * progress,
+              (output.fragilityScore - starting.fragilityScore) *
+                flow.progress,
           ),
           survivalWeeks: Math.round(
             starting.survivalWeeks +
-              (output.survivalWeeks - starting.survivalWeeks) * progress,
+              (output.survivalWeeks - starting.survivalWeeks) * flow.progress,
           ),
           recommendedBuffer: Math.round(
             starting.recommendedBuffer +
               (output.recommendedBuffer - starting.recommendedBuffer) *
-                progress,
+                flow.progress,
           ),
         }
       : output;
   const phase =
-    progress < 0.2
+    flow.progress < 0.2
       ? "Aplicamos la inversión inicial"
-      : progress < 0.4
+      : flow.progress < 0.4
         ? "El efectivo sale hoy. El ingreso llega después."
-        : progress < 0.58
+        : flow.progress < 0.58
           ? "Los cobros futuros no cubren los pagos de hoy"
-          : progress < 0.78
+          : flow.progress < 0.78
             ? "Tu cliente principal retrasó su pago 30 días"
             : "Sin liquidez, la estructura pierde su soporte";
   return (
@@ -262,7 +225,7 @@ export default function App() {
         </div>
       </header>
       <AnimatePresence mode="wait">
-        {state === "intro" ? (
+        {flow.state === "intro" ? (
           <motion.main
             key="intro"
             className="intro"
@@ -298,7 +261,7 @@ export default function App() {
               </div>
               <button
                 className="primary intro-button"
-                onClick={() => setState("stable")}
+                onClick={() => dispatch({ type: "ENTER_DASHBOARD" })}
               >
                 Explorar mi estabilidad <ArrowRight size={19} />
               </button>
@@ -472,9 +435,9 @@ export default function App() {
                     className={`status ${output.status === "Crítico" ? "danger" : output.status === "Precaución" ? "warning" : "stable"}`}
                   >
                     <span />
-                    {state === "simulating"
+                    {flow.state === "simulating"
                       ? "Simulando decisión"
-                      : state === "mitigating"
+                      : flow.state === "mitigating"
                         ? "Recuperando estabilidad"
                         : output.status === "Estable"
                           ? "Tu negocio tiene una base sólida"
@@ -486,11 +449,11 @@ export default function App() {
                 <div className="scene">
                   <ResilienceTower
                     expenseBlocks={output.removedExpenseBlocks}
-                    instantResult={skipAnimation}
-                    state={state}
-                    progress={active ? progress : 0}
+                    instantResult={flow.skipAnimation}
+                    state={flow.state}
+                    progress={active ? flow.progress : 0}
                     output={output}
-                    resetKey={resetKey}
+                    resetKey={flow.resetKey}
                     reduced={reduced}
                   />
                   <div className="week-marker top">
@@ -538,7 +501,9 @@ export default function App() {
                   expenses={expenses}
                   onAdd={addExpense}
                   onUndo={() => setExpenses((current) => current.slice(0, -1))}
-                  disabled={state === "simulating" || state === "mitigating"}
+                  disabled={
+                    flow.state === "simulating" || flow.state === "mitigating"
+                  }
                 />
                 {expenses.length > 0 && (
                   <div
@@ -558,39 +523,41 @@ export default function App() {
                   </div>
                   <span className="subtle">Sin afectar tu negocio real</span>
                 </div>
-                {state === "simulating" || state === "mitigating" ? (
+                {flow.state === "simulating" || flow.state === "mitigating" ? (
                   <div className="simulation" aria-live="polite">
                     <div className="simulation-title">
                       <Sparkles size={20} />
                       <strong>
-                        {state === "mitigating"
+                        {flow.state === "mitigating"
                           ? "Un anticipo cambia la historia"
-                          : scenario?.title}
+                          : flow.scenario?.title}
                       </strong>
                       <button
                         className="text-button"
-                        onClick={() => {
-                          setSkipAnimation(true);
-                          setProgress(1);
-                          setState(
-                            state === "mitigating" ? "recovered" : "critical",
-                          );
-                        }}
+                        onClick={() =>
+                          dispatch({
+                            type:
+                              flow.state === "mitigating"
+                                ? "FINISH_MITIGATION"
+                                : "SHOW_RESULT",
+                            skip: true,
+                          })
+                        }
                       >
                         Ver resultado <ArrowRight size={15} />
                       </button>
                     </div>
                     <p>
-                      {state === "mitigating"
+                      {flow.state === "mitigating"
                         ? "El 40% de anticipo refuerza las primeras semanas."
-                        : scenario?.id === "contract"
+                        : flow.scenario?.id === "contract"
                           ? phase
-                          : progress < 0.6
+                          : flow.progress < 0.6
                             ? "Proyectamos cobros y obligaciones de las próximas semanas…"
                             : "Evaluamos el efecto sobre tu liquidez."}
                     </p>
                     <div className="progress-track">
-                      <div style={{ width: `${progress * 100}%` }} />
+                      <div style={{ width: `${flow.progress * 100}%` }} />
                     </div>
                     <div className="timeline">
                       <span>01 · Decisión</span>
@@ -598,25 +565,25 @@ export default function App() {
                       <span>03 · Estabilidad</span>
                     </div>
                   </div>
-                ) : state === "critical" || state === "recovered" ? (
+                ) : flow.state === "result" || flow.state === "recovered" ? (
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`result ${state === "recovered" && output.minimumProjectedBalance >= 0 ? "recovered" : ""}`}
+                    className={`result ${flow.state === "recovered" && output.minimumProjectedBalance >= 0 ? "recovered" : ""}`}
                     aria-live="polite"
                   >
                     <div className="result-title">
-                      {state === "recovered" ? (
+                      {flow.state === "recovered" ? (
                         <ShieldCheck size={22} />
                       ) : (
                         <TriangleAlert size={22} />
                       )}
                       <h3>
-                        {state === "recovered"
+                        {flow.state === "recovered"
                           ? output.minimumProjectedBalance < 0
                             ? "El anticipo aún no cubre tus gastos"
                             : "Una decisión más resiliente"
-                          : scenario?.id === "contract"
+                          : flow.scenario?.id === "contract"
                             ? "Rentable no siempre significa sostenible"
                             : "Así cambia tu estabilidad"}
                       </h3>
@@ -627,9 +594,9 @@ export default function App() {
                       </span>
                     </div>
                     <p>
-                      {state === "recovered"
+                      {flow.state === "recovered"
                         ? output.recommendation
-                        : scenario?.id === "contract"
+                        : flow.scenario?.id === "contract"
                           ? "El contrato es rentable, pero tu negocio podría quedarse sin efectivo antes de cobrarlo."
                           : output.recommendation}
                     </p>
@@ -637,7 +604,7 @@ export default function App() {
                       <span>
                         Fragilidad
                         <strong>
-                          {state === "recovered"
+                          {flow.state === "recovered"
                             ? beforeMitigation.fragilityScore
                             : starting.fragilityScore}{" "}
                           → {output.fragilityScore}
@@ -646,19 +613,19 @@ export default function App() {
                       <span>
                         Supervivencia
                         <strong>
-                          {state === "recovered"
+                          {flow.state === "recovered"
                             ? beforeMitigation.survivalWeeks
                             : starting.survivalWeeks}{" "}
                           → {output.survivalWeeks} semanas
                         </strong>
                       </span>
                       <span>
-                        {state === "recovered"
+                        {flow.state === "recovered"
                           ? "Buffer restante"
                           : "Saldo mínimo proyectado"}
                         <strong>
                           {formatMoney(
-                            state === "recovered"
+                            flow.state === "recovered"
                               ? output.recommendedBuffer
                               : output.minimumProjectedBalance,
                           )}{" "}
@@ -672,7 +639,7 @@ export default function App() {
                         </span>
                       )}
                     </div>
-                    {state !== "recovered" && (
+                    {flow.state !== "recovered" && (
                       <div className="recommendation">
                         <Sparkles size={19} />
                         <div>
@@ -682,18 +649,17 @@ export default function App() {
                       </div>
                     )}
                     <div className="result-actions">
-                      {scenario?.id === "contract" && state === "critical" && (
-                        <button
-                          className="primary"
-                          onClick={() => {
-                            setProgress(0);
-                            setState("mitigating");
-                            setResetKey((k) => k + 1);
-                          }}
-                        >
-                          Aplicar anticipo del 40% <ArrowRight size={17} />
-                        </button>
-                      )}
+                      {flow.scenario?.id === "contract" &&
+                        flow.state === "result" && (
+                          <button
+                            className="primary"
+                            onClick={() =>
+                              dispatch({ type: "START_MITIGATION" })
+                            }
+                          >
+                            Aplicar anticipo del 40% <ArrowRight size={17} />
+                          </button>
+                        )}
                       <button className="secondary" onClick={reset}>
                         <RotateCcw size={16} /> Reiniciar simulación
                       </button>
@@ -705,10 +671,9 @@ export default function App() {
                       <button
                         className={`scenario-card ${i === 0 ? "featured" : ""}`}
                         key={s.id}
-                        onClick={() => {
-                          setScenario(s);
-                          setState("scenarioSelected");
-                        }}
+                        onClick={() =>
+                          dispatch({ type: "SELECT_SCENARIO", scenario: s })
+                        }
                       >
                         <div className="scenario-top">
                           <span className={`scenario-icon icon-${i}`}>
@@ -757,27 +722,24 @@ export default function App() {
           </motion.main>
         )}
       </AnimatePresence>
-      {state === "scenarioSelected" && scenario && (
+      {flow.state === "scenarioSelected" && flow.scenario && (
         <Modal
-          title={scenario.title}
-          onClose={() => {
-            setState("stable");
-            setScenario(null);
-          }}
+          title={flow.scenario.title}
+          onClose={() => dispatch({ type: "CLOSE_SCENARIO" })}
         >
-          <p>{scenario.description}</p>
+          <p>{flow.scenario.description}</p>
           <div className="sheet-business">
             <Building2 size={19} /> Distribuidora Luna <span>MXN</span>
           </div>
           <dl>
-            {scenario.details.map(([label, value]) => (
+            {flow.scenario.details.map(([label, value]) => (
               <div key={label}>
                 <dt>{label}</dt>
                 <dd>{value}</dd>
               </div>
             ))}
           </dl>
-          {scenario.id === "contract" && (
+          {flow.scenario.id === "contract" && (
             <div className="sheet-note">
               <TriangleAlert size={20} />
               <p>
