@@ -19,14 +19,19 @@ import {
 import { scenarios } from "./entities/scenario";
 import type { Business, FinancialTransaction } from "./entities/business";
 import { mockFinancialDataSource } from "./entities/business";
-import type { SimulatedExpense, SimulationOutput } from "./entities/simulation";
+import type { SimulationOutput } from "./entities/simulation";
 import { simulateFinancialDecision } from "./entities/simulation";
 import { formatMoney, Modal } from "./shared";
 import { useSimulationFlow } from "./features/scenario-simulation";
 import { IntroScreen } from "./features/onboarding";
+import { FinancialOverview } from "./features/financial-overview";
 import { TechnicalExplanationDialog } from "./features/technical-explanation";
 import { ResilienceTower } from "./components/ResilienceTower";
-import { ExpensePanel } from "./components/ExpensePanel";
+import {
+  ExpensePanel,
+  ExpenseFeedback,
+  useExpenses,
+} from "./features/expense-simulation";
 type BusinessDataState =
   | { status: "loading" }
   | { status: "ready"; business: Business; transactions: FinancialTransaction[] }
@@ -90,7 +95,12 @@ function DemoBadge() {
 }
 export default function App() {
   const data = useBusinessData();
-  const [expenses, setExpenses] = useState<SimulatedExpense[]>([]);
+  const {
+    expenses,
+    add: addExpenseEntry,
+    undo: undoExpense,
+    reset: resetExpenses,
+  } = useExpenses();
   const [technical, setTechnical] = useState(false);
   const reduced = !!useReducedMotion();
   const [flow, dispatch] = useSimulationFlow(reduced);
@@ -163,14 +173,11 @@ export default function App() {
     );
   }
   function reset() {
-    setExpenses([]);
+    resetExpenses();
     dispatch({ type: "RESET" });
   }
   function addExpense(category: string, amount: number) {
-    setExpenses((current) => [
-      ...current,
-      { id: crypto.randomUUID(), category, amount },
-    ]);
+    addExpenseEntry(category, amount);
     dispatch({ type: "CLEAR_SKIP" });
     if (window.innerWidth <= 700)
       document.querySelector(".tower-card")?.scrollIntoView({
@@ -256,103 +263,21 @@ export default function App() {
               </button>
             </div>
             <div className="workspace">
-              <section className="overview">
-                <div className="section-heading">
-                  <span>
-                    <Building2 size={18} /> Distribuidora Luna
-                  </span>
-                  <span className="subtle">12 empleados</span>
-                </div>
-                <div className="balance">
-                  <span>Saldo disponible</span>
-                  <div>
-                    {formatMoney(
-                      (data.status === "ready" ? data.business.balance : 0) -
-                        output.simulatedExpenseTotal,
-                    )}{" "}
-                    <small>MXN</small>
-                  </div>
-                  <span className="balance-note">
-                    <span />{" "}
-                    {expenses.length
-                      ? "Saldo después de los gastos simulados"
-                      : "Operación actual · antes de la decisión"}
-                  </span>
-                </div>
-                <div className="metrics">
-                  <div className="metric fragility">
-                    <div className="metric-label">
-                      Índice de Fragilidad <CircleHelp size={14} />
-                    </div>
-                    <div className="score-row">
-                      <strong>
-                        {shown.fragilityScore}
-                        <small>/100</small>
-                      </strong>
-                      <span
-                        className={`status ${shown.fragilityScore >= 70 ? "danger" : shown.fragilityScore >= 40 ? "warning" : "stable"}`}
-                      >
-                        <span />
-                        {shown.fragilityScore >= 70
-                          ? "Crítico"
-                          : shown.fragilityScore >= 40
-                            ? "Precaución"
-                            : "Estable"}
-                      </span>
-                    </div>
-                    <div className="gauge">
-                      <i style={{ left: `${shown.fragilityScore}%` }} />
-                    </div>
-                    <div className="gauge-labels">
-                      <span>Menor fragilidad</span>
-                      <span>Mayor fragilidad</span>
-                    </div>
-                  </div>
-                  <div className="metric">
-                    <span className="metric-label">
-                      <Clock3 size={16} /> Supervivencia
-                    </span>
-                    <strong>
-                      {shown.survivalWeeks} <small>semanas</small>
-                    </strong>
-                    <span className="metric-foot">Horizonte de operación</span>
-                  </div>
-                  <div className="metric">
-                    <span className="metric-label">
-                      <ShieldCheck size={16} /> Buffer recomendado
-                    </span>
-                    <strong className="buffer-value">
-                      {formatMoney(shown.recommendedBuffer)}
-                    </strong>
-                    <span className="metric-foot">
-                      Capital de trabajo · MXN
-                    </span>
-                  </div>
-                </div>
-                <div className="context">
-                  <ShieldCheck size={18} />
-                  <p>
-                    {active || expenses.length > 0
-                      ? `${shown.survivalWeeks} semanas de operación estimadas en este escenario simulado.`
-                      : baseline.recommendation}
-                  </p>
-                </div>
-                <div className="upcoming">
-                  <span>
-                    <span className="mini-icon coral">
-                      <Clock3 size={16} />
-                    </span>
-                    <span>
-                      Próximo pago crítico<strong>Nómina en 6 días</strong>
-                    </span>
-                  </span>
-                  <span className="upcoming-amount">$72,000</span>
-                </div>
-                <div className="concentration">
-                  <span>Concentración del principal cliente</span>
-                  <strong>42%</strong>
-                </div>
-              </section>
+              <FinancialOverview
+                availableBalance={
+                  (data.status === "ready" ? data.business.balance : 0) -
+                  output.simulatedExpenseTotal
+                }
+                hasExpenses={expenses.length > 0}
+                fragilityScore={shown.fragilityScore}
+                survivalWeeks={shown.survivalWeeks}
+                recommendedBuffer={shown.recommendedBuffer}
+                contextMessage={
+                  active || expenses.length > 0
+                    ? `${shown.survivalWeeks} semanas de operación estimadas en este escenario simulado.`
+                    : baseline.recommendation
+                }
+              />
               <section className="tower-card">
                 <div className="tower-heading">
                   <div>
@@ -438,19 +363,16 @@ export default function App() {
                 <ExpensePanel
                   expenses={expenses}
                   onAdd={addExpense}
-                  onUndo={() => setExpenses((current) => current.slice(0, -1))}
+                  onUndo={undoExpense}
                   disabled={
                     flow.state === "simulating" || flow.state === "mitigating"
                   }
                 />
                 {expenses.length > 0 && (
-                  <div
-                    className={`expense-feedback ${output.minimumProjectedBalance < 0 ? "expense-critical" : ""}`}
-                    role="status"
-                  >
-                    <TriangleAlert size={18} />
-                    <p>{output.recommendation}</p>
-                  </div>
+                  <ExpenseFeedback
+                    isCritical={output.minimumProjectedBalance < 0}
+                    recommendation={output.recommendation}
+                  />
                 )}
                 <div className="decision-heading">
                   <div>
