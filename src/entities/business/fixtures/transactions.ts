@@ -1,4 +1,4 @@
-import type { FinancialTransaction } from "./types";
+import type { FinancialTransaction } from "../model/types";
 const templates = [
   ["Nómina", "Equipo Luna", 72000],
   ["Renta", "Inmuebles del Norte", 24000],

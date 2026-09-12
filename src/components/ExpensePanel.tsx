@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { ArrowDownRight, Plus, RotateCcw, Wallet } from "lucide-react";
-import type { SimulatedExpense } from "../data/types";
-import { money } from "../lib/mockFinancialEngine";
+import type { SimulatedExpense } from "../entities/simulation";
+import { formatMoney } from "../shared";
 export function ExpensePanel({
   expenses,
   onAdd,
@@ -99,7 +99,7 @@ export function ExpensePanel({
             disabled={disabled}
             onClick={() => onAdd(String(label), Number(value))}
           >
-            {label} <strong>{money(Number(value))}</strong>
+            {label} <strong>{formatMoney(Number(value))}</strong>
           </button>
         ))}
       </div>
@@ -109,7 +109,7 @@ export function ExpensePanel({
             <span>
               Gastos agregados <small>({expenses.length})</small>
             </span>
-            <strong>−{money(total)}</strong>
+            <strong>−{formatMoney(total)}</strong>
           </div>
           <ol>
             {expenses
@@ -119,7 +119,7 @@ export function ExpensePanel({
                 <li key={e.id}>
                   <ArrowDownRight size={15} />
                   <span>{e.category}</span>
-                  <strong>−{money(e.amount)}</strong>
+                  <strong>−{formatMoney(e.amount)}</strong>
                 </li>
               ))}
           </ol>

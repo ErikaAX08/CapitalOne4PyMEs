@@ -1,4 +1,4 @@
-import type { Scenario } from "./types";
+import type { Scenario } from "../model/types";
 export const scenarios: Scenario[] = [
   {
     id: "contract",

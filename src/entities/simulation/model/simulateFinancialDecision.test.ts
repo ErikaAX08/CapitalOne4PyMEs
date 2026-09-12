@@ -1,9 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { simulateFinancialDecision } from "./mockFinancialEngine";
-import { business } from "../data/business";
-import { transactions } from "../data/transactions";
-import { scenarios } from "../data/scenarios";
+import { simulateFinancialDecision } from "./simulateFinancialDecision";
+import { business, transactions } from "../../business";
+import { scenarios } from "../../scenario";
 test("contract cash gap and advance mitigation remain deterministic", () => {
   const stable = simulateFinancialDecision(business, transactions, null);
   const contract = simulateFinancialDecision(

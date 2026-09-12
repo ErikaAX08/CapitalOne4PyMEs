@@ -1,11 +1,8 @@
-import type {
-  Business,
-  FinancialTransaction,
-  Scenario,
-  SimulationOutput,
-  SimulatedExpense,
-} from "../data/types";
-import { balances } from "../data/projections";
+import type { Business, FinancialTransaction } from "../../business";
+import type { Scenario } from "../../scenario";
+import type { SimulationOutput, SimulatedExpense } from "./types";
+import { balances } from "../fixtures/projections";
+import { formatMoney } from "../../../shared/lib/formatMoney";
 export function simulateFinancialDecision(
   business: Business,
   transactions: FinancialTransaction[],
@@ -110,8 +107,8 @@ export function simulateFinancialDecision(
     recommendation:
       simulatedExpenseTotal > 0
         ? minimumProjectedBalance < 0
-          ? `Estos gastos dejan un saldo mínimo proyectado de ${money(minimumProjectedBalance)}. Reduce o escalona los pagos, o reserva al menos ${money(-minimumProjectedBalance)} de liquidez adicional.`
-          : `Con ${money(simulatedExpenseTotal)} en gastos adicionales, conserva ${money(metrics[2] + Math.round(simulatedExpenseTotal * 0.15))} de capital de trabajo y prioriza los pagos esenciales.`
+          ? `Estos gastos dejan un saldo mínimo proyectado de ${formatMoney(minimumProjectedBalance)}. Reduce o escalona los pagos, o reserva al menos ${formatMoney(-minimumProjectedBalance)} de liquidez adicional.`
+          : `Con ${formatMoney(simulatedExpenseTotal)} en gastos adicionales, conserva ${formatMoney(metrics[2] + Math.round(simulatedExpenseTotal * 0.15))} de capital de trabajo y prioriza los pagos esenciales.`
         : recovered
           ? "Con el anticipo, el negocio conserva suficiente liquidez para ejecutar el contrato sin comprometer la nómina."
           : scenario?.id === "contract"
@@ -123,9 +120,3 @@ export function simulateFinancialDecision(
                 : "Tu negocio puede mantener su operación durante 14 semanas bajo las condiciones actuales.",
   };
 }
-export const money = (value: number) =>
-  new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    maximumFractionDigits: 0,
-  }).format(value);

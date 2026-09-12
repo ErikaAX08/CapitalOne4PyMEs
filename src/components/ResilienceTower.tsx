@@ -10,8 +10,9 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, RoundedBox } from "@react-three/drei";
 import { Physics, RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import type { Group } from "three";
-import type { AppState, SimulationOutput } from "../data/types";
-import { money } from "../lib/mockFinancialEngine";
+import type { AppState } from "../data/types";
+import type { SimulationOutput } from "../entities/simulation";
+import { formatMoney } from "../shared";
 const colors = ["#4389dc", "#58b69b", "#afbac9", "#e48b7d", "#e3bd56"];
 const labels = [
   "Liquidez disponible",
@@ -317,7 +318,7 @@ export function ResilienceTower({
           </button>
           <span>SEMANA {Math.floor(selected / 3) + 1}</span>
           <strong>
-            {labels[color(selected)]} · {money(values[color(selected)])}
+            {labels[color(selected)]} · {formatMoney(values[color(selected)])}
           </strong>
           <small>
             Estado:{" "}

@@ -17,15 +17,63 @@ import {
   TriangleAlert,
   Truck,
 } from "lucide-react";
-import { business } from "./data/business";
-import { transactions } from "./data/transactions";
-import { scenarios } from "./data/scenarios";
-import type { AppState, Scenario, SimulatedExpense } from "./data/types";
-import { money, simulateFinancialDecision } from "./lib/mockFinancialEngine";
+import { scenarios } from "./entities/scenario";
+import type { AppState } from "./data/types";
+import type { Scenario } from "./entities/scenario";
+import type {
+  Business,
+  FinancialTransaction,
+} from "./entities/business";
+import { mockFinancialDataSource } from "./entities/business";
+import type { SimulatedExpense, SimulationOutput } from "./entities/simulation";
+import { simulateFinancialDecision } from "./entities/simulation";
+import { formatMoney } from "./shared";
 import { ResilienceTower } from "./components/ResilienceTower";
 import { ExpensePanel } from "./components/ExpensePanel";
 import { Modal } from "./components/Modal";
-const baseline = simulateFinancialDecision(business, transactions, null);
+type BusinessDataState =
+  | { status: "loading" }
+  | { status: "ready"; business: Business; transactions: FinancialTransaction[] }
+  | { status: "empty" }
+  | { status: "error" };
+const EMPTY_OUTPUT: SimulationOutput = {
+  removedExpenseBlocks: 0,
+  simulatedExpenseTotal: 0,
+  fragilityScore: 0,
+  survivalWeeks: 0,
+  recommendedBuffer: 0,
+  minimumProjectedBalance: 0,
+  criticalWeek: null,
+  weeklyProjections: [],
+  towerBlockChanges: [],
+  recommendation: "",
+  status: "Estable",
+};
+function useBusinessData(): BusinessDataState {
+  const [state, setState] = useState<BusinessDataState>({ status: "loading" });
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      mockFinancialDataSource.getBusiness(),
+      mockFinancialDataSource.getTransactions(),
+    ])
+      .then(([business, transactions]) => {
+        if (cancelled) return;
+        setState(
+          transactions.length
+            ? { status: "ready", business, transactions }
+            : { status: "empty" },
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "error" });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return state;
+}
 function Logo() {
   return (
     <div className="logo">
@@ -45,6 +93,7 @@ function DemoBadge() {
   );
 }
 export default function App() {
+  const data = useBusinessData();
   const [expenses, setExpenses] = useState<SimulatedExpense[]>([]);
   const [skipAnimation, setSkipAnimation] = useState(false);
   const [state, setState] = useState<AppState>("intro");
@@ -55,25 +104,51 @@ export default function App() {
   const reduced = !!useReducedMotion();
   const mitigated = state === "mitigating" || state === "recovered";
   const active = state === "simulating" || state === "critical" || mitigated;
+  const baseline = useMemo(
+    () =>
+      data.status === "ready"
+        ? simulateFinancialDecision(data.business, data.transactions, null)
+        : EMPTY_OUTPUT,
+    [data],
+  );
   const output = useMemo(
     () =>
-      simulateFinancialDecision(
-        business,
-        transactions,
-        active ? scenario : null,
-        mitigated ? ["advance40"] : [],
-        expenses,
-      ),
-    [scenario, active, mitigated, expenses],
+      data.status === "ready"
+        ? simulateFinancialDecision(
+            data.business,
+            data.transactions,
+            active ? scenario : null,
+            mitigated ? ["advance40"] : [],
+            expenses,
+          )
+        : EMPTY_OUTPUT,
+    [data, scenario, active, mitigated, expenses],
   );
   const starting = useMemo(
-    () => simulateFinancialDecision(business, transactions, null, [], expenses),
-    [expenses],
+    () =>
+      data.status === "ready"
+        ? simulateFinancialDecision(
+            data.business,
+            data.transactions,
+            null,
+            [],
+            expenses,
+          )
+        : EMPTY_OUTPUT,
+    [data, expenses],
   );
   const beforeMitigation = useMemo(
     () =>
-      simulateFinancialDecision(business, transactions, scenario, [], expenses),
-    [scenario, expenses],
+      data.status === "ready"
+        ? simulateFinancialDecision(
+            data.business,
+            data.transactions,
+            scenario,
+            [],
+            expenses,
+          )
+        : EMPTY_OUTPUT,
+    [data, scenario, expenses],
   );
   useEffect(() => {
     if (state !== "simulating" && state !== "mitigating") return;
@@ -99,6 +174,25 @@ export default function App() {
         block: "start",
       });
   }, [state, reduced]);
+  if (data.status !== "ready") {
+    return (
+      <div className="app">
+        <header>
+          <Logo />
+          <div className="header-right">
+            <DemoBadge />
+          </div>
+        </header>
+        <main role="status" aria-live="polite" style={{ padding: "3rem" }}>
+          {data.status === "loading"
+            ? "Cargando datos del negocio…"
+            : data.status === "empty"
+              ? "No hay transacciones disponibles para simular."
+              : "No pudimos cargar los datos del negocio. Intenta de nuevo."}
+        </main>
+      </div>
+    );
+  }
   function reset() {
     setExpenses([]);
     setSkipAnimation(false);
@@ -271,7 +365,10 @@ export default function App() {
                 <div className="balance">
                   <span>Saldo disponible</span>
                   <div>
-                    {money(business.balance - output.simulatedExpenseTotal)}{" "}
+                    {formatMoney(
+                      (data.status === "ready" ? data.business.balance : 0) -
+                        output.simulatedExpenseTotal,
+                    )}{" "}
                     <small>MXN</small>
                   </div>
                   <span className="balance-note">
@@ -324,7 +421,7 @@ export default function App() {
                       <ShieldCheck size={16} /> Buffer recomendado
                     </span>
                     <strong className="buffer-value">
-                      {money(shown.recommendedBuffer)}
+                      {formatMoney(shown.recommendedBuffer)}
                     </strong>
                     <span className="metric-foot">
                       Capital de trabajo · MXN
@@ -560,7 +657,7 @@ export default function App() {
                           ? "Buffer restante"
                           : "Saldo mínimo proyectado"}
                         <strong>
-                          {money(
+                          {formatMoney(
                             state === "recovered"
                               ? output.recommendedBuffer
                               : output.minimumProjectedBalance,
@@ -641,7 +738,7 @@ export default function App() {
                                 : "Cobro afectado"}
                           </span>
                           <strong>
-                            {money(s.amount)} <ChevronRight size={15} />
+                            {formatMoney(s.amount)} <ChevronRight size={15} />
                           </strong>
                         </div>
                       </button>
