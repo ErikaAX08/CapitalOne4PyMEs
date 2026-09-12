@@ -10,9 +10,9 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, RoundedBox } from "@react-three/drei";
 import { Physics, RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import type { Group } from "three";
-import type { SimulationFlowState } from "../features/scenario-simulation";
-import type { SimulationOutput } from "../entities/simulation";
-import { formatMoney } from "../shared";
+import type { SimulationFlowState } from "../../scenario-simulation";
+import type { SimulationOutput } from "../../../entities/simulation";
+import { formatMoney } from "../../../shared";
 const colors = ["#4389dc", "#58b69b", "#afbac9", "#e48b7d", "#e3bd56"];
 const labels = [
   "Liquidez disponible",

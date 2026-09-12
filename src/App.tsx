@@ -1,13 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import {
-  ChevronRight,
-  CircleHelp,
-  Hand,
-  Layers3,
-  RotateCcw,
-  ShieldCheck,
-} from "lucide-react";
+import { ChevronRight, CircleHelp, Layers3, ShieldCheck } from "lucide-react";
 import { scenarios } from "./entities/scenario";
 import type { Business, FinancialTransaction } from "./entities/business";
 import { mockFinancialDataSource } from "./entities/business";
@@ -24,7 +17,7 @@ import {
 import { IntroScreen } from "./features/onboarding";
 import { FinancialOverview } from "./features/financial-overview";
 import { TechnicalExplanationDialog } from "./features/technical-explanation";
-import { ResilienceTower } from "./components/ResilienceTower";
+import { TowerCard } from "./features/resilience-tower";
 import {
   ExpensePanel,
   ExpenseFeedback,
@@ -276,87 +269,17 @@ export default function App() {
                     : baseline.recommendation
                 }
               />
-              <section className="tower-card">
-                <div className="tower-heading">
-                  <div>
-                    <span className="eyebrow">TU NEGOCIO, EN PERSPECTIVA</span>
-                    <h2>Torre de estabilidad · 3D</h2>
-                  </div>
-                  <button
-                    className="icon-button"
-                    aria-label="Reiniciar simulación"
-                    title="Reiniciar simulación"
-                    onClick={reset}
-                  >
-                    <RotateCcw size={18} />
-                  </button>
-                </div>
-                <div className="tower-status">
-                  <span
-                    className={`status ${output.status === "Crítico" ? "danger" : output.status === "Precaución" ? "warning" : "stable"}`}
-                  >
-                    <span />
-                    {flow.state === "simulating"
-                      ? "Simulando decisión"
-                      : flow.state === "mitigating"
-                        ? "Recuperando estabilidad"
-                        : output.status === "Estable"
-                          ? "Tu negocio tiene una base sólida"
-                          : output.status === "Crítico"
-                            ? "La liquidez necesita refuerzo"
-                            : "Una estructura con más perspectiva"}
-                  </span>
-                </div>
-                <div className="scene">
-                  <ResilienceTower
-                    expenseBlocks={output.removedExpenseBlocks}
-                    instantResult={flow.skipAnimation}
-                    state={flow.state}
-                    progress={active ? flow.progress : 0}
-                    output={output}
-                    resetKey={flow.resetKey}
-                    reduced={reduced}
-                  />
-                  <div className="week-marker top">
-                    SEMANA 12<span>Ingresos futuros</span>
-                  </div>
-                  <div className="week-marker bottom">
-                    SEMANA 1<span>Tu base de hoy</span>
-                  </div>
-                  <div className="scene-hint">
-                    <Hand size={15} /> Cada gasto retira soporte · Toca un
-                    bloque
-                  </div>
-                </div>
-                <div className="legend">
-                  {[
-                    "Liquidez",
-                    "Cobros",
-                    "Gastos",
-                    "Obligaciones",
-                    "Inciertos",
-                  ].map((label, i) => (
-                    <span key={label}>
-                      <i
-                        style={{
-                          background: [
-                            "#4285dc",
-                            "#54b69a",
-                            "#b1bac7",
-                            "#e88478",
-                            "#e5bb54",
-                          ][i],
-                        }}
-                      />
-                      {label}
-                    </span>
-                  ))}
-                </div>
-                <div className="tower-footer">
-                  <Layers3 size={15} /> 12 niveles. 12 semanas. Una mirada al
-                  futuro.
-                </div>
-              </section>
+              <TowerCard
+                flowState={flow.state}
+                status={output.status}
+                expenseBlocks={output.removedExpenseBlocks}
+                instantResult={flow.skipAnimation}
+                progress={active ? flow.progress : 0}
+                output={output}
+                resetKey={flow.resetKey}
+                reduced={reduced}
+                onReset={reset}
+              />
               <section className="decisions">
                 <ExpensePanel
                   expenses={expenses}

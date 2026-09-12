@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Building2, Layers3, ShieldCheck } from "lucide-react";
 import type { SimulationOutput } from "../../../entities/simulation";
-import { ResilienceTower } from "../../../components/ResilienceTower";
+import { ResilienceTower } from "../../resilience-tower";
 export function IntroScreen({
   onEnter,
   reduced,
