@@ -4,7 +4,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Building2,
-  Check,
   ChevronRight,
   CircleHelp,
   Clock3,
@@ -22,11 +21,12 @@ import type { Business, FinancialTransaction } from "./entities/business";
 import { mockFinancialDataSource } from "./entities/business";
 import type { SimulatedExpense, SimulationOutput } from "./entities/simulation";
 import { simulateFinancialDecision } from "./entities/simulation";
-import { formatMoney } from "./shared";
+import { formatMoney, Modal } from "./shared";
 import { useSimulationFlow } from "./features/scenario-simulation";
+import { IntroScreen } from "./features/onboarding";
+import { TechnicalExplanationDialog } from "./features/technical-explanation";
 import { ResilienceTower } from "./components/ResilienceTower";
 import { ExpensePanel } from "./components/ExpensePanel";
-import { Modal } from "./components/Modal";
 type BusinessDataState =
   | { status: "loading" }
   | { status: "ready"; business: Business; transactions: FinancialTransaction[] }
@@ -226,73 +226,11 @@ export default function App() {
       </header>
       <AnimatePresence mode="wait">
         {flow.state === "intro" ? (
-          <motion.main
-            key="intro"
-            className="intro"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, y: -12 }}
-          >
-            <div className="intro-copy">
-              <span className="eyebrow blue">
-                TU SIGUIENTE DECISIÓN, CON PERSPECTIVA
-              </span>
-              <h1>
-                Crecer es importante.
-                <br />
-                <span>Mantenerte firme,</span>
-                <br />
-                también.
-              </h1>
-              <p className="intro-subtitle">
-                Visualiza la resiliencia financiera de tu negocio
-              </p>
-              <p>Decide hoy sin comprometer el mañana de tu negocio.</p>
-              <div className="business-picker">
-                <span className="business-icon">
-                  <Building2 />
-                </span>
-                <div>
-                  <small>NEGOCIO SELECCIONADO</small>
-                  <strong>Distribuidora Luna</strong>
-                  <span>Distribución comercial · 12 empleados</span>
-                </div>
-                <ShieldCheck size={20} />
-              </div>
-              <button
-                className="primary intro-button"
-                onClick={() => dispatch({ type: "ENTER_DASHBOARD" })}
-              >
-                Explorar mi estabilidad <ArrowRight size={19} />
-              </button>
-              <small className="source-label">
-                <ShieldCheck size={15} /> Datos simulados desde Capital One
-                Nessie
-              </small>
-            </div>
-            <div className="intro-scene">
-              <div className="intro-scene-title">
-                <span className="status stable">
-                  <span />
-                  Estabilidad que puedes ver
-                </span>
-              </div>
-              <ResilienceTower
-                state="stable"
-                progress={0}
-                output={baseline}
-                resetKey={0}
-                reduced={reduced}
-              />
-              <div className="intro-scene-note">
-                <Layers3 size={20} />
-                <span>
-                  Cada semana cuenta.
-                  <small>Descubre qué sostiene tu negocio.</small>
-                </span>
-              </div>
-            </div>
-          </motion.main>
+          <IntroScreen
+            onEnter={() => dispatch({ type: "ENTER_DASHBOARD" })}
+            reduced={reduced}
+            baseline={baseline}
+          />
         ) : (
           <motion.main
             key="dashboard"
@@ -762,75 +700,7 @@ export default function App() {
         </Modal>
       )}
       {technical && (
-        <Modal
-          title="Detrás de tu estabilidad"
-          onClose={() => setTechnical(false)}
-        >
-          <p>Dos perspectivas complementarias para entender tu liquidez.</p>
-          <div className="technical-section">
-            <span className="number">01</span>
-            <h3>Señal estructural</h3>
-            <p>
-              Analizamos cómo cambia la relación entre ingresos, saldo, tiempos
-              de cobro, gastos fijos y concentración de clientes.
-            </p>
-            <div className="persistence">
-              <span>Diagrama de persistencia · ilustrativo</span>
-              <svg
-                viewBox="0 0 300 100"
-                role="img"
-                aria-label="Diagrama ilustrativo de persistencia, sin cálculo topológico real"
-              >
-                <path
-                  d="M20 10V80H285 M20 80L275 15"
-                  stroke="#c7d3e2"
-                  strokeDasharray="4 4"
-                  fill="none"
-                />
-                {[
-                  [50, 50],
-                  [90, 56],
-                  [110, 28],
-                  [150, 40],
-                  [198, 18],
-                  [220, 30],
-                ].map(([cx, cy], i) => (
-                  <circle
-                    key={i}
-                    cx={cx}
-                    cy={cy}
-                    r="5"
-                    fill={i === 4 ? "#e88478" : "#4285dc"}
-                  />
-                ))}
-              </svg>
-            </div>
-          </div>
-          <div className="technical-section">
-            <span className="number">02</span>
-            <h3>Simulación de caja</h3>
-            <p>
-              Proyectamos cobros, pagos y escenarios para estimar el momento en
-              que el negocio perdería liquidez.
-            </p>
-          </div>
-          <div className="context">
-            <CircleHelp size={20} />
-            <p>
-              La señal topológica detecta cambios estructurales; la simulación
-              financiera los traduce en pesos y semanas.
-            </p>
-          </div>
-          <p className="fine-print">
-            Esta demo usa resultados deterministas simulados. No ejecuta
-            homología persistente, no predice quiebras y no demuestra poder
-            predictivo de la topología. Nessie y los motores analíticos son
-            integraciones futuras.
-          </p>
-          <button className="primary full" onClick={() => setTechnical(false)}>
-            Entendido <Check size={17} />
-          </button>
-        </Modal>
+        <TechnicalExplanationDialog onClose={() => setTechnical(false)} />
       )}
     </div>
   );
