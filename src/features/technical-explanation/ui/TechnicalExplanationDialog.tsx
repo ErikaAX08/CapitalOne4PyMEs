@@ -58,12 +58,10 @@ export function TechnicalExplanationDialog({
         <span className="mr-[9px] inline-block rounded-[5px] bg-[#edf3fc] p-[6px] text-[12px] text-[#6e8fbf]">
           02
         </span>
-        <h3 className="inline text-[16px] font-semibold">
-          Simulación de caja
-        </h3>
+        <h3 className="inline text-[16px] font-semibold">Simulación de caja</h3>
         <p className="mt-3 text-[12px] leading-[1.8] text-[#7a8ea8]">
-          Proyectamos cobros, pagos y escenarios para estimar el momento en
-          que el negocio perdería liquidez.
+          Proyectamos cobros, pagos y escenarios para estimar el momento en que
+          el negocio perdería liquidez.
         </p>
       </div>
       <div className="mt-[14px] flex items-start gap-[10px] rounded-lg bg-[#f0f6fc] p-[12px_13px] text-[#5980ab]">
@@ -74,10 +72,9 @@ export function TechnicalExplanationDialog({
         </p>
       </div>
       <p className="my-4 text-[12px] leading-[1.7] text-[#65778e] max-[700px]:text-[11px]">
-        Esta demo usa resultados deterministas simulados. No ejecuta
-        homología persistente, no predice quiebras y no demuestra poder
-        predictivo de la topología. Nessie y los motores analíticos son
-        integraciones futuras.
+        Esta demo usa resultados deterministas simulados. No ejecuta homología
+        persistente, no predice quiebras y no demuestra poder predictivo de la
+        topología. Nessie y los motores analíticos son integraciones futuras.
       </p>
       <button
         className="inline-flex w-full items-center justify-center gap-3 rounded-lg border border-[#296bd5] bg-[#296bd5] px-[18px] py-[14px] text-[13px] font-medium text-white shadow-[0_4px_9px_#296bd51a] hover:bg-[#205cbd] disabled:cursor-wait disabled:opacity-45 max-[700px]:min-h-[46px]"

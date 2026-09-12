@@ -72,9 +72,7 @@ export function ExpensePanel({
           </label>
           <label className="block text-[12px] text-[#64788f] max-[700px]:text-[11px]">
             Monto del gasto{" "}
-            <span className="float-right text-[10px] text-[#8998ac]">
-              MXN
-            </span>
+            <span className="float-right text-[10px] text-[#8998ac]">MXN</span>
             <div className="mt-[7px] flex h-[46px] w-full items-center gap-2 rounded-lg border border-[#dbe4f0] bg-[#fbfcfe] px-3 text-[14px] text-[#314d70] focus-within:outline-2 focus-within:outline-[#6d9ce0] focus-within:outline-offset-2">
               <span className="text-[#8a9aae]">$</span>
               <input

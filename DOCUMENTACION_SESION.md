@@ -39,14 +39,14 @@ No se implementaron backend, autenticación, base de datos, persistencia de los 
 
 ## 2. Evolución durante la sesión
 
-| Etapa | Trabajo realizado | Resultado |
-| --- | --- | --- |
-| Inspección inicial | Se revisó el repositorio, que estaba vacío. | Se creó una base React + TypeScript + Vite. |
-| Primera versión | Se construyeron la interfaz light, datos, motor mock, torre 3D y escenarios. | Demo con el recorrido contrato → riesgo → colapso → anticipo. |
-| Validación inicial | Se instalaron dependencias, se ejecutó el proyecto y se probaron vistas y flujos. | Se corrigieron problemas de compilación, compatibilidad y física. |
-| Refinamiento 2D | A petición del usuario, la torre se sustituyó temporalmente por SVG animado. Se añadió la captura de gastos. | Cada gasto retiraba soporte, con deshacer y actualización de métricas. |
-| Regreso a 3D | Se restauraron Three.js, React Three Fiber, Drei y Rapier. | Se conservaron las mejoras de gastos dentro de la experiencia 3D. |
-| Documentación | Se actualizó el README y se redactó este documento. | Guía para usar, entender y continuar el proyecto. |
+| Etapa              | Trabajo realizado                                                                                            | Resultado                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| Inspección inicial | Se revisó el repositorio, que estaba vacío.                                                                  | Se creó una base React + TypeScript + Vite.                            |
+| Primera versión    | Se construyeron la interfaz light, datos, motor mock, torre 3D y escenarios.                                 | Demo con el recorrido contrato → riesgo → colapso → anticipo.          |
+| Validación inicial | Se instalaron dependencias, se ejecutó el proyecto y se probaron vistas y flujos.                            | Se corrigieron problemas de compilación, compatibilidad y física.      |
+| Refinamiento 2D    | A petición del usuario, la torre se sustituyó temporalmente por SVG animado. Se añadió la captura de gastos. | Cada gasto retiraba soporte, con deshacer y actualización de métricas. |
+| Regreso a 3D       | Se restauraron Three.js, React Three Fiber, Drei y Rapier.                                                   | Se conservaron las mejoras de gastos dentro de la experiencia 3D.      |
+| Documentación      | Se actualizó el README y se redactó este documento.                                                          | Guía para usar, entender y continuar el proyecto.                      |
 
 **La versión vigente es 3D.** La versión SVG fue una etapa intermedia, no un modo alternativo seleccionable. No existe selector entre 2D y 3D ni selector de tema.
 
@@ -79,22 +79,22 @@ Los detalles de escenarios se presentan mediante un diálogo nativo: panel later
 
 Las versiones siguientes corresponden a las declaradas en `package.json` al redactar este documento.
 
-| Tecnología | Versión | Responsabilidad |
-| --- | --- | --- |
-| React / React DOM | 19.1.1 | Componentes y estado de la interfaz |
-| TypeScript | 5.9.2 | Tipos y comprobación estática |
-| Vite | 7.3.6 | Desarrollo local y build |
-| Three.js | 0.180.0 | Renderizado 3D |
-| `@react-three/fiber` | 9.3.0 | Integración declarativa entre React y Three.js |
-| `@react-three/drei` | 10.7.6 | `OrbitControls` y `RoundedBox` |
-| `@react-three/rapier` | 2.2.0 | Cuerpos rígidos y colapso físico |
-| Tailwind CSS / plugin Vite | 4.1.13 | Sistema de estilos: clases utilitarias en cada componente, tokens en `@theme` y reglas base en `@layer base` dentro de `src/app/styles.css` |
-| Framer Motion | 12.23.12 | Transiciones de interfaz |
-| Lucide React | 0.468.0 | Iconos |
-| `@fontsource/inter` | 5.2.8 | Tipografía local |
-| Playwright Test | 1.55.1 | Pruebas de navegador |
-| `tsx` | 4.20.5 | Ejecución de pruebas TypeScript con Node |
-| Prettier | Rango `^3.6.2` | Formato de código |
+| Tecnología                 | Versión        | Responsabilidad                                                                                                                             |
+| -------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| React / React DOM          | 19.1.1         | Componentes y estado de la interfaz                                                                                                         |
+| TypeScript                 | 5.9.2          | Tipos y comprobación estática                                                                                                               |
+| Vite                       | 7.3.6          | Desarrollo local y build                                                                                                                    |
+| Three.js                   | 0.180.0        | Renderizado 3D                                                                                                                              |
+| `@react-three/fiber`       | 9.3.0          | Integración declarativa entre React y Three.js                                                                                              |
+| `@react-three/drei`        | 10.7.6         | `OrbitControls` y `RoundedBox`                                                                                                              |
+| `@react-three/rapier`      | 2.2.0          | Cuerpos rígidos y colapso físico                                                                                                            |
+| Tailwind CSS / plugin Vite | 4.1.13         | Sistema de estilos: clases utilitarias en cada componente, tokens en `@theme` y reglas base en `@layer base` dentro de `src/app/styles.css` |
+| Framer Motion              | 12.23.12       | Transiciones de interfaz                                                                                                                    |
+| Lucide React               | 0.468.0        | Iconos                                                                                                                                      |
+| `@fontsource/inter`        | 5.2.8          | Tipografía local                                                                                                                            |
+| Playwright Test            | 1.55.1         | Pruebas de navegador                                                                                                                        |
+| `tsx`                      | 4.20.5         | Ejecución de pruebas TypeScript con Node                                                                                                    |
+| Prettier                   | Rango `^3.6.2` | Formato de código                                                                                                                           |
 
 pnpm es el único gestor versionado (`packageManager` fijado en `package.json`, `pnpm-lock.yaml` es el único lockfile). No debe generarse `package-lock.json` ni `yarn.lock`; ambos están en `.gitignore` como recordatorio de la mezcla de instalaciones que causó ejecutables inconsistentes durante una fase temprana de la sesión.
 
@@ -167,24 +167,24 @@ El motor decide los resultados de la demo; es una función pura sin React ni Thr
 
 ### Responsabilidades por módulo
 
-| Módulo | Responsabilidad actual |
-| --- | --- |
-| [src/app/main.tsx](src/app/main.tsx) | Monta React en `#root`, activa `StrictMode` e importa Inter y `styles.css`. |
-| [src/app/App.tsx](src/app/App.tsx) | Composición: carga de datos (`useBusinessData`), deriva `SimulationOutput` para cada feature y conecta sus eventos. Cabecera, layout del dashboard y pie de página son la única UI propia que le queda. |
-| [src/app/styles.css](src/app/styles.css) | `@import "tailwindcss"`, tokens de color/tipografía en `@theme`, reset y comportamiento de botones/foco en `@layer base`. El resto de la apariencia vive como clases utilitarias en cada componente. |
-| [src/entities/business](src/entities/business) | `Business`, `FinancialTransaction`, `FinancialDataSource`, fixtures y `mockFinancialDataSource` (único punto que entrega negocio y transacciones a la UI). |
-| [src/entities/scenario](src/entities/scenario) | `Scenario`, `ScenarioId` y el catálogo de tres decisiones. |
-| [src/entities/simulation](src/entities/simulation) | `SimulationOutput`, `SimulatedExpense`, trayectorias (`fixtures/projections.ts`) y `simulateFinancialDecision` — el motor, sin dependencias de UI. |
-| [src/features/scenario-simulation](src/features/scenario-simulation) | `useSimulationFlow` (reducer de la máquina de estados del flujo) y la UI de escenarios, progreso y resultado. |
-| [src/features/resilience-tower](src/features/resilience-tower) | `towerPresentation.ts` (view model puro) y la UI 3D: `ResilienceTower`, `TowerScene`, `TowerBlock`, `TowerFallback`, `TowerCard`. |
-| [src/features/expense-simulation](src/features/expense-simulation) | `useExpenses`, `ExpensePanel` y `ExpenseFeedback`. |
-| [src/features/financial-overview](src/features/financial-overview) | Panel de saldo, fragilidad, supervivencia y buffer. |
-| [src/features/onboarding](src/features/onboarding) | Pantalla de introducción. |
-| [src/features/technical-explanation](src/features/technical-explanation) | Diálogo «¿Cómo lo calculamos?». |
-| [src/shared/ui/Modal.tsx](src/shared/ui/Modal.tsx) | Diálogo nativo reutilizable (escenarios y explicación técnica), cierre con Escape, restaura el foco. |
-| [src/shared/lib/formatMoney.ts](src/shared/lib/formatMoney.ts) | Formato de moneda MXN, separado del motor financiero. |
-| [scripts/check-import-boundaries.ts](scripts/check-import-boundaries.ts) | Verifica en CI/local que no haya dependencias inversas ni imports profundos entre slices. |
-| [vite.config.ts](vite.config.ts) | Plugins React/Tailwind, alias `@app`/`@features`/`@entities`/`@shared` y separación de chunks de Three.js y física. |
+| Módulo                                                                   | Responsabilidad actual                                                                                                                                                                                  |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [src/app/main.tsx](src/app/main.tsx)                                     | Monta React en `#root`, activa `StrictMode` e importa Inter y `styles.css`.                                                                                                                             |
+| [src/app/App.tsx](src/app/App.tsx)                                       | Composición: carga de datos (`useBusinessData`), deriva `SimulationOutput` para cada feature y conecta sus eventos. Cabecera, layout del dashboard y pie de página son la única UI propia que le queda. |
+| [src/app/styles.css](src/app/styles.css)                                 | `@import "tailwindcss"`, tokens de color/tipografía en `@theme`, reset y comportamiento de botones/foco en `@layer base`. El resto de la apariencia vive como clases utilitarias en cada componente.    |
+| [src/entities/business](src/entities/business)                           | `Business`, `FinancialTransaction`, `FinancialDataSource`, fixtures y `mockFinancialDataSource` (único punto que entrega negocio y transacciones a la UI).                                              |
+| [src/entities/scenario](src/entities/scenario)                           | `Scenario`, `ScenarioId` y el catálogo de tres decisiones.                                                                                                                                              |
+| [src/entities/simulation](src/entities/simulation)                       | `SimulationOutput`, `SimulatedExpense`, trayectorias (`fixtures/projections.ts`) y `simulateFinancialDecision` — el motor, sin dependencias de UI.                                                      |
+| [src/features/scenario-simulation](src/features/scenario-simulation)     | `useSimulationFlow` (reducer de la máquina de estados del flujo) y la UI de escenarios, progreso y resultado.                                                                                           |
+| [src/features/resilience-tower](src/features/resilience-tower)           | `towerPresentation.ts` (view model puro) y la UI 3D: `ResilienceTower`, `TowerScene`, `TowerBlock`, `TowerFallback`, `TowerCard`.                                                                       |
+| [src/features/expense-simulation](src/features/expense-simulation)       | `useExpenses`, `ExpensePanel` y `ExpenseFeedback`.                                                                                                                                                      |
+| [src/features/financial-overview](src/features/financial-overview)       | Panel de saldo, fragilidad, supervivencia y buffer.                                                                                                                                                     |
+| [src/features/onboarding](src/features/onboarding)                       | Pantalla de introducción.                                                                                                                                                                               |
+| [src/features/technical-explanation](src/features/technical-explanation) | Diálogo «¿Cómo lo calculamos?».                                                                                                                                                                         |
+| [src/shared/ui/Modal.tsx](src/shared/ui/Modal.tsx)                       | Diálogo nativo reutilizable (escenarios y explicación técnica), cierre con Escape, restaura el foco.                                                                                                    |
+| [src/shared/lib/formatMoney.ts](src/shared/lib/formatMoney.ts)           | Formato de moneda MXN, separado del motor financiero.                                                                                                                                                   |
+| [scripts/check-import-boundaries.ts](scripts/check-import-boundaries.ts) | Verifica en CI/local que no haya dependencias inversas ni imports profundos entre slices.                                                                                                               |
+| [vite.config.ts](vite.config.ts)                                         | Plugins React/Tailwind, alias `@app`/`@features`/`@entities`/`@shared` y separación de chunks de Three.js y física.                                                                                     |
 
 **Grado de modularización:** cada capacidad de producto es localizable por nombre y expone una API pública propia; ninguna feature importa los internos de otra. `App.tsx` pasó de 778 a menos de 400 líneas, todas de composición.
 
@@ -192,15 +192,15 @@ El motor decide los resultados de la demo; es una función pura sin React ni Thr
 
 ### Estados explícitos
 
-| Estado (`SimulationFlowState`) | Significado en la interfaz |
-| --- | --- |
-| `intro` | Pantalla inicial y negocio seleccionado |
-| `stable` | Dashboard base; también permite registrar gastos |
-| `scenarioSelected` | Detalles de un escenario abiertos |
-| `simulating` | Secuencia temporal de simulación |
-| `result` | Resultado de un escenario terminado |
-| `mitigating` | Aplicación del anticipo |
-| `recovered` | Resultado posterior a la mitigación |
+| Estado (`SimulationFlowState`) | Significado en la interfaz                       |
+| ------------------------------ | ------------------------------------------------ |
+| `intro`                        | Pantalla inicial y negocio seleccionado          |
+| `stable`                       | Dashboard base; también permite registrar gastos |
+| `scenarioSelected`             | Detalles de un escenario abiertos                |
+| `simulating`                   | Secuencia temporal de simulación                 |
+| `result`                       | Resultado de un escenario terminado              |
+| `mitigating`                   | Aplicación del anticipo                          |
+| `recovered`                    | Resultado posterior a la mitigación              |
 
 **Distinción importante:** `SimulationFlowState` expresa la etapa del flujo, mientras que `SimulationOutput.status` expresa el riesgo financiero. El estado de interfaz `result` también se utiliza al terminar los escenarios de equipo o retraso, aunque su resultado financiero sea «Precaución». Igualmente, gastos manuales pueden volver crítico el resultado mientras el flujo sigue en `stable`. (Este estado se llamaba `critical` antes de la migración de arquitectura; se renombró a `result` en `features/scenario-simulation` precisamente para evitar la confusión con el riesgo financiero «Crítico».)
 
@@ -243,16 +243,16 @@ El reinicio limpia gastos, escenario y progreso, y vuelve al dashboard. Recargar
 
 ### Tipos principales
 
-| Tipo | Campos o propósito |
-| --- | --- |
-| `Business` | Identificador, nombre, propietaria, empleados, saldo y concentración |
-| `FinancialTransaction` | Fecha, monto, dirección, categoría, contraparte, estado y confianza |
-| `Scenario` | Identificador de decisión, título, descripción, monto y detalles |
-| `WeeklyProjection` | Semana, saldo, ingresos y gastos |
-| `TowerChange` | Semana y acción visual: retirar liquidez, agregar ingreso, retrasar ingreso o agregar liquidez |
-| `SimulatedExpense` | Identificador, categoría y monto de un gasto introducido por el usuario |
-| `SimulationOutput` | Métricas, proyecciones, cambios visuales, recomendación, riesgo y acumulado de gastos |
-| `FinancialDataSource` | Métodos asíncronos `getBusiness()` y `getTransactions()` |
+| Tipo                   | Campos o propósito                                                                             |
+| ---------------------- | ---------------------------------------------------------------------------------------------- |
+| `Business`             | Identificador, nombre, propietaria, empleados, saldo y concentración                           |
+| `FinancialTransaction` | Fecha, monto, dirección, categoría, contraparte, estado y confianza                            |
+| `Scenario`             | Identificador de decisión, título, descripción, monto y detalles                               |
+| `WeeklyProjection`     | Semana, saldo, ingresos y gastos                                                               |
+| `TowerChange`          | Semana y acción visual: retirar liquidez, agregar ingreso, retrasar ingreso o agregar liquidez |
+| `SimulatedExpense`     | Identificador, categoría y monto de un gasto introducido por el usuario                        |
+| `SimulationOutput`     | Métricas, proyecciones, cambios visuales, recomendación, riesgo y acumulado de gastos          |
+| `FinancialDataSource`  | Métodos asíncronos `getBusiness()` y `getTransactions()`                                       |
 
 Las transacciones cubren nómina, renta, inventario, servicios, crédito, cobros, impuestos, transporte y mantenimiento. Se generan 40 registros entre septiembre y diciembre de 2026, con importes y estados repetibles. Son fixtures, no un extracto bancario real.
 
@@ -280,13 +280,13 @@ El motor valida que haya transacciones, que el saldo sea finito y que los gastos
 
 ### Resultados base, sin gastos adicionales
 
-| Escenario | Fragilidad | Supervivencia | Buffer recomendado | Saldo mínimo proyectado | Riesgo |
-| --- | ---: | ---: | ---: | ---: | --- |
-| Situación inicial | 31 | 14 semanas | $24,000 | $156,000 | Estable |
-| Contrato y retraso automático | 78 | 7 semanas | $96,000 | −$96,000 | Crítico |
-| Contrato con anticipo del 40% | 43 | 12 semanas | $18,000 | $32,000 | Precaución |
-| Comprar equipo | 49 | 10 semanas | $42,000 | $92,000 | Precaución |
-| Retraso de cliente | 64 | 8 semanas | $72,000 | $4,000 | Precaución |
+| Escenario                     | Fragilidad | Supervivencia | Buffer recomendado | Saldo mínimo proyectado | Riesgo     |
+| ----------------------------- | ---------: | ------------: | -----------------: | ----------------------: | ---------- |
+| Situación inicial             |         31 |    14 semanas |            $24,000 |                $156,000 | Estable    |
+| Contrato y retraso automático |         78 |     7 semanas |            $96,000 |                −$96,000 | Crítico    |
+| Contrato con anticipo del 40% |         43 |    12 semanas |            $18,000 |                 $32,000 | Precaución |
+| Comprar equipo                |         49 |    10 semanas |            $42,000 |                 $92,000 | Precaución |
+| Retraso de cliente            |         64 |     8 semanas |            $72,000 |                  $4,000 | Precaución |
 
 Todos los importes son MXN. El dashboard también muestra saldo inicial de $280,000, nómina de $72,000 en seis días y concentración del principal cliente de 42%.
 
@@ -325,15 +325,15 @@ Estas fórmulas son reglas de demostración, no un modelo calibrado ni una recom
 
 Agregar $24,000, luego $72,000 y después $95,000, sin escenario predefinido, produce:
 
-| Métrica | Resultado |
-| --- | ---: |
-| Gastos acumulados | $191,000 |
-| Saldo disponible | $89,000 |
-| Bloques retirados | 8 |
-| Fragilidad | 95 |
-| Supervivencia | 4 semanas |
-| Buffer recomendado | $52,650 |
-| Saldo mínimo proyectado | −$35,000 |
+| Métrica                 | Resultado |
+| ----------------------- | --------: |
+| Gastos acumulados       |  $191,000 |
+| Saldo disponible        |   $89,000 |
+| Bloques retirados       |         8 |
+| Fragilidad              |        95 |
+| Supervivencia           | 4 semanas |
+| Buffer recomendado      |   $52,650 |
+| Saldo mínimo proyectado |  −$35,000 |
 
 Aunque todavía hay saldo disponible, la proyección presenta un faltante futuro. Esa diferencia es la razón narrativa para el colapso.
 
@@ -395,12 +395,12 @@ Cambiar una regla financiera o un color no requiere tocar `TowerScene.tsx`/`Towe
 - Cámara en perspectiva y `OrbitControls`, con desplazamiento lateral deshabilitado y zoom limitado.
 - DPR limitado al rango 1–1.5 y mapa de sombras de 1024 × 1024.
 
-| Color | Significado |
-| --- | --- |
-| Azul | Liquidez disponible |
-| Verde | Cobros esperados |
-| Gris | Gastos operativos |
-| Coral | Obligaciones |
+| Color    | Significado                   |
+| -------- | ----------------------------- |
+| Azul     | Liquidez disponible           |
+| Verde    | Cobros esperados              |
+| Gris     | Gastos operativos             |
+| Coral    | Obligaciones                  |
 | Amarillo | Cobros retrasados o inciertos |
 
 Los detalles al tocar un bloque son representativos: semana, concepto, importe y estado. No están enlazados uno a uno con las transacciones mock.
@@ -530,10 +530,10 @@ PLAYWRIGHT_BASE_URL=http://localhost:5174 pnpm test:e2e
 
 La configuración define dos proyectos:
 
-| Proyecto | Viewport | Configuración |
-| --- | --- | --- |
-| `desktop` | 1440 × 1100 | Navegador de escritorio |
-| `mobile` | 390 × 844 | Emulación móvil e interacción táctil |
+| Proyecto  | Viewport    | Configuración                        |
+| --------- | ----------- | ------------------------------------ |
+| `desktop` | 1440 × 1100 | Navegador de escritorio              |
+| `mobile`  | 390 × 844   | Emulación móvil e interacción táctil |
 
 Cuatro casos se ejecutan en ambos proyectos, para un total de ocho:
 
@@ -552,17 +552,17 @@ Esta actualización documental no ejecuta de nuevo la suite: describe las valida
 
 ## 16. Problemas encontrados y resueltos
 
-| Problema | Resolución aplicada |
-| --- | --- |
-| Versiones de React y librerías 3D con rangos incompatibles | Se fijaron versiones compatibles para la demo. |
-| Framer Motion resolvía una versión incompatible de `motion-dom` | Overrides: `motion-dom` 12.23.12 y `motion-utils` 12.23.6. |
-| Diferencias entre instalaciones npm y pnpm | Se conservaron las restricciones en ambos gestores y se sincronizaron lockfiles. |
-| Scripts de instalación de esbuild y Tailwind pendientes en pnpm | Se habilitaron en `pnpm-workspace.yaml`. |
-| Operaciones físicas sobre referencias retiradas | Se ajustó el ciclo de vida de cuerpos y se verificó validez y tipo dinámico antes de aplicar movimiento. |
-| Colapso poco visible | Se ajustaron soporte, velocidades y duración de la caída. |
-| Fallback de WebGL no visible en algunos casos | Se añadió detección previa y una alternativa textual fuera del canvas. |
-| Ejecutable Playwright inconsistente tras mezclar instalaciones | `test:e2e` utiliza directamente el CLI de `@playwright/test`. |
-| Cambios de dependencias y servidores locales antiguos | Se reinició Vite con la instalación vigente y se repitieron verificaciones. |
+| Problema                                                        | Resolución aplicada                                                                                      |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Versiones de React y librerías 3D con rangos incompatibles      | Se fijaron versiones compatibles para la demo.                                                           |
+| Framer Motion resolvía una versión incompatible de `motion-dom` | Overrides: `motion-dom` 12.23.12 y `motion-utils` 12.23.6.                                               |
+| Diferencias entre instalaciones npm y pnpm                      | Se conservaron las restricciones en ambos gestores y se sincronizaron lockfiles.                         |
+| Scripts de instalación de esbuild y Tailwind pendientes en pnpm | Se habilitaron en `pnpm-workspace.yaml`.                                                                 |
+| Operaciones físicas sobre referencias retiradas                 | Se ajustó el ciclo de vida de cuerpos y se verificó validez y tipo dinámico antes de aplicar movimiento. |
+| Colapso poco visible                                            | Se ajustaron soporte, velocidades y duración de la caída.                                                |
+| Fallback de WebGL no visible en algunos casos                   | Se añadió detección previa y una alternativa textual fuera del canvas.                                   |
+| Ejecutable Playwright inconsistente tras mezclar instalaciones  | `test:e2e` utiliza directamente el CLI de `@playwright/test`.                                            |
+| Cambios de dependencias y servidores locales antiguos           | Se reinició Vite con la instalación vigente y se repitieron verificaciones.                              |
 
 Las auditorías de dependencias ejecutadas después de los ajustes reportaron cero vulnerabilidades en ese momento. Esto es un resultado histórico de la sesión, no una garantía permanente.
 

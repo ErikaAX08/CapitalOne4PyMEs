@@ -52,7 +52,11 @@ test("lost blocks: simulating ramps up scenario loss with progress, result appli
     reduced: false,
     instantResult: false,
   });
-  assert.equal(half.lost, 2, "4 removeLiquidity blocks at half ramp -> floor(4*0.5)=2");
+  assert.equal(
+    half.lost,
+    2,
+    "4 removeLiquidity blocks at half ramp -> floor(4*0.5)=2",
+  );
   const full = computeTowerViewModel({
     state: "result",
     progress: 1,
@@ -70,7 +74,11 @@ test("lost blocks: simulating ramps up scenario loss with progress, result appli
     reduced: false,
     instantResult: false,
   });
-  assert.equal(idle.lost, 0, "no scenario loss is applied before simulating starts");
+  assert.equal(
+    idle.lost,
+    0,
+    "no scenario loss is applied before simulating starts",
+  );
 });
 
 test("expense blocks and scenario loss combine but cap at 35", () => {
@@ -82,7 +90,11 @@ test("expense blocks and scenario loss combine but cap at 35", () => {
     reduced: false,
     instantResult: false,
   });
-  assert.equal(vm.lost, 35, "34 expense blocks + 4 scenario blocks caps at 35, not 38");
+  assert.equal(
+    vm.lost,
+    35,
+    "34 expense blocks + 4 scenario blocks caps at 35, not 38",
+  );
 });
 
 test("collapse from expenses alone does not require Crítico status", () => {
@@ -102,7 +114,10 @@ test("collapse from expenses alone does not require Crítico status", () => {
 });
 
 test("collapse from a scenario requires Crítico status and being at/near the result", () => {
-  const critical = output({ status: "Crítico", minimumProjectedBalance: -96000 });
+  const critical = output({
+    status: "Crítico",
+    minimumProjectedBalance: -96000,
+  });
   assert.equal(
     computeTowerViewModel({
       state: "simulating",
@@ -216,7 +231,8 @@ test("blockColors: mitigating/recovered weeks 1-4 turn liquidity-colored (0) reg
     reduced: false,
     instantResult: false,
   });
-  for (let index = 0; index < 12; index++) assert.equal(vm.blockColors[index], 0);
+  for (let index = 0; index < 12; index++)
+    assert.equal(vm.blockColors[index], 0);
 });
 
 test("description reports collapsed vs the engine status, lost blocks and survival weeks", () => {

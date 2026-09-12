@@ -1,4 +1,10 @@
-import { Component, Suspense, useEffect, useState, type ReactNode } from "react";
+import {
+  Component,
+  Suspense,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
 import { formatMoney } from "@shared";
@@ -75,9 +81,7 @@ export function ResilienceTower({
       {webgl ? (
         <SceneBoundary key={resetKey}>
           <Suspense
-            fallback={
-              <TowerFallback>Preparando tu torre 3D…</TowerFallback>
-            }
+            fallback={<TowerFallback>Preparando tu torre 3D…</TowerFallback>}
           >
             <TowerScene
               resetKey={resetKey}

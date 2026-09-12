@@ -24,7 +24,11 @@ import {
 } from "@features/expense-simulation";
 type BusinessDataState =
   | { status: "loading" }
-  | { status: "ready"; business: Business; transactions: FinancialTransaction[] }
+  | {
+      status: "ready";
+      business: Business;
+      transactions: FinancialTransaction[];
+    }
   | { status: "empty" }
   | { status: "error" };
 const EMPTY_OUTPUT: SimulationOutput = {
@@ -184,8 +188,7 @@ export default function App() {
           ...output,
           fragilityScore: Math.round(
             starting.fragilityScore +
-              (output.fragilityScore - starting.fragilityScore) *
-                flow.progress,
+              (output.fragilityScore - starting.fragilityScore) * flow.progress,
           ),
           survivalWeeks: Math.round(
             starting.survivalWeeks +
