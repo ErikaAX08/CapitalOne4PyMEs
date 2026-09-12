@@ -24,7 +24,7 @@ Los escenarios de contrato, compra de equipo y retraso de cliente siguen disponi
 
 ## Arquitectura
 
-Organización por features, con dirección de dependencia `app -> features -> entities -> shared` (ver `PLAN_MIGRACION_ARQUITECTURA.md` y `DOCUMENTACION_SESION.md` para el detalle completo):
+Organización por features, con dirección de dependencia `app -> features -> entities -> shared` (ver `AGENTS.md` para el detalle completo):
 
 - `src/app/`: composición. `App.tsx` carga datos, conecta el flujo de simulación y distribuye props; `main.tsx` monta React; `styles.css` es el único punto de entrada de Tailwind (tokens en `@theme`, reset en `@layer base`).
 - `src/features/`: una carpeta por capacidad de producto — `onboarding`, `financial-overview`, `expense-simulation`, `scenario-simulation` (incluye el reducer `useSimulationFlow`), `resilience-tower` (incluye el view model puro `towerPresentation.ts` y el runtime 3D) y `technical-explanation`.
@@ -50,7 +50,3 @@ pnpm test:e2e
 Las pruebas de navegador requieren Vite activo. Cubren escritorio y teléfono, registro de gastos, colapso, deshacer, reinicio, contrato y anticipo, escenarios alternativos y funcionamiento sin WebGL. Permiten `PLAYWRIGHT_BASE_URL` y `PLAYWRIGHT_EXECUTABLE_PATH` para reutilizar otro puerto o un navegador instalado.
 
 `prefers-reduced-motion` y «Ver resultado» permiten evitar las animaciones. Inter y todos los recursos se sirven localmente. Los overrides de Motion se declaran en `package.json` y `pnpm-workspace.yaml` para una instalación reproducible con pnpm.
-
-## Documentación de la sesión
-
-Consulta [DOCUMENTACION_SESION.md](DOCUMENTACION_SESION.md) para conocer la evolución del proyecto, arquitectura, módulos, reglas mock, torre 3D, validaciones e integraciones pendientes.

@@ -4,7 +4,7 @@
 
 Resilia es una demo React + TypeScript + Vite que permite explorar el impacto de decisiones y gastos simulados sobre la liquidez de una PyME. La torre 3D es una representación visual; los cálculos actuales son deterministas y mock, no predicciones financieras reales.
 
-Lee `DOCUMENTACION_SESION.md` antes de cambiar comportamiento. Contiene el contrato funcional, resultados de referencia, accesibilidad, física 3D y límites del producto. `PLAN_MIGRACION_ARQUITECTURA.md` describe la migración ya completada — consúltalo para el razonamiento de cada fase, pero el árbol real (`src/app`, `src/features`, `src/entities`, `src/shared`) es la fuente de verdad sobre la estructura vigente.
+El árbol real (`src/app`, `src/features`, `src/entities`, `src/shared`) es la fuente de verdad sobre la estructura vigente.
 
 ## Estado actual
 
@@ -53,7 +53,7 @@ Añade `typecheck`, `test`, `test:e2e`, `check:boundaries`, `format` y `format:c
 - No cambies las cifras y fórmulas documentadas como parte de una refactorización.
 - El estado de flujo (`SimulationFlowState`, en `features/scenario-simulation`) y el estado financiero (`SimulationOutput.status`) son conceptos distintos; ya no comparten el nombre `critical` (el de flujo es `result`).
 - No agregues secretos ni credenciales al cliente. Usa `.env.example` solo para nombres de variables sin valores sensibles.
-- Las etiquetas de semana de la torre y el subtítulo "Sin afectar tu negocio real" ahora son visibles (corregido en DOCUMENTACION_SESION.md §16; antes estaban ocultos por CSS heredado de la etapa 2D). Si descubres otro comportamiento heredado similar, documéntalo y pregunta antes de "arreglarlo" dentro de un refactor no relacionado.
+- Las etiquetas de semana de la torre y el subtítulo "Sin afectar tu negocio real" ahora son visibles (antes estaban ocultos por CSS heredado de la etapa 2D). Si descubres otro comportamiento heredado similar, documéntalo y pregunta antes de "arreglarlo" dentro de un refactor no relacionado.
 
 ## Forma de trabajar
 
