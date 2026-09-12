@@ -1,97 +1,91 @@
 # AGENTS.md
 
-## Propósito del repositorio
+Conventions for the whole repository. Area-specific rules live in the
+corresponding area file — see [`apps/web/AGENTS.md`](apps/web/AGENTS.md) for the
+front-end, which has its own architecture rules that take precedence there.
 
-Resilia es una demo React + TypeScript + Vite que permite explorar el impacto de decisiones y gastos simulados sobre la liquidez de una PyME. La torre 3D es una representación visual; los cálculos actuales son deterministas y mock, no predicciones financieras reales.
+## Repository purpose
 
-El árbol real (`src/app`, `src/features`, `src/entities`, `src/shared`) es la fuente de verdad sobre la estructura vigente.
+A structural fragility engine for Mexican SMEs. It turns a business decision
+with user-supplied numbers into: weeks of survival, the first uncovered
+obligation, a tension attribution per factor, and the minimum reinforcement that
+restores stability.
 
-## Estado actual
+Read `docs/prd-mvp.md` for scope and `docs/architecture.md` for the design before
+making structural changes.
 
-- Arquitectura por features con dirección `app -> features -> entities -> shared`, verificada por `pnpm check:boundaries`.
-- pnpm es el único gestor, con `packageManager` fijado y un solo lockfile.
-- Estilos con Tailwind CSS v4 (clases utilitarias en cada componente); `src/app/styles.css` solo tiene `@theme`, `@layer base` y el reset de `prefers-reduced-motion`. No hay CSS por feature ni hoja monolítica.
-- Verifica el árbol real (`find src -maxdepth 2`) antes de asumir rutas: este documento se actualiza, pero el código manda.
+## Language policy
 
-## Gestor de paquetes
+- **English** for code, identifiers, file and directory names, comments, commit
+  messages, new documents, and the JSON contracts under `contracts/`.
+- **Spanish** for user-facing copy — every string rendered in the interface.
 
-Usa pnpm para toda operación:
+The contract is the boundary: `collection_delay_days` in JSON, "Retraso en
+cobranza" on screen. Never mix the two inside one layer.
+
+## Layout
+
+| Path | Contents | Language |
+| --- | --- | --- |
+| `apps/web/` | Front-end, Vite + React + TypeScript | TypeScript |
+| `services/domain/` | Bounded contexts `scenario` and `risk` | Go |
+| `services/engine/` | Cash calendar, Monte Carlo, tension sweep | Python |
+| `contracts/` | JSON schemas shared across services | JSON Schema |
+| `infra/` | Terraform modules and environments | HCL |
+| `docs/` | Product and architecture documents | Markdown |
+
+## Rules that hold everywhere
+
+- **Money is an integer count of cents.** Never a float, and never a float
+  crossing a service boundary.
+- **The engine is deterministic.** A fixed seed plus fixed inputs must produce
+  byte-identical output. Reproducibility is what the project's credibility rests
+  on; do not introduce unseeded randomness.
+- **An unknown balance is never zero.** It is `unknown`, and it forces
+  reconciliation.
+- **Contracts change in `contracts/` first**, then in the services that read
+  them. A schema mismatch must fail the build, never degrade silently.
+- **No number reaches the screen without an engine run behind it.** Do not
+  hand-write figures into fixtures or components.
+- **No secrets in the repository.** Use `.env.example` for variable names only.
+
+## Toolchains
+
+The repository root is language-neutral: it holds no package manifest and no
+dependency manager. Each area declares its own dependencies and is run from its
+own directory.
+
+| Area | Manifest | Manager |
+| --- | --- | --- |
+| `apps/web` | `package.json` | pnpm, exclusively |
+| `services/domain` | `go.mod` | Go modules |
+| `services/engine` | `pyproject.toml` | pip / uv |
+| `infra` | `*.tf` | Terraform |
+
+Do not add a manifest, lockfile or `node_modules` at the root. A single
+JavaScript package does not justify a workspace, and a workspace would make a
+polyglot repository look JavaScript-first.
+
+For the front-end, use pnpm only. Never run `npm install`, never create
+`package-lock.json`, never hand-edit `pnpm-lock.yaml`. pnpm 11 reads settings
+such as `overrides` from `apps/web/pnpm-workspace.yaml`, not from the `pnpm`
+field in `package.json`.
 
 ```sh
+cd apps/web
 pnpm install
 pnpm dev
-pnpm test
-pnpm build
-pnpm test:e2e
-```
-
-No ejecutes `npm install`, no generes `package-lock.json` y no edites manualmente `pnpm-lock.yaml`. Si cambian dependencias, usa el comando pnpm correspondiente y versiona el lockfile resultante.
-
-Añade `typecheck`, `test`, `test:e2e`, `check:boundaries`, `format` y `format:check` a `package.json` si algún día faltan; hoy todos existen.
-
-## Reglas de arquitectura
-
-- `app` (`src/app/`) compone e inicializa; no contiene lógica financiera ni implementaciones extensas de features.
-- `features` (`src/features/<nombre>/`) se organiza por capacidad de producto, no por tipo técnico global.
-- `entities` (`src/entities/<nombre>/`) contiene contratos, fixtures, fuentes de datos y lógica pura del dominio.
-- `shared` (`src/shared/`) solo contiene piezas agnósticas al dominio y reutilizadas de verdad (hoy: `Modal`, `formatMoney`).
-- Dirección permitida: `app -> features -> entities -> shared`. `pnpm check:boundaries` la verifica; ejecútalo si tocas imports entre slices.
-- No hagas deep imports a otra slice; importa desde su `index.ts` público (usa los alias `@app`, `@features/<nombre>`, `@entities/<nombre>`, `@shared` para cruzar de slice — imports relativos solo dentro de la misma slice).
-- Una feature no importa internals de otra feature; una entidad puede importar otra entidad y `shared`, pero nunca una feature o `app`.
-- No introduzcas router, store global, framework arquitectónico o repositorios genéricos sin un requisito concreto.
-- Mantén `simulateFinancialDecision` (en `entities/simulation`) puro y determinista.
-- `formatMoney` vive en `shared/lib/`, no en el motor ni en ninguna feature.
-- La UI consume negocio/transacciones mediante `mockFinancialDataSource` (en `entities/business`), no importando fixtures directamente. Los escenarios (`entities/scenario`) son la excepción: no tienen fuente de datos async, se importan como fixture porque no hay un adaptador equivalente a Nessie para ellos.
-- Estilos: usa clases utilitarias de Tailwind directamente en el JSX del componente. Reserva `@layer base` en `src/app/styles.css` para resets de elemento (botones, encabezados, foco) que de otra forma habría que repetir en cada componente; no le añadas ahí estilos de una sola feature.
-
-## Contratos que se deben preservar
-
-- Todos los datos son simulados y se presentan como tales.
-- La torre tiene 12 niveles y 36 bloques; la física no calcula el riesgo.
-- Deben mantenerse teclado, movimiento reducido, fallback sin WebGL y diseño responsive.
-- Los recursos de la demo permanecen locales; no agregues llamadas externas sin autorización.
-- No cambies las cifras y fórmulas documentadas como parte de una refactorización.
-- El estado de flujo (`SimulationFlowState`, en `features/scenario-simulation`) y el estado financiero (`SimulationOutput.status`) son conceptos distintos; ya no comparten el nombre `critical` (el de flujo es `result`).
-- No agregues secretos ni credenciales al cliente. Usa `.env.example` solo para nombres de variables sin valores sensibles.
-- Las etiquetas de semana de la torre y el subtítulo "Sin afectar tu negocio real" ahora son visibles (antes estaban ocultos por CSS heredado de la etapa 2D). Si descubres otro comportamiento heredado similar, documéntalo y pregunta antes de "arreglarlo" dentro de un refactor no relacionado.
-
-## Forma de trabajar
-
-1. Inspecciona `package.json`, el árbol real y los cambios existentes antes de editar.
-2. Haz migraciones verticales y pequeñas; evita mover todo el repositorio en un solo cambio.
-3. Primero caracteriza comportamiento, luego mueve código y finalmente mejora diseño interno.
-4. Conserva cambios del usuario y no reformatees archivos no relacionados.
-5. Coloca pruebas junto al dominio o feature que protegen; reserva `tests/` para E2E.
-6. No uses snapshots grandes como sustituto de aserciones de comportamiento.
-7. Actualiza imports y pruebas en el mismo cambio que mueve un módulo.
-8. Si una fase revela un bug preexistente, documéntalo y sepáralo de la refactorización.
-
-## Validación mínima
-
-Antes de cerrar un cambio de código, ejecuta en proporción al alcance:
-
-```sh
 pnpm typecheck
 pnpm test
-pnpm build
-```
-
-Si tocaste imports entre slices:
-
-```sh
 pnpm check:boundaries
 ```
 
-Para cambios de flujo, accesibilidad, layout, WebGL o torre:
+## Working style
 
-```sh
-pnpm test:e2e
-```
-
-Los E2E esperan un servidor accesible en `http://localhost:5173` salvo que se defina `PLAYWRIGHT_BASE_URL`. `PLAYWRIGHT_EXECUTABLE_PATH` permite reutilizar un Chromium instalado.
-
-No afirmes que una validación pasó si no se ejecutó en la sesión actual. Reporta advertencias y limitaciones, en especial las verificaciones visuales de la física.
-
-## Criterio para nuevas abstracciones
-
-Extrae una abstracción cuando tenga un dueño claro, reduzca acoplamiento real o habilite una segunda implementación conocida. No crees carpetas vacías ni capas especulativas para hacer coincidir el árbol con el plan. El árbol objetivo es una guía de responsabilidades, no una cuota de archivos.
+1. Inspect the real tree before assuming paths. This document is maintained, but
+   the code is the source of truth.
+2. Keep changes scoped to what was asked. Do not refactor adjacent code, rename
+   things, or "fix" inherited behaviour inside an unrelated change — document it
+   and ask.
+3. Do not add a router, global store, architectural framework, or generic
+   repository layer without a concrete requirement.
