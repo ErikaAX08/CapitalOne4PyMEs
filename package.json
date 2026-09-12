@@ -3,11 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=20.19.0",
+    "pnpm": ">=11.0.0"
+  },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
-    "test": "node --import tsx --test src/lib/*.test.ts",
-    "test:e2e": "node node_modules/@playwright/test/cli.js test"
+    "typecheck": "tsc -b",
+    "test": "node --import tsx --test 'src/**/*.test.ts'",
+    "test:e2e": "playwright test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",

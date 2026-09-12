@@ -4,14 +4,14 @@ Dashboard light para explorar la liquidez de Distribuidora Luna antes de tomar u
 
 ## Ejecutar
 
-Requiere Node.js 20.19+ o 22.12+.
+Requiere Node.js 20.19+ o 22.12+ y pnpm (único gestor de paquetes admitido).
 
 ```sh
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-También se admite `pnpm install` y `pnpm dev`. Abrir la URL que imprime Vite. `npm run build` genera la versión estática en `dist/`.
+Abrir la URL que imprime Vite. `pnpm build` genera la versión estática en `dist/`.
 
 ## Simular gastos
 
@@ -36,14 +36,15 @@ Los escenarios de contrato, compra de equipo y retraso de cliente siguen disponi
 ## Verificar
 
 ```sh
-npm test
-npx playwright install chromium
-npm run test:e2e
+pnpm typecheck
+pnpm test
+pnpm exec playwright install chromium
+pnpm test:e2e
 ```
 
 Las pruebas de navegador requieren Vite activo. Cubren escritorio y teléfono, registro de gastos, colapso, deshacer, reinicio, contrato y anticipo, escenarios alternativos y funcionamiento sin WebGL. Permiten `PLAYWRIGHT_BASE_URL` y `PLAYWRIGHT_EXECUTABLE_PATH` para reutilizar otro puerto o un navegador instalado.
 
-`prefers-reduced-motion` y «Ver resultado» permiten evitar las animaciones. Inter y todos los recursos se sirven localmente. Los overrides de Motion se conservan en ambos gestores para una instalación reproducible.
+`prefers-reduced-motion` y «Ver resultado» permiten evitar las animaciones. Inter y todos los recursos se sirven localmente. Los overrides de Motion se declaran en `package.json` y `pnpm-workspace.yaml` para una instalación reproducible con pnpm.
 
 ## Documentación de la sesión
 
