@@ -1,28 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  ArrowRight,
-  ArrowUpRight,
-  Building2,
   ChevronRight,
   CircleHelp,
-  Clock3,
   Hand,
   Layers3,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
-  TrendingUp,
-  TriangleAlert,
-  Truck,
 } from "lucide-react";
 import { scenarios } from "./entities/scenario";
 import type { Business, FinancialTransaction } from "./entities/business";
 import { mockFinancialDataSource } from "./entities/business";
 import type { SimulationOutput } from "./entities/simulation";
 import { simulateFinancialDecision } from "./entities/simulation";
-import { formatMoney, Modal } from "./shared";
-import { useSimulationFlow } from "./features/scenario-simulation";
+import { formatMoney } from "./shared";
+import {
+  useSimulationFlow,
+  ScenarioList,
+  ScenarioDialog,
+  SimulationProgress,
+  SimulationResult,
+} from "./features/scenario-simulation";
 import { IntroScreen } from "./features/onboarding";
 import { FinancialOverview } from "./features/financial-overview";
 import { TechnicalExplanationDialog } from "./features/technical-explanation";
@@ -384,191 +382,57 @@ export default function App() {
                   <span className="subtle">Sin afectar tu negocio real</span>
                 </div>
                 {flow.state === "simulating" || flow.state === "mitigating" ? (
-                  <div className="simulation" aria-live="polite">
-                    <div className="simulation-title">
-                      <Sparkles size={20} />
-                      <strong>
-                        {flow.state === "mitigating"
-                          ? "Un anticipo cambia la historia"
-                          : flow.scenario?.title}
-                      </strong>
-                      <button
-                        className="text-button"
-                        onClick={() =>
-                          dispatch({
-                            type:
-                              flow.state === "mitigating"
-                                ? "FINISH_MITIGATION"
-                                : "SHOW_RESULT",
-                            skip: true,
-                          })
-                        }
-                      >
-                        Ver resultado <ArrowRight size={15} />
-                      </button>
-                    </div>
-                    <p>
-                      {flow.state === "mitigating"
-                        ? "El 40% de anticipo refuerza las primeras semanas."
-                        : flow.scenario?.id === "contract"
-                          ? phase
-                          : flow.progress < 0.6
-                            ? "Proyectamos cobros y obligaciones de las próximas semanas…"
-                            : "Evaluamos el efecto sobre tu liquidez."}
-                    </p>
-                    <div className="progress-track">
-                      <div style={{ width: `${flow.progress * 100}%` }} />
-                    </div>
-                    <div className="timeline">
-                      <span>01 · Decisión</span>
-                      <span>02 · Flujo de caja</span>
-                      <span>03 · Estabilidad</span>
-                    </div>
-                  </div>
+                  <SimulationProgress
+                    mitigating={flow.state === "mitigating"}
+                    scenarioTitle={flow.scenario?.title}
+                    isContract={flow.scenario?.id === "contract"}
+                    phase={phase}
+                    progress={flow.progress}
+                    onSkip={() =>
+                      dispatch({
+                        type:
+                          flow.state === "mitigating"
+                            ? "FINISH_MITIGATION"
+                            : "SHOW_RESULT",
+                        skip: true,
+                      })
+                    }
+                  />
                 ) : flow.state === "result" || flow.state === "recovered" ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`result ${flow.state === "recovered" && output.minimumProjectedBalance >= 0 ? "recovered" : ""}`}
-                    aria-live="polite"
-                  >
-                    <div className="result-title">
-                      {flow.state === "recovered" ? (
-                        <ShieldCheck size={22} />
-                      ) : (
-                        <TriangleAlert size={22} />
-                      )}
-                      <h3>
-                        {flow.state === "recovered"
-                          ? output.minimumProjectedBalance < 0
-                            ? "El anticipo aún no cubre tus gastos"
-                            : "Una decisión más resiliente"
-                          : flow.scenario?.id === "contract"
-                            ? "Rentable no siempre significa sostenible"
-                            : "Así cambia tu estabilidad"}
-                      </h3>
-                      <span
-                        className={`status ${output.status === "Crítico" ? "danger" : "warning"}`}
-                      >
-                        {output.status}
-                      </span>
-                    </div>
-                    <p>
-                      {flow.state === "recovered"
-                        ? output.recommendation
-                        : flow.scenario?.id === "contract"
-                          ? "El contrato es rentable, pero tu negocio podría quedarse sin efectivo antes de cobrarlo."
-                          : output.recommendation}
-                    </p>
-                    <div className="result-metrics">
-                      <span>
-                        Fragilidad
-                        <strong>
-                          {flow.state === "recovered"
-                            ? beforeMitigation.fragilityScore
-                            : starting.fragilityScore}{" "}
-                          → {output.fragilityScore}
-                        </strong>
-                      </span>
-                      <span>
-                        Supervivencia
-                        <strong>
-                          {flow.state === "recovered"
-                            ? beforeMitigation.survivalWeeks
-                            : starting.survivalWeeks}{" "}
-                          → {output.survivalWeeks} semanas
-                        </strong>
-                      </span>
-                      <span>
-                        {flow.state === "recovered"
-                          ? "Buffer restante"
-                          : "Saldo mínimo proyectado"}
-                        <strong>
-                          {formatMoney(
-                            flow.state === "recovered"
-                              ? output.recommendedBuffer
-                              : output.minimumProjectedBalance,
-                          )}{" "}
-                          MXN
-                        </strong>
-                      </span>
-                      {output.criticalWeek && (
-                        <span>
-                          Semana crítica
-                          <strong>Semana {output.criticalWeek}</strong>
-                        </span>
-                      )}
-                    </div>
-                    {flow.state !== "recovered" && (
-                      <div className="recommendation">
-                        <Sparkles size={19} />
-                        <div>
-                          <strong>Tu siguiente mejor paso</strong>
-                          <p>{output.recommendation}</p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="result-actions">
-                      {flow.scenario?.id === "contract" &&
-                        flow.state === "result" && (
-                          <button
-                            className="primary"
-                            onClick={() =>
-                              dispatch({ type: "START_MITIGATION" })
-                            }
-                          >
-                            Aplicar anticipo del 40% <ArrowRight size={17} />
-                          </button>
-                        )}
-                      <button className="secondary" onClick={reset}>
-                        <RotateCcw size={16} /> Reiniciar simulación
-                      </button>
-                    </div>
-                  </motion.div>
+                  <SimulationResult
+                    recovered={flow.state === "recovered"}
+                    isContract={flow.scenario?.id === "contract"}
+                    status={output.status}
+                    minimumProjectedBalance={output.minimumProjectedBalance}
+                    recommendedBuffer={output.recommendedBuffer}
+                    recommendation={output.recommendation}
+                    fragilityBefore={
+                      flow.state === "recovered"
+                        ? beforeMitigation.fragilityScore
+                        : starting.fragilityScore
+                    }
+                    fragilityAfter={output.fragilityScore}
+                    survivalBefore={
+                      flow.state === "recovered"
+                        ? beforeMitigation.survivalWeeks
+                        : starting.survivalWeeks
+                    }
+                    survivalAfter={output.survivalWeeks}
+                    criticalWeek={output.criticalWeek}
+                    canMitigate={
+                      flow.scenario?.id === "contract" &&
+                      flow.state === "result"
+                    }
+                    onMitigate={() => dispatch({ type: "START_MITIGATION" })}
+                    onReset={reset}
+                  />
                 ) : (
-                  <div className="scenario-grid">
-                    {scenarios.map((s, i) => (
-                      <button
-                        className={`scenario-card ${i === 0 ? "featured" : ""}`}
-                        key={s.id}
-                        onClick={() =>
-                          dispatch({ type: "SELECT_SCENARIO", scenario: s })
-                        }
-                      >
-                        <div className="scenario-top">
-                          <span className={`scenario-icon icon-${i}`}>
-                            {i === 0 ? (
-                              <TrendingUp size={21} />
-                            ) : i === 1 ? (
-                              <Truck size={21} />
-                            ) : (
-                              <Clock3 size={21} />
-                            )}
-                          </span>
-                          {i === 0 && (
-                            <span className="scenario-tag">
-                              Pruébalo primero
-                            </span>
-                          )}
-                          <ArrowUpRight size={18} />
-                        </div>
-                        <h3>{s.title}</h3>
-                        <p>{s.description}</p>
-                        <div className="scenario-bottom">
-                          <span>
-                            {i === 0
-                              ? "Inversión"
-                              : i === 1
-                                ? "Pago inicial"
-                                : "Cobro afectado"}
-                          </span>
-                          <strong>
-                            {formatMoney(s.amount)} <ChevronRight size={15} />
-                          </strong>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                  <ScenarioList
+                    scenarios={scenarios}
+                    onSelect={(s) =>
+                      dispatch({ type: "SELECT_SCENARIO", scenario: s })
+                    }
+                  />
                 )}
               </section>
             </div>
@@ -583,43 +447,11 @@ export default function App() {
         )}
       </AnimatePresence>
       {flow.state === "scenarioSelected" && flow.scenario && (
-        <Modal
-          title={flow.scenario.title}
+        <ScenarioDialog
+          scenario={flow.scenario}
           onClose={() => dispatch({ type: "CLOSE_SCENARIO" })}
-        >
-          <p>{flow.scenario.description}</p>
-          <div className="sheet-business">
-            <Building2 size={19} /> Distribuidora Luna <span>MXN</span>
-          </div>
-          <dl>
-            {flow.scenario.details.map(([label, value]) => (
-              <div key={label}>
-                <dt>{label}</dt>
-                <dd>{value}</dd>
-              </div>
-            ))}
-          </dl>
-          {flow.scenario.id === "contract" && (
-            <div className="sheet-note">
-              <TriangleAlert size={20} />
-              <p>
-                El inventario y la nómina se pagan antes de cobrar. La
-                simulación también probará un retraso de 30 días de tu cliente
-                principal.
-              </p>
-            </div>
-          )}
-          <p className="fine-print">
-            Cifras ilustrativas. El margen considera otros costos del contrato;
-            la inversión inicial no equivale al costo total.
-          </p>
-          <button className="primary full" onClick={simulate}>
-            Simular decisión <ArrowRight size={18} />
-          </button>
-          <span className="sheet-time">
-            <Clock3 size={14} /> 8 segundos para ver una nueva perspectiva
-          </span>
-        </Modal>
+          onSimulate={simulate}
+        />
       )}
       {technical && (
         <TechnicalExplanationDialog onClose={() => setTechnical(false)} />
