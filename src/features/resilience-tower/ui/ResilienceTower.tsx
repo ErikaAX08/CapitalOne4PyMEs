@@ -1,7 +1,7 @@
 import { Component, Suspense, useEffect, useState, type ReactNode } from "react";
-import type { SimulationFlowState } from "../../scenario-simulation";
-import type { SimulationOutput } from "../../../entities/simulation";
-import { formatMoney } from "../../../shared";
+import type { SimulationFlowState } from "@features/scenario-simulation";
+import type { SimulationOutput } from "@entities/simulation";
+import { formatMoney } from "@shared";
 import {
   computeTowerViewModel,
   BLOCK_LABELS,

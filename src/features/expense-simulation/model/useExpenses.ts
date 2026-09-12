@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SimulatedExpense } from "../../../entities/simulation";
+import type { SimulatedExpense } from "@entities/simulation";
 export function useExpenses() {
   const [expenses, setExpenses] = useState<SimulatedExpense[]>([]);
   function add(category: string, amount: number) {

@@ -1,8 +1,8 @@
-import type { Business, FinancialTransaction } from "../../business";
-import type { Scenario } from "../../scenario";
+import type { Business, FinancialTransaction } from "@entities/business";
+import type { Scenario } from "@entities/scenario";
 import type { SimulationOutput, SimulatedExpense } from "./types";
 import { balances } from "../fixtures/projections";
-import { formatMoney } from "../../../shared/lib/formatMoney";
+import { formatMoney } from "@shared";
 export function simulateFinancialDecision(
   business: Business,
   transactions: FinancialTransaction[],

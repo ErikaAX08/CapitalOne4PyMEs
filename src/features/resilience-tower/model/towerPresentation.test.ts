@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { computeTowerViewModel } from "./towerPresentation";
-import type { SimulationOutput, TowerChange } from "../../../entities/simulation";
+import type { SimulationOutput, TowerChange } from "@entities/simulation";
 
 function output(overrides: Partial<SimulationOutput> = {}): SimulationOutput {
   return {

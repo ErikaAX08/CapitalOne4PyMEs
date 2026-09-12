@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { ArrowDownRight, Plus, RotateCcw, Wallet } from "lucide-react";
-import type { SimulatedExpense } from "../../../entities/simulation";
-import { formatMoney } from "../../../shared";
+import type { SimulatedExpense } from "@entities/simulation";
+import { formatMoney } from "@shared";
 export function ExpensePanel({
   expenses,
   onAdd,

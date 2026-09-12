@@ -5,8 +5,8 @@ import {
   TrendingUp,
   Truck,
 } from "lucide-react";
-import type { Scenario } from "../../../entities/scenario";
-import { formatMoney } from "../../../shared";
+import type { Scenario } from "@entities/scenario";
+import { formatMoney } from "@shared";
 const ICON_STYLES = [
   "bg-[#e5effd] text-[#4280d5]",
   "bg-[#edf0f5] text-[#74839a]",

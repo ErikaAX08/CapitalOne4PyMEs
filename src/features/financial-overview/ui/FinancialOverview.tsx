@@ -1,5 +1,5 @@
 import { Building2, CircleHelp, Clock3, ShieldCheck } from "lucide-react";
-import { formatMoney } from "../../../shared";
+import { formatMoney } from "@shared";
 export function FinancialOverview({
   availableBalance,
   hasExpenses,

@@ -6,7 +6,7 @@ import {
   Sparkles,
   TriangleAlert,
 } from "lucide-react";
-import { formatMoney } from "../../../shared";
+import { formatMoney } from "@shared";
 export function SimulationResult({
   recovered,
   isContract,

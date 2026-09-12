@@ -1,5 +1,5 @@
 import { Check, CircleHelp } from "lucide-react";
-import { Modal } from "../../../shared";
+import { Modal } from "@shared";
 export function TechnicalExplanationDialog({
   onClose,
 }: {

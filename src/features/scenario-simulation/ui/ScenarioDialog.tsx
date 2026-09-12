@@ -1,6 +1,6 @@
 import { ArrowRight, Building2, Clock3, TriangleAlert } from "lucide-react";
-import type { Scenario } from "../../../entities/scenario";
-import { Modal } from "../../../shared";
+import type { Scenario } from "@entities/scenario";
+import { Modal } from "@shared";
 export function ScenarioDialog({
   scenario,
   onClose,

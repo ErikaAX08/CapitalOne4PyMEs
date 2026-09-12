@@ -5,7 +5,7 @@ import {
   initialFlowState,
   type FlowState,
 } from "./simulationFlow";
-import { scenarios } from "../../../entities/scenario";
+import { scenarios } from "@entities/scenario";
 
 const contract = scenarios[0];
 

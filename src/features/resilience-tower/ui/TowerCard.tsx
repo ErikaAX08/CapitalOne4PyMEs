@@ -1,6 +1,6 @@
 import { Hand, Layers3, RotateCcw } from "lucide-react";
-import type { SimulationFlowState } from "../../scenario-simulation";
-import type { SimulationOutput } from "../../../entities/simulation";
+import type { SimulationFlowState } from "@features/scenario-simulation";
+import type { SimulationOutput } from "@entities/simulation";
 import { ResilienceTower } from "./ResilienceTower";
 export function TowerCard({
   flowState,

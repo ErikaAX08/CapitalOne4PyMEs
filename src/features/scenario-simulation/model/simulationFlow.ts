@@ -1,4 +1,4 @@
-import type { Scenario } from "../../../entities/scenario";
+import type { Scenario } from "@entities/scenario";
 export type SimulationFlowState =
   | "intro"
   | "stable"

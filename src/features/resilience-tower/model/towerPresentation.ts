@@ -1,5 +1,5 @@
-import type { SimulationFlowState } from "../../scenario-simulation";
-import type { SimulationOutput } from "../../../entities/simulation";
+import type { SimulationFlowState } from "@features/scenario-simulation";
+import type { SimulationOutput } from "@entities/simulation";
 export const BLOCK_HEX_COLORS = [
   "#4389dc",
   "#58b69b",

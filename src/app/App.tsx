@@ -1,27 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronRight, CircleHelp, Layers3, ShieldCheck } from "lucide-react";
-import { scenarios } from "./entities/scenario";
-import type { Business, FinancialTransaction } from "./entities/business";
-import { mockFinancialDataSource } from "./entities/business";
-import type { SimulationOutput } from "./entities/simulation";
-import { simulateFinancialDecision } from "./entities/simulation";
+import { scenarios } from "@entities/scenario";
+import type { Business, FinancialTransaction } from "@entities/business";
+import { mockFinancialDataSource } from "@entities/business";
+import type { SimulationOutput } from "@entities/simulation";
+import { simulateFinancialDecision } from "@entities/simulation";
 import {
   useSimulationFlow,
   ScenarioList,
   ScenarioDialog,
   SimulationProgress,
   SimulationResult,
-} from "./features/scenario-simulation";
-import { IntroScreen } from "./features/onboarding";
-import { FinancialOverview } from "./features/financial-overview";
-import { TechnicalExplanationDialog } from "./features/technical-explanation";
-import { TowerCard } from "./features/resilience-tower";
+} from "@features/scenario-simulation";
+import { IntroScreen } from "@features/onboarding";
+import { FinancialOverview } from "@features/financial-overview";
+import { TechnicalExplanationDialog } from "@features/technical-explanation";
+import { TowerCard } from "@features/resilience-tower";
 import {
   ExpensePanel,
   ExpenseFeedback,
   useExpenses,
-} from "./features/expense-simulation";
+} from "@features/expense-simulation";
 type BusinessDataState =
   | { status: "loading" }
   | { status: "ready"; business: Business; transactions: FinancialTransaction[] }
