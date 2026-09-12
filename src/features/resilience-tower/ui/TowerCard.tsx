@@ -1,6 +1,7 @@
 import { Hand, Layers3, RotateCcw } from "lucide-react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
+import { Card, Badge, Button } from "@shared";
 import { ResilienceTower } from "./ResilienceTower";
 export function TowerCard({
   flowState,
@@ -23,35 +24,38 @@ export function TowerCard({
   reduced: boolean;
   onReset: () => void;
 }) {
-  const statusClass =
+  const statusVariant =
     status === "Crítico"
-      ? "bg-[#fceae7] text-[#b95243]"
+      ? "danger"
       : status === "Precaución"
-        ? "bg-[#fff3d8] text-[#916713]"
-        : "bg-[#eaf6f0] text-[#318663]";
+        ? "warning"
+        : "success";
   return (
-    <section className="tower-card relative flex min-h-[604px] flex-col overflow-hidden rounded-[14px] border border-[#e0e7ef] bg-[#f0f4f8] max-[700px]:min-h-[480px] min-[701px]:sticky min-[701px]:top-[22px] min-[701px]:col-start-2 min-[701px]:row-[1/3] min-[701px]:h-[min(830px,calc(100vh-44px))] min-[701px]:min-h-[620px] min-[701px]:self-start">
+    <Card className="tower-card relative flex min-h-[604px] flex-col gap-0 overflow-hidden bg-surface-subtle max-[700px]:min-h-[480px] min-[701px]:sticky min-[701px]:top-[22px] min-[701px]:col-start-2 min-[701px]:row-[1/3] min-[701px]:h-[min(830px,calc(100vh-44px))] min-[701px]:min-h-[620px] min-[701px]:self-start">
       <div className="z-1 flex justify-between p-[24px_25px_0] max-[700px]:p-[20px_20px_0]">
         <div>
-          <span className="text-[11px] font-semibold tracking-[1.4px] text-[#8a9aae] max-[700px]:text-[9px]">
-            TU NEGOCIO, EN PERSPECTIVA
+          <span className="font-title text-[11px] font-semibold tracking-[0.12em] text-body-subtle uppercase max-[700px]:text-[9px]">
+            Tu negocio, en perspectiva
           </span>
-          <h2 className="mt-[6px] text-[19px] font-semibold tracking-[-0.5px]">
+          <h2 className="font-title mt-[6px] text-[19px] font-semibold tracking-[-0.06em]">
             Torre de estabilidad · 3D
           </h2>
         </div>
-        <button
-          className="grid h-[34px] w-[34px] place-items-center rounded-lg border border-[#dce4ed] bg-[#ffffffad] text-[#73849a] max-[700px]:min-h-[42px] max-[700px]:min-w-[42px]"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-[34px] w-[34px] max-[700px]:min-h-[42px] max-[700px]:min-w-[42px]"
           aria-label="Reiniciar simulación"
           title="Reiniciar simulación"
           onClick={onReset}
         >
           <RotateCcw size={18} />
-        </button>
+        </Button>
       </div>
       <div className="p-[15px_25px_0] max-[700px]:p-[12px_20px_0]">
-        <span
-          className={`inline-flex items-center gap-[6px] rounded-[20px] border border-[#e1e9ee] bg-[#ffffffbd] px-[10px] py-[6px] text-[12px] font-medium whitespace-nowrap ${statusClass}`}
+        <Badge
+          variant={statusVariant}
+          className="h-auto gap-[6px] px-[10px] py-[6px] text-[12px] font-medium"
         >
           <span className="h-[5px] w-[5px] rounded-full bg-current" />
           {flowState === "simulating"
@@ -63,7 +67,7 @@ export function TowerCard({
                 : status === "Crítico"
                   ? "La liquidez necesita refuerzo"
                   : "Una estructura con más perspectiva"}
-        </span>
+        </Badge>
       </div>
       <div className="relative min-h-[360px] flex-1 max-[700px]:h-[390px] max-[700px]:min-h-[390px] [&>.tower-3d]:absolute [&>.tower-3d]:inset-0">
         <ResilienceTower
@@ -75,19 +79,19 @@ export function TowerCard({
           resetKey={resetKey}
           reduced={reduced}
         />
-        <div className="pointer-events-none absolute top-[50px] right-[22px] text-[10px] tracking-[1px] text-[#8e9eb2] before:absolute before:top-[4px] before:left-[-30px] before:h-px before:w-[22px] before:bg-[#c3ceda] before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[10px]">
-          SEMANA 12
-          <span className="mt-1 block text-[11px] tracking-normal text-[#a0adbd] max-[700px]:text-[9px]">
+        <div className="pointer-events-none absolute top-[50px] right-[22px] text-[10px] tracking-[1px] text-body-subtle before:absolute before:top-[4px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[10px]">
+          Semana 12
+          <span className="mt-1 block text-[11px] tracking-normal text-body-subtle max-[700px]:text-[9px]">
             Ingresos futuros
           </span>
         </div>
-        <div className="pointer-events-none absolute bottom-[75px] right-[22px] text-[10px] tracking-[1px] text-[#8e9eb2] before:absolute before:top-[4px] before:left-[-30px] before:h-px before:w-[22px] before:bg-[#c3ceda] before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[10px]">
-          SEMANA 1
-          <span className="mt-1 block text-[11px] tracking-normal text-[#a0adbd] max-[700px]:text-[9px]">
+        <div className="pointer-events-none absolute bottom-[75px] right-[22px] text-[10px] tracking-[1px] text-body-subtle before:absolute before:top-[4px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[10px]">
+          Semana 1
+          <span className="mt-1 block text-[11px] tracking-normal text-body-subtle max-[700px]:text-[9px]">
             Tu base de hoy
           </span>
         </div>
-        <div className="pointer-events-none absolute right-0 bottom-0 left-0 flex items-center justify-center gap-[7px] text-[11px] text-[#8c9aaa]">
+        <div className="pointer-events-none absolute right-0 bottom-0 left-0 flex items-center justify-center gap-[7px] text-[11px] text-body-subtle">
           <Hand size={15} /> Cada gasto retira soporte · Toca un bloque
         </div>
       </div>
@@ -96,7 +100,7 @@ export function TowerCard({
           (label, i) => (
             <span
               key={label}
-              className="flex items-center gap-[5px] text-[11px] text-[#65778e] max-[700px]:text-[9px]"
+              className="flex items-center gap-[5px] text-[11px] text-body-muted max-[700px]:text-[9px]"
             >
               <i
                 style={{
@@ -108,16 +112,16 @@ export function TowerCard({
                     "#e5bb54",
                   ][i],
                 }}
-                className="h-[7px] w-[7px] rounded-[2px]"
+                className="h-[7px] w-[7px]"
               />
               {label}
             </span>
           ),
         )}
       </div>
-      <div className="flex items-center justify-center gap-[7px] border-t border-[#e1e7ef] bg-[#ffffff40] p-[13px] text-[11px] text-[#65778e]">
+      <div className="flex items-center justify-center gap-[7px] border-t border-hairline bg-canvas/40 p-[13px] text-[11px] text-body-muted">
         <Layers3 size={15} /> 12 niveles. 12 semanas. Una mirada al futuro.
       </div>
-    </section>
+    </Card>
   );
 }

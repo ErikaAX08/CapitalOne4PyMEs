@@ -1,28 +1,131 @@
 @import "tailwindcss";
-@theme {
-  --font-sans: Inter, sans-serif;
-  --color-ink: #172b48;
-  --color-page: #f7f9fc;
-  --color-brand: #296bd5;
-  --color-brand-dark: #205cbd;
-  --color-brand-light: #3776d2;
-  --color-brand-soft: #467dd0;
-  --color-text-primary: #233b5a;
-  --color-text-secondary: #65778e;
-  --color-text-muted: #8b98aa;
-  --color-border: #e1e7ef;
-  --color-stable-bg: #eaf6f0;
-  --color-stable-fg: #318663;
-  --color-warning-bg: #fff3d8;
-  --color-warning-fg: #916713;
-  --color-danger-bg: #fceae7;
-  --color-danger-fg: #b95243;
+@import "tw-animate-css";
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
 }
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-300.woff2") format("woff2");
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-500.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-600.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-800.woff2") format("woff2");
+  font-weight: 800;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "Inter", Arial, sans-serif;
+  --font-title: "Inter", Arial, sans-serif;
+  --font-subtitle: "Inter", Arial, sans-serif;
+  --font-body: "Inter", Arial, sans-serif;
+
+  --radius: 0px;
+
+  --color-brand-blue: #123465;
+  --color-brand-blue-hover: #0d2850;
+  --color-brand-blue-pressed: #081c3a;
+  --color-brand-blue-soft: #e9eef7;
+  --color-brand-red: #d0192f;
+  --color-brand-red-soft: #fbe9ea;
+
+  --color-canvas: #ffffff;
+  --color-surface-subtle: #f4f6fb;
+  --color-surface-muted: #eaeef6;
+  --color-surface-inverse: #0b2143;
+
+  --color-ink: #0d1b2f;
+  --color-body: #3b4a5e;
+  --color-body-muted: #64708a;
+  --color-body-subtle: #8a93a8;
+  --color-on-brand: #ffffff;
+  --color-on-inverse: #ffffff;
+
+  --color-hairline: #e2e6ef;
+  --color-hairline-strong: #c7cede;
+  --color-focus-ring: #2f6fed;
+
+  --color-success: #17845a;
+  --color-success-soft: #e3f7ec;
+  --color-warning: #a86700;
+  --color-warning-soft: #fff4de;
+  --color-danger: #d0192f;
+  --color-danger-soft: #fbe9ea;
+  --color-info: #2f6fed;
+  --color-info-soft: #eaf1fe;
+
+  --color-chart-1: #123465;
+  --color-chart-2: #2f6fed;
+  --color-chart-3: #7aa2e0;
+  --color-chart-4: #b9c6dc;
+  --color-chart-5: #17845a;
+  --color-chart-6: #7a6aa8;
+  --color-chart-7: #4d7c9a;
+  --color-chart-8: #a86700;
+  --color-chart-anomaly: #d0192f;
+
+  /* shadcn/ui contract -- generated primitives (Button, Dialog, Card, ...)
+     read these; keep them mapped onto the tokens above rather than letting
+     `shadcn add` reintroduce its own oklch defaults. */
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-canvas);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-canvas);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-brand-blue);
+  --color-primary-foreground: var(--color-on-brand);
+  --color-secondary: var(--color-surface-subtle);
+  --color-secondary-foreground: var(--color-body);
+  --color-muted: var(--color-surface-muted);
+  --color-muted-foreground: var(--color-body-muted);
+  --color-accent: var(--color-brand-blue-soft);
+  --color-accent-foreground: var(--color-brand-blue);
+  --color-destructive: var(--color-danger);
+  --color-destructive-foreground: var(--color-on-brand);
+  --color-border: var(--color-hairline);
+  --color-input: var(--color-hairline-strong);
+  --color-ring: var(--color-focus-ring);
+
+  /* Legacy semantic aliases kept so existing status classes keep working
+     while pointing at the Capital One semantic hexes. */
+  --color-stable-bg: var(--color-success-soft);
+  --color-stable-fg: var(--color-success);
+  --color-warning-bg: var(--color-warning-soft);
+  --color-warning-fg: var(--color-warning);
+  --color-danger-bg: var(--color-danger-soft);
+  --color-danger-fg: var(--color-danger);
+}
+
 @layer base {
   :root {
     font-family: var(--font-sans);
     color: var(--color-ink);
-    background: var(--color-page);
+    background: var(--color-canvas);
     font-synthesis: none;
     font-weight: 400;
     font-size: 14px;
@@ -41,10 +144,6 @@
   button {
     font: inherit;
     cursor: pointer;
-    transition:
-      background 0.18s,
-      transform 0.18s,
-      box-shadow 0.18s;
   }
   button:disabled {
     cursor: wait;
@@ -54,14 +153,8 @@
     -webkit-tap-highlight-color: transparent;
   }
   button:focus-visible {
-    outline: 3px solid #639eef;
-    outline-offset: 4px;
-  }
-  button:hover {
-    filter: brightness(0.98);
-  }
-  button:active {
-    transform: translateY(1px);
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
