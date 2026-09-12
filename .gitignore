@@ -1,0 +1,45 @@
+# Dependencies and package-manager state
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+
+# Build and coverage output
+dist/
+coverage/
+*.tsbuildinfo
+
+# Test artifacts
+test-results/
+playwright-report/
+blob-report/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Tool caches and logs
+.cache/
+.vite/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor and operating-system files
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+
+# This repository standardizes on pnpm. pnpm-lock.yaml stays versioned.
+package-lock.json
+yarn.lock
+
+# Claude Code local session state
+.claude/
