@@ -3,6 +3,8 @@
 > **Estado al cierre de la sesión:** demo funcional con torre **3D**, registro de gastos, escenarios financieros y mitigación. Interfaz exclusivamente light. Datos y resultados analíticos simulados.
 >
 > Este documento describe el código existente y el trabajo realizado. Las mejoras futuras se identifican expresamente; no deben interpretarse como funcionalidades implementadas.
+>
+> **Migración de arquitectura completada.** El proyecto pasó de una organización por tipo técnico (`components/data/lib`, `App.tsx` monolítico) a una organización por features (`app -> features -> entities -> shared`), siguiendo `PLAN_MIGRACION_ARQUITECTURA.md`. pnpm es el único gestor de paquetes. Las secciones de este documento describen el árbol resultante, no el plan.
 
 ## 1. Producto y propósito
 
@@ -86,7 +88,7 @@ Las versiones siguientes corresponden a las declaradas en `package.json` al reda
 | `@react-three/fiber` | 9.3.0 | Integración declarativa entre React y Three.js |
 | `@react-three/drei` | 10.7.6 | `OrbitControls` y `RoundedBox` |
 | `@react-three/rapier` | 2.2.0 | Cuerpos rígidos y colapso físico |
-| Tailwind CSS / plugin Vite | 4.1.13 | Integración de estilos; complementada con CSS propio |
+| Tailwind CSS / plugin Vite | 4.1.13 | Sistema de estilos: clases utilitarias en cada componente, tokens en `@theme` y reglas base en `@layer base` dentro de `src/app/styles.css` |
 | Framer Motion | 12.23.12 | Transiciones de interfaz |
 | Lucide React | 0.468.0 | Iconos |
 | `@fontsource/inter` | 5.2.8 | Tipografía local |
@@ -94,7 +96,7 @@ Las versiones siguientes corresponden a las declaradas en `package.json` al reda
 | `tsx` | 4.20.5 | Ejecución de pruebas TypeScript con Node |
 | Prettier | Rango `^3.6.2` | Formato de código |
 
-Se conservan `package-lock.json` y `pnpm-lock.yaml`. Es preferible elegir un gestor por instalación y evitar alternarlos sobre el mismo `node_modules`, porque durante la sesión esa mezcla produjo resoluciones y ejecutables inconsistentes.
+pnpm es el único gestor versionado (`packageManager` fijado en `package.json`, `pnpm-lock.yaml` es el único lockfile). No debe generarse `package-lock.json` ni `yarn.lock`; ambos están en `.gitignore` como recordatorio de la mezcla de instalaciones que causó ejecutables inconsistentes durante una fase temprana de la sesión.
 
 ## 5. Estructura del repositorio
 
@@ -102,117 +104,136 @@ Se conservan `package-lock.json` y `pnpm-lock.yaml`. Es preferible elegir un ges
 .
 ├── DOCUMENTACION_SESION.md
 ├── README.md
+├── AGENTS.md
 ├── index.html
 ├── package.json
-├── package-lock.json
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml
 ├── tsconfig.json
 ├── vite.config.ts
 ├── playwright.config.ts
+├── scripts/
+│   └── check-import-boundaries.ts
 ├── src/
-│   ├── main.tsx
-│   ├── App.tsx
-│   ├── styles.css
-│   ├── components/
-│   │   ├── ResilienceTower.tsx
-│   │   ├── ExpensePanel.tsx
-│   │   └── Modal.tsx
-│   ├── data/
-│   │   ├── types.ts
-│   │   ├── business.ts
-│   │   ├── transactions.ts
-│   │   ├── scenarios.ts
-│   │   └── projections.ts
-│   └── lib/
-│       ├── mockFinancialEngine.ts
-│       └── mockFinancialEngine.test.ts
+│   ├── app/                       # Composición: monta React, estado global mínimo
+│   │   ├── main.tsx
+│   │   ├── App.tsx
+│   │   └── styles.css             # @import "tailwindcss"; tokens en @theme; reset en @layer base
+│   ├── features/                  # Una carpeta por capacidad de producto
+│   │   ├── onboarding/
+│   │   ├── financial-overview/
+│   │   ├── expense-simulation/
+│   │   ├── scenario-simulation/
+│   │   ├── resilience-tower/
+│   │   └── technical-explanation/
+│   ├── entities/                  # Dominio: tipos, fixtures, motor, fuente de datos
+│   │   ├── business/
+│   │   ├── scenario/
+│   │   └── simulation/
+│   └── shared/                    # Agnóstico al dominio: Modal, formatMoney
+│       ├── ui/
+│       └── lib/
 ├── tests/
 │   └── demo.spec.ts
 └── dist/                         # Generado por el build
 ```
 
-Las dependencias, los resultados de pruebas y los archivos generados indicados en `.gitignore` no forman parte del código fuente a mantener.
+Cada feature/entidad expone un `index.ts` como API pública; el resto de su carpeta (`ui/`, `model/`, `api/`, `fixtures/`) es interno. Las dependencias, los resultados de pruebas y los archivos generados indicados en `.gitignore` no forman parte del código fuente a mantener.
 
 ## 6. Arquitectura general
 
-La aplicación es una SPA de una sola experiencia. No tiene router, servidor propio, store externo ni capa de persistencia. El estado compartido reside en `App.tsx`; los resultados financieros se derivan mediante el motor mock.
+La aplicación es una SPA de una sola experiencia. No tiene router, servidor propio, store externo ni capa de persistencia. `App.tsx` es la raíz de composición: carga datos, conecta el flujo de simulación y distribuye props a las features; no implementa la lógica de ninguna capacidad de producto.
+
+La dirección de dependencia es `app -> features -> entities -> shared` y se verifica con `pnpm check:boundaries` (`scripts/check-import-boundaries.ts`): una capa no puede importar de una capa superior, y cruzar de una feature/entidad a otra solo es válido a través del `index.ts` público de esa slice (no hay imports profundos entre slices).
 
 ```mermaid
 flowchart TD
-    Main[main.tsx: React, fuentes y estilos] --> App[App.tsx: estado y orquestación]
-    Data[data: negocio, transacciones, escenarios y proyecciones] --> Engine[mockFinancialEngine]
-    App -->|escenario, mitigación y gastos| Engine
+    Main["app/main.tsx"] --> App["app/App.tsx"]
+    App --> Data["entities/business: mockFinancialDataSource"]
+    Data -->|business, transactions| App
+    App -->|escenario, mitigación, gastos| Engine["entities/simulation: simulateFinancialDecision"]
     Engine -->|SimulationOutput| App
-    App --> Metrics[Métricas y recomendaciones]
-    App --> Tower[ResilienceTower: escena y física]
-    App --> Expenses[ExpensePanel: registrar y deshacer]
-    App --> Modal[Modal: escenarios y explicación]
-    Expenses -->|onAdd / onUndo| App
-    Modal -->|seleccionar / simular / cerrar| App
+    App --> Overview["features/financial-overview"]
+    App --> Tower["features/resilience-tower"]
+    App --> Expenses["features/expense-simulation"]
+    App --> Flow["features/scenario-simulation: useSimulationFlow"]
+    App --> Onboarding["features/onboarding"]
+    App --> Technical["features/technical-explanation"]
+    Flow -->|dispatch de eventos| App
+    Expenses -->|add / undo / reset| App
 ```
 
-El motor decide los resultados de la demo. La torre interpreta esos resultados visualmente. La física no calcula la fragilidad ni la supervivencia.
+El motor decide los resultados de la demo; es una función pura sin React ni Three.js. La torre interpreta esos resultados visualmente mediante un view model puro (`towerPresentation.ts`); la física no calcula la fragilidad ni la supervivencia.
 
 ### Responsabilidades por módulo
 
-| Archivo | Responsabilidad actual |
+| Módulo | Responsabilidad actual |
 | --- | --- |
-| [src/main.tsx](src/main.tsx) | Monta React en `#root`, activa `StrictMode` e importa Inter y estilos. |
-| [src/App.tsx](src/App.tsx) | Orquesta introducción, dashboard, métricas, escenarios, cronología, resultados, mitigación y explicación técnica. Mantiene el estado compartido. |
-| [src/components/ResilienceTower.tsx](src/components/ResilienceTower.tsx) | Renderiza la torre, controla la física y los colores, permite inspeccionar bloques y ofrece fallback textual. |
-| [src/components/ExpensePanel.tsx](src/components/ExpensePanel.tsx) | Formulario de gastos, accesos rápidos, total acumulado, últimas entradas y deshacer. |
-| [src/components/Modal.tsx](src/components/Modal.tsx) | Diálogo nativo reutilizable, cierre con Escape, botón y fondo; restaura el foco. |
-| [src/lib/mockFinancialEngine.ts](src/lib/mockFinancialEngine.ts) | Calcula resultados mock, impacto de gastos, proyecciones, cambios de torre y recomendaciones. También exporta `money()`. |
-| [src/data/types.ts](src/data/types.ts) | Contratos de datos y tipos compartidos. |
-| [src/data/business.ts](src/data/business.ts) | Negocio de ejemplo y proveedor asíncrono mock. |
-| [src/data/transactions.ts](src/data/transactions.ts) | Genera las 40 transacciones de ejemplo. |
-| [src/data/scenarios.ts](src/data/scenarios.ts) | Catálogo de decisiones y detalles mostrados al usuario. |
-| [src/data/projections.ts](src/data/projections.ts) | Trayectorias predeterminadas de saldo para 12 semanas. |
-| [src/styles.css](src/styles.css) | Diseño light, layouts, componentes visuales y reglas responsive. |
-| [vite.config.ts](vite.config.ts) | Plugins React/Tailwind y separación de chunks de Three.js y física. |
+| [src/app/main.tsx](src/app/main.tsx) | Monta React en `#root`, activa `StrictMode` e importa Inter y `styles.css`. |
+| [src/app/App.tsx](src/app/App.tsx) | Composición: carga de datos (`useBusinessData`), deriva `SimulationOutput` para cada feature y conecta sus eventos. Cabecera, layout del dashboard y pie de página son la única UI propia que le queda. |
+| [src/app/styles.css](src/app/styles.css) | `@import "tailwindcss"`, tokens de color/tipografía en `@theme`, reset y comportamiento de botones/foco en `@layer base`. El resto de la apariencia vive como clases utilitarias en cada componente. |
+| [src/entities/business](src/entities/business) | `Business`, `FinancialTransaction`, `FinancialDataSource`, fixtures y `mockFinancialDataSource` (único punto que entrega negocio y transacciones a la UI). |
+| [src/entities/scenario](src/entities/scenario) | `Scenario`, `ScenarioId` y el catálogo de tres decisiones. |
+| [src/entities/simulation](src/entities/simulation) | `SimulationOutput`, `SimulatedExpense`, trayectorias (`fixtures/projections.ts`) y `simulateFinancialDecision` — el motor, sin dependencias de UI. |
+| [src/features/scenario-simulation](src/features/scenario-simulation) | `useSimulationFlow` (reducer de la máquina de estados del flujo) y la UI de escenarios, progreso y resultado. |
+| [src/features/resilience-tower](src/features/resilience-tower) | `towerPresentation.ts` (view model puro) y la UI 3D: `ResilienceTower`, `TowerScene`, `TowerBlock`, `TowerFallback`, `TowerCard`. |
+| [src/features/expense-simulation](src/features/expense-simulation) | `useExpenses`, `ExpensePanel` y `ExpenseFeedback`. |
+| [src/features/financial-overview](src/features/financial-overview) | Panel de saldo, fragilidad, supervivencia y buffer. |
+| [src/features/onboarding](src/features/onboarding) | Pantalla de introducción. |
+| [src/features/technical-explanation](src/features/technical-explanation) | Diálogo «¿Cómo lo calculamos?». |
+| [src/shared/ui/Modal.tsx](src/shared/ui/Modal.tsx) | Diálogo nativo reutilizable (escenarios y explicación técnica), cierre con Escape, restaura el foco. |
+| [src/shared/lib/formatMoney.ts](src/shared/lib/formatMoney.ts) | Formato de moneda MXN, separado del motor financiero. |
+| [scripts/check-import-boundaries.ts](scripts/check-import-boundaries.ts) | Verifica en CI/local que no haya dependencias inversas ni imports profundos entre slices. |
+| [vite.config.ts](vite.config.ts) | Plugins React/Tailwind, alias `@app`/`@features`/`@entities`/`@shared` y separación de chunks de Three.js y física. |
 
-**Grado de modularización:** existen componentes reutilizables para la torre, gastos y diálogos. Las métricas, resultados, selección de escenarios y explicación técnica todavía se renderizan principalmente dentro de `App.tsx`; no se crearon archivos separados para todos los componentes sugeridos en el brief inicial.
+**Grado de modularización:** cada capacidad de producto es localizable por nombre y expone una API pública propia; ninguna feature importa los internos de otra. `App.tsx` pasó de 778 a menos de 400 líneas, todas de composición.
 
 ## 7. Estado y flujo de la aplicación
 
 ### Estados explícitos
 
-| Estado | Significado en la interfaz |
+| Estado (`SimulationFlowState`) | Significado en la interfaz |
 | --- | --- |
 | `intro` | Pantalla inicial y negocio seleccionado |
 | `stable` | Dashboard base; también permite registrar gastos |
 | `scenarioSelected` | Detalles de un escenario abiertos |
 | `simulating` | Secuencia temporal de simulación |
-| `critical` | Resultado de un escenario terminado |
+| `result` | Resultado de un escenario terminado |
 | `mitigating` | Aplicación del anticipo |
 | `recovered` | Resultado posterior a la mitigación |
 
-**Distinción importante:** `AppState` expresa la etapa del flujo, mientras que `SimulationOutput.status` expresa el riesgo financiero. El estado de interfaz `critical` también se utiliza al terminar los escenarios de equipo o retraso, aunque su resultado financiero sea «Precaución». Igualmente, gastos manuales pueden volver crítico el resultado mientras el flujo sigue en `stable`.
+**Distinción importante:** `SimulationFlowState` expresa la etapa del flujo, mientras que `SimulationOutput.status` expresa el riesgo financiero. El estado de interfaz `result` también se utiliza al terminar los escenarios de equipo o retraso, aunque su resultado financiero sea «Precaución». Igualmente, gastos manuales pueden volver crítico el resultado mientras el flujo sigue en `stable`. (Este estado se llamaba `critical` antes de la migración de arquitectura; se renombró a `result` en `features/scenario-simulation` precisamente para evitar la confusión con el riesgo financiero «Crítico».)
+
+El flujo es un reducer (`flowReducer` en `features/scenario-simulation/model/simulationFlow.ts`) con eventos explícitos — `ENTER_DASHBOARD`, `SELECT_SCENARIO`, `CLOSE_SCENARIO`, `START_SIMULATION`, `TICK`, `SHOW_RESULT`, `START_MITIGATION`, `FINISH_MITIGATION`, `CLEAR_SKIP`, `RESET` — en vez de llamadas `setState` sueltas; una transición no representada en el reducer simplemente no cambia el estado.
 
 ```mermaid
 flowchart LR
-    I[intro] -->|Explorar| S[stable]
-    S -->|Elegir escenario| D[scenarioSelected]
-    D -->|Cerrar| S
-    D -->|Simular| A[simulating]
-    A -->|Terminar u omitir| R[critical: resultado]
-    R -->|Anticipo del contrato| M[mitigating]
-    M -->|Terminar u omitir| G[recovered]
-    R -->|Reiniciar| S
-    G -->|Reiniciar| S
-    S -->|Agregar o deshacer gasto| S
+    I[intro] -->|ENTER_DASHBOARD| S[stable]
+    S -->|SELECT_SCENARIO| D[scenarioSelected]
+    D -->|CLOSE_SCENARIO| S
+    D -->|START_SIMULATION| A[simulating]
+    A -->|TICK a 1 / SHOW_RESULT| R[result]
+    R -->|START_MITIGATION| M[mitigating]
+    M -->|TICK a 1 / FINISH_MITIGATION| G[recovered]
+    R -->|RESET| S
+    G -->|RESET| S
+    S -->|gasto agregado| S
 ```
 
 ### Estado complementario
 
-- `expenses`: gastos simulados acumulados, almacenados en memoria.
+Dentro de `FlowState` (el reducer):
+
 - `scenario`: escenario seleccionado.
 - `progress`: avance entre 0 y 1.
 - `resetKey`: fuerza la reconstrucción de la escena cuando corresponde.
-- `skipAnimation`: indica que se solicitó el resultado inmediato.
-- `technical`: controla el panel de explicación.
-- `reduced`: preferencia de movimiento reducido del dispositivo.
+- `skipAnimation`: indica que se solicitó el resultado inmediato (`CLEAR_SKIP` lo reinicia al agregar un gasto nuevo, para que ese colapso se anime aunque ya se hubiera omitido una animación previa).
+
+Fuera del reducer, en `App.tsx` y sus hooks:
+
+- `expenses` (`useExpenses`, en `features/expense-simulation`): gastos simulados acumulados, en memoria.
+- `technical`: controla el panel de explicación técnica.
+- `reduced` (`useReducedMotion`): preferencia de movimiento reducido del dispositivo; se pasa a `useSimulationFlow` para las duraciones del temporizador.
 
 `starting` calcula la referencia con los gastos actuales y sin escenario. `beforeMitigation` calcula el escenario antes del anticipo. Se usan para que las comparaciones y transiciones no vuelvan siempre a los valores iniciales cuando ya se han agregado gastos.
 
@@ -235,7 +256,7 @@ El reinicio limpia gastos, escenario y progreso, y vuelve al dashboard. Recargar
 
 Las transacciones cubren nómina, renta, inventario, servicios, crédito, cobros, impuestos, transporte y mantenimiento. Se generan 40 registros entre septiembre y diciembre de 2026, con importes y estados repetibles. Son fixtures, no un extracto bancario real.
 
-`mockDataSource` implementa el contrato asíncrono del proveedor. **La UI todavía importa `business` y `transactions` directamente**: el adaptador existe como punto de extensión, pero aún no gobierna la carga de datos de la aplicación.
+`mockFinancialDataSource` (en `entities/business/api/`) implementa el contrato asíncrono del proveedor y es el único punto que entrega `business`/`transactions` a la aplicación: `App.tsx` los obtiene mediante un hook (`useBusinessData`) con estados `loading`/`ready`/`empty`/`error`, no mediante un import directo de los fixtures. Sustituir el mock por una integración real a Nessie implica reemplazar únicamente `mockFinancialDataSource`.
 
 Los gastos manuales usan identificadores creados con `crypto.randomUUID()`. Esos identificadores no afectan los cálculos: mismos importes y escenarios producen los mismos resultados financieros.
 
@@ -352,12 +373,17 @@ Ambos tienen resultado y recomendación propios. No toda simulación produce un 
 
 ### Componentes internos
 
-`ResilienceTower.tsx` contiene:
+`features/resilience-tower/` separa la traducción de datos del runtime 3D:
 
-- `ResilienceTower`: adapta métricas y estado a la escena; detecta WebGL y gestiona el detalle de bloques.
-- `SceneBoundary`: captura errores de renderizado y ofrece una alternativa textual.
-- `Scene`: agrupa los cuerpos, aplica balanceo y controla la duración del colapso.
-- `Block`: crea un bloque con geometría redondeada y cuerpo rígido.
+- `model/towerPresentation.ts`: función pura `computeTowerViewModel()` — traduce `SimulationOutput` + estado del flujo a `{ lost, collapsed, staticFall, risk, description, blockColors }`. Sin React, DOM ni Three.js; probada sin WebGL.
+- `ui/ResilienceTower.tsx`: orquestador delgado — detecta WebGL, guarda el bloque seleccionado y arma el `aria-label` a partir del view model.
+- `ui/SceneBoundary` (dentro de `ResilienceTower.tsx`): captura errores de renderizado y ofrece una alternativa textual.
+- `ui/TowerScene.tsx`: el runtime 3D propiamente dicho — `Canvas`, cámara, luces, `OrbitControls` y el grupo de física con su balanceo y temporizador de colapso.
+- `ui/TowerBlock.tsx`: un bloque con geometría redondeada y cuerpo rígido.
+- `ui/TowerFallback.tsx`: el contenedor de texto reutilizado por el fallback sin WebGL, el `Suspense` y `SceneBoundary`.
+- `ui/TowerCard.tsx`: la tarjeta que envuelve la torre en el dashboard (encabezado, leyenda, pie).
+
+Cambiar una regla financiera o un color no requiere tocar `TowerScene.tsx`/`TowerBlock.tsx`, y viceversa.
 
 ### Construcción visual
 
@@ -438,34 +464,27 @@ La versión 2D temporal redujo el bundle al retirar la escena 3D. Al restaurarla
 
 ## 14. Instalación y ejecución
 
-### npm
-
-```sh
-npm install
-npm run dev
-```
-
-### pnpm
+pnpm es el único gestor admitido (ver sección 4). `npm install`/`yarn` no deben usarse: generan un lockfile distinto y, según el diagnóstico que motivó la migración de arquitectura, resoluciones inconsistentes si conviven con `node_modules` instalado por pnpm.
 
 ```sh
 pnpm install
 pnpm dev
 ```
 
-La base de herramientas utilizada requiere Node.js 20.19+ o 22.12+. Vite imprime la URL disponible; si el puerto está ocupado, puede seleccionar otro.
+La base de herramientas utilizada requiere Node.js 20.19+ o 22.12+ y pnpm ≥11 (fijado en `packageManager`). Vite imprime la URL disponible; si el puerto está ocupado, puede seleccionar otro.
 
 La última URL de demo utilizada durante la sesión fue `http://localhost:5174/`. Es una dirección local, no una publicación en internet ni una garantía de que el proceso continúe activo después de cerrar el entorno.
 
 Para solicitar ese puerto:
 
 ```sh
-npm run dev -- --port 5174
+pnpm dev -- --port 5174
 ```
 
 ### Build de producción
 
 ```sh
-npm run build
+pnpm build
 ```
 
 El comando ejecuta `tsc -b` y después `vite build`. Los artefactos quedan en `dist/`.
@@ -473,39 +492,38 @@ El comando ejecuta `tsc -b` y después `vite build`. Los artefactos quedan en `d
 Para revisar el build localmente:
 
 ```sh
-npx vite preview --host 127.0.0.1 --port 4173
+pnpm exec vite preview --host 127.0.0.1 --port 4173
 ```
 
 No se desplegó la aplicación a un hosting público durante esta sesión.
 
 ## 15. Pruebas y validaciones realizadas
 
-### Pruebas del motor
+### Pruebas unitarias
 
-Archivo: [src/lib/mockFinancialEngine.test.ts](src/lib/mockFinancialEngine.test.ts).
+`pnpm test` ejecuta con el runner nativo de Node (`--import tsx`) todo archivo que haga match con `src/**/*.test.ts`, sin importar en qué feature o entidad viva:
+
+- [src/entities/simulation/model/simulateFinancialDecision.test.ts](src/entities/simulation/model/simulateFinancialDecision.test.ts): valores base de los cinco escenarios (incluidos equipo y retraso, antes cubiertos solo indirectamente), determinismo, identidad de caja, acumulación de gastos y el ejemplo de $191,000 documentado en la sección 9.
+- [src/features/scenario-simulation/model/simulationFlow.test.ts](src/features/scenario-simulation/model/simulationFlow.test.ts): el reducer del flujo — recorrido feliz, `SHOW_RESULT`/`FINISH_MITIGATION` con y sin `skip`, `CLEAR_SKIP`, transiciones inválidas ignoradas y `RESET` desde cualquier estado.
+- [src/features/resilience-tower/model/towerPresentation.test.ts](src/features/resilience-tower/model/towerPresentation.test.ts): el view model de la torre (bloques perdidos, colapso, `staticFall`, colores por bloque, descripción accesible) sin WebGL ni Canvas.
 
 ```sh
-npm test
+pnpm test
 ```
-
-Utiliza el runner de Node con `tsx`. Los dos casos verifican:
-
-1. Valores base, resultado del contrato, mitigación, determinismo, cantidad de transacciones, horizonte de 12 semanas e identidad de caja.
-2. Acumulación de gastos, pérdida de bloques, aumento de fragilidad, faltante futuro, coherencia de caja y rechazo de gastos inválidos.
 
 ### Pruebas de navegador
 
 Archivo: [tests/demo.spec.ts](tests/demo.spec.ts).
 
 ```sh
-npx playwright install chromium
-npm run test:e2e
+pnpm exec playwright install chromium
+pnpm test:e2e
 ```
 
 El servidor debe estar activo. Para un puerto diferente:
 
 ```sh
-PLAYWRIGHT_BASE_URL=http://localhost:5174 npm run test:e2e
+PLAYWRIGHT_BASE_URL=http://localhost:5174 pnpm test:e2e
 ```
 
 `PLAYWRIGHT_EXECUTABLE_PATH` permite indicar un Chromium ya instalado. Se utilizó esa opción durante la sesión para evitar otra descarga de navegador.
@@ -526,7 +544,7 @@ Cuatro casos se ejecutan en ambos proyectos, para un total de ocho:
 
 El recorrido principal recoge errores de consola y de página y comprueba que no existan solicitudes fuera del origen local, salvo recursos `data:` y `blob:`. También hay comprobaciones de desbordamiento horizontal.
 
-**Resultado registrado tras restaurar 3D:** build correcto, dos pruebas del motor aprobadas y ocho pruebas de navegador aprobadas. Se revisaron capturas de las vistas móvil y escritorio. Las capturas de prueba se escriben en `/tmp`; son evidencias temporales, no assets de la aplicación.
+**Resultado registrado tras la migración de arquitectura:** `pnpm typecheck`, `pnpm test` (19 pruebas unitarias), `pnpm build` y las ocho pruebas de navegador pasan sobre el árbol final por features. `pnpm check:boundaries` no reporta dependencias inversas ni imports profundos entre slices. Se revisaron capturas de las vistas móvil y escritorio en cada fase de la migración, incluida la conversión a Tailwind, comparándolas contra el diseño previo a simple vista (sin herramienta de diff de píxeles). Las capturas de prueba se escriben en `/tmp`; son evidencias temporales, no assets de la aplicación.
 
 Las aserciones de la suite final comprueban estado accesible, resultados y presencia del canvas; no certifican físicamente cada colisión. La caída también fue inspeccionada visualmente durante el desarrollo.
 
@@ -552,21 +570,19 @@ Las auditorías de dependencias ejecutadas después de los ajustes reportaron ce
 
 ### Capital One Nessie
 
-Punto de entrada: `FinancialDataSource` y `mockDataSource`.
+Punto de entrada: `FinancialDataSource` (interfaz) y `mockFinancialDataSource` (implementación), en `entities/business/api/`. `App.tsx` ya consume este proveedor mediante `useBusinessData()` con estados `loading`/`ready`/`empty`/`error` — ese paso, antes pendiente, se completó durante la migración de arquitectura.
 
 Trabajo pendiente:
 
-1. Implementar un proveedor que adapte cuentas y transacciones al modelo tipado.
-2. Cambiar la carga de `App.tsx` para consumir el proveedor asíncrono.
-3. Agregar estados de carga, error y ausencia de datos.
-4. Normalizar fechas, monedas, categorías, confianza y estados.
-5. Definir una capa segura para credenciales y autorización; no colocar secretos en el bundle del navegador.
+1. Implementar un proveedor real que adapte cuentas y transacciones de Nessie al modelo tipado (`Business`, `FinancialTransaction`).
+2. Normalizar fechas, monedas, categorías, confianza y estados entre el formato de Nessie y el contrato actual.
+3. Definir una capa segura para credenciales y autorización; no colocar secretos en el bundle del navegador.
 
 La etiqueta «Datos simulados desde Capital One Nessie» forma parte del relato de la demo. No significa que los datos actuales procedan de una consulta a Nessie.
 
 ### Motor TDA
 
-Punto de entrada: comentarios e interfaz de salida en `mockFinancialEngine.ts`.
+Punto de entrada: comentarios e interfaz de salida en `entities/simulation/model/simulateFinancialDecision.ts`.
 
 Pendiente: representación de series, cálculo topológico, calibración, validación y traducción de señales a métricas interpretables. El diagrama del panel técnico es ilustrativo y no procede de un cálculo de persistencia.
 
@@ -578,16 +594,17 @@ Antes de hacerlo, deben definirse con precisión supervivencia, primera semana d
 
 ## 18. Límites actuales y siguientes pasos sugeridos
 
-Estos puntos están documentados como pendientes, no como trabajo realizado:
+La migración de arquitectura (`PLAN_MIGRACION_ARQUITECTURA.md`) resolvió varios puntos que este documento listaba antes como pendientes: separación de `App.tsx` en features, renombre de `critical` a `result`, extracción de `towerPresentation.ts` como adaptador de presentación, y conexión de `mockFinancialDataSource`. Lo que sigue pendiente, no como trabajo realizado:
 
-- Separar métricas, resultados, escenarios y explicación técnica de `App.tsx` si crece la aplicación.
-- Distinguir mejor el estado de flujo `critical` del estado financiero crítico, por ejemplo renombrándolo a `result` en una futura refactorización.
-- Extraer un adaptador de presentación para que las reglas de color, bloques y colapso no residan directamente en la escena.
+- **Dos comportamientos preexistentes, encontrados y preservados durante la conversión a Tailwind (no corregidos a propósito, para no mezclar un cambio de comportamiento con un refactor puro):**
+  - Las etiquetas de semana de la torre («SEMANA 12», «SEMANA 1») están ocultas (`hidden` en `TowerCard.tsx`) porque una regla CSS heredada de la etapa 2D las ocultaba siempre, en cualquier tamaño de pantalla. Si el diseño pretende mostrarlas, quitar `hidden` de esos dos `div`.
+  - El subtítulo «Sin afectar tu negocio real» junto a «Prueba una decisión» está oculto (`hidden` en `App.tsx`) por la misma razón: dos reglas CSS heredadas (una para móvil, una para el layout de escritorio) lo ocultaban en todo viewport real.
+- El breakpoint intermedio (701–1000px, entre el layout de una columna y el de escritorio con torre sticky) no se verificó con el mismo detalle que móvil (≤700px) y escritorio (≥1550px) durante la conversión a Tailwind; es posible que haya diferencias menores de espaciado en ese rango específico.
+- ESLint sigue diferido (decisión de la Fase 1): no hay reglas de lint más allá de `tsc` y `pnpm check:boundaries`.
 - Incorporar navegación por teclado para consultar semanas y bloques individuales.
 - Validar contraste y accesibilidad con herramientas específicas y usuarios.
 - Perfilar renderizado y consumo de memoria en teléfonos físicos.
-- Revisar carga diferida del módulo 3D y optimización de assets físicos.
-- Limpiar estilos residuales de la etapa 2D; no implican que exista un segundo modo funcional.
+- Revisar carga diferida del módulo 3D; no se implementó porque no hay una medición que confirme que compensa la complejidad adicional del fallback.
 - Añadir persistencia, exportación o autenticación solamente si pasan a formar parte del alcance del producto.
 - Reemplazar reglas mock únicamente cuando existan definiciones analíticas y datos adecuados para validarlas.
 

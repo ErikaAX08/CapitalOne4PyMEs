@@ -4,13 +4,14 @@
 
 Resilia es una demo React + TypeScript + Vite que permite explorar el impacto de decisiones y gastos simulados sobre la liquidez de una PyME. La torre 3D es una representación visual; los cálculos actuales son deterministas y mock, no predicciones financieras reales.
 
-Lee `DOCUMENTACION_SESION.md` antes de cambiar comportamiento. Contiene el contrato funcional, resultados de referencia, accesibilidad, física 3D y límites del producto. Lee `PLAN_MIGRACION_ARQUITECTURA.md` antes de mover archivos o crear capas.
+Lee `DOCUMENTACION_SESION.md` antes de cambiar comportamiento. Contiene el contrato funcional, resultados de referencia, accesibilidad, física 3D y límites del producto. `PLAN_MIGRACION_ARQUITECTURA.md` describe la migración ya completada — consúltalo para el razonamiento de cada fase, pero el árbol real (`src/app`, `src/features`, `src/entities`, `src/shared`) es la fuente de verdad sobre la estructura vigente.
 
-## Estado actual y objetivo
+## Estado actual
 
-- **Actual:** organización `components/data/lib`, `App.tsx` monolítico, CSS global y dos lockfiles históricos.
-- **Objetivo:** arquitectura por features con dirección `app -> features -> entities -> shared` y pnpm como único gestor.
-- El plan no implica que la migración ya esté implementada. Verifica el árbol real antes de asumir rutas.
+- Arquitectura por features con dirección `app -> features -> entities -> shared`, verificada por `pnpm check:boundaries`.
+- pnpm es el único gestor, con `packageManager` fijado y un solo lockfile.
+- Estilos con Tailwind CSS v4 (clases utilitarias en cada componente); `src/app/styles.css` solo tiene `@theme`, `@layer base` y el reset de `prefers-reduced-motion`. No hay CSS por feature ni hoja monolítica.
+- Verifica el árbol real (`find src -maxdepth 2`) antes de asumir rutas: este documento se actualiza, pero el código manda.
 
 ## Gestor de paquetes
 
@@ -26,21 +27,22 @@ pnpm test:e2e
 
 No ejecutes `npm install`, no generes `package-lock.json` y no edites manualmente `pnpm-lock.yaml`. Si cambian dependencias, usa el comando pnpm correspondiente y versiona el lockfile resultante.
 
-La estandarización completa de scripts y metadatos está pendiente en la Fase 1 del plan. Si un comando documentado todavía no existe, consulta `package.json` y no inventes que ya fue agregado.
+Añade `typecheck`, `test`, `test:e2e`, `check:boundaries`, `format` y `format:check` a `package.json` si algún día faltan; hoy todos existen.
 
-## Reglas de arquitectura objetivo
+## Reglas de arquitectura
 
-- `app` compone e inicializa; no contiene lógica financiera ni implementaciones extensas de features.
-- `features` se organiza por capacidad de producto, no por tipo técnico global.
-- `entities` contiene contratos, fixtures, fuentes de datos y lógica pura del dominio.
-- `shared` solo contiene piezas agnósticas al dominio y reutilizadas de verdad.
-- Dirección permitida: `app -> features -> entities -> shared`.
-- No hagas deep imports a otra slice; importa desde su `index.ts` público.
-- Una feature no importa internals de otra feature.
+- `app` (`src/app/`) compone e inicializa; no contiene lógica financiera ni implementaciones extensas de features.
+- `features` (`src/features/<nombre>/`) se organiza por capacidad de producto, no por tipo técnico global.
+- `entities` (`src/entities/<nombre>/`) contiene contratos, fixtures, fuentes de datos y lógica pura del dominio.
+- `shared` (`src/shared/`) solo contiene piezas agnósticas al dominio y reutilizadas de verdad (hoy: `Modal`, `formatMoney`).
+- Dirección permitida: `app -> features -> entities -> shared`. `pnpm check:boundaries` la verifica; ejecútalo si tocas imports entre slices.
+- No hagas deep imports a otra slice; importa desde su `index.ts` público (usa los alias `@app`, `@features/<nombre>`, `@entities/<nombre>`, `@shared` para cruzar de slice — imports relativos solo dentro de la misma slice).
+- Una feature no importa internals de otra feature; una entidad puede importar otra entidad y `shared`, pero nunca una feature o `app`.
 - No introduzcas router, store global, framework arquitectónico o repositorios genéricos sin un requisito concreto.
-- Mantén `simulateFinancialDecision` puro y determinista.
-- Separa formato de moneda y reglas visuales de la lógica financiera.
-- La UI debe consumir negocio/transacciones mediante `FinancialDataSource`, no fixtures directamente, una vez realizada la Fase 2.
+- Mantén `simulateFinancialDecision` (en `entities/simulation`) puro y determinista.
+- `formatMoney` vive en `shared/lib/`, no en el motor ni en ninguna feature.
+- La UI consume negocio/transacciones mediante `mockFinancialDataSource` (en `entities/business`), no importando fixtures directamente. Los escenarios (`entities/scenario`) son la excepción: no tienen fuente de datos async, se importan como fixture porque no hay un adaptador equivalente a Nessie para ellos.
+- Estilos: usa clases utilitarias de Tailwind directamente en el JSX del componente. Reserva `@layer base` en `src/app/styles.css` para resets de elemento (botones, encabezados, foco) que de otra forma habría que repetir en cada componente; no le añadas ahí estilos de una sola feature.
 
 ## Contratos que se deben preservar
 
@@ -49,8 +51,9 @@ La estandarización completa de scripts y metadatos está pendiente en la Fase 1
 - Deben mantenerse teclado, movimiento reducido, fallback sin WebGL y diseño responsive.
 - Los recursos de la demo permanecen locales; no agregues llamadas externas sin autorización.
 - No cambies las cifras y fórmulas documentadas como parte de una refactorización.
-- El estado de flujo y el estado financiero son conceptos distintos.
+- El estado de flujo (`SimulationFlowState`, en `features/scenario-simulation`) y el estado financiero (`SimulationOutput.status`) son conceptos distintos; ya no comparten el nombre `critical` (el de flujo es `result`).
 - No agregues secretos ni credenciales al cliente. Usa `.env.example` solo para nombres de variables sin valores sensibles.
+- Dos comportamientos preexistentes están documentados y preservados a propósito (ver DOCUMENTACION_SESION.md §18): las etiquetas de semana de la torre y el subtítulo "Sin afectar tu negocio real" están ocultos por CSS heredado. No los "arregles" silenciosamente dentro de un refactor; si el usuario pide corregirlos, es un cambio de comportamiento con su propio commit y prueba.
 
 ## Forma de trabajar
 
@@ -68,8 +71,15 @@ La estandarización completa de scripts y metadatos está pendiente en la Fase 1
 Antes de cerrar un cambio de código, ejecuta en proporción al alcance:
 
 ```sh
+pnpm typecheck
 pnpm test
 pnpm build
+```
+
+Si tocaste imports entre slices:
+
+```sh
+pnpm check:boundaries
 ```
 
 Para cambios de flujo, accesibilidad, layout, WebGL o torre:
