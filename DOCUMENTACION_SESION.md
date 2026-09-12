@@ -563,6 +563,8 @@ Esta actualización documental no ejecuta de nuevo la suite: describe las valida
 | Fallback de WebGL no visible en algunos casos                   | Se añadió detección previa y una alternativa textual fuera del canvas.                                   |
 | Ejecutable Playwright inconsistente tras mezclar instalaciones  | `test:e2e` utiliza directamente el CLI de `@playwright/test`.                                            |
 | Cambios de dependencias y servidores locales antiguos           | Se reinició Vite con la instalación vigente y se repitieron verificaciones.                              |
+| Etiquetas de semana de la torre («SEMANA 12», «SEMANA 1») ocultas por una regla CSS heredada de la etapa 2D, en cualquier tamaño de pantalla | Encontrado al reconstruir el CSS original durante la conversión a Tailwind; corregido a pedido del usuario quitando el `hidden` en `TowerCard.tsx` y restaurando el posicionamiento y la línea guía originales. |
+| Subtítulo «Sin afectar tu negocio real» oculto por dos reglas CSS heredadas (móvil y layout de escritorio) que juntas cubrían todo viewport real | Mismo hallazgo; corregido a pedido del usuario quitando el `hidden` en `App.tsx`. |
 
 Las auditorías de dependencias ejecutadas después de los ajustes reportaron cero vulnerabilidades en ese momento. Esto es un resultado histórico de la sesión, no una garantía permanente.
 
@@ -596,9 +598,6 @@ Antes de hacerlo, deben definirse con precisión supervivencia, primera semana d
 
 La migración de arquitectura (`PLAN_MIGRACION_ARQUITECTURA.md`) resolvió varios puntos que este documento listaba antes como pendientes: separación de `App.tsx` en features, renombre de `critical` a `result`, extracción de `towerPresentation.ts` como adaptador de presentación, y conexión de `mockFinancialDataSource`. Lo que sigue pendiente, no como trabajo realizado:
 
-- **Dos comportamientos preexistentes, encontrados y preservados durante la conversión a Tailwind (no corregidos a propósito, para no mezclar un cambio de comportamiento con un refactor puro):**
-  - Las etiquetas de semana de la torre («SEMANA 12», «SEMANA 1») están ocultas (`hidden` en `TowerCard.tsx`) porque una regla CSS heredada de la etapa 2D las ocultaba siempre, en cualquier tamaño de pantalla. Si el diseño pretende mostrarlas, quitar `hidden` de esos dos `div`.
-  - El subtítulo «Sin afectar tu negocio real» junto a «Prueba una decisión» está oculto (`hidden` en `App.tsx`) por la misma razón: dos reglas CSS heredadas (una para móvil, una para el layout de escritorio) lo ocultaban en todo viewport real.
 - El breakpoint intermedio (701–1000px, entre el layout de una columna y el de escritorio con torre sticky) no se verificó con el mismo detalle que móvil (≤700px) y escritorio (≥1550px) durante la conversión a Tailwind; es posible que haya diferencias menores de espaciado en ese rango específico.
 - ESLint sigue diferido (decisión de la Fase 1): no hay reglas de lint más allá de `tsc` y `pnpm check:boundaries`.
 - Incorporar navegación por teclado para consultar semanas y bloques individuales.

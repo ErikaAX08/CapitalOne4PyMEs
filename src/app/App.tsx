@@ -316,7 +316,7 @@ export default function App() {
                       Prueba una decisión
                     </h2>
                   </div>
-                  <span className="hidden text-[11px] font-normal text-[#65778e]">
+                  <span className="text-[11px] font-normal text-[#65778e]">
                     Sin afectar tu negocio real
                   </span>
                 </div>

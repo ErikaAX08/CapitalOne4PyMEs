@@ -53,7 +53,7 @@ Añade `typecheck`, `test`, `test:e2e`, `check:boundaries`, `format` y `format:c
 - No cambies las cifras y fórmulas documentadas como parte de una refactorización.
 - El estado de flujo (`SimulationFlowState`, en `features/scenario-simulation`) y el estado financiero (`SimulationOutput.status`) son conceptos distintos; ya no comparten el nombre `critical` (el de flujo es `result`).
 - No agregues secretos ni credenciales al cliente. Usa `.env.example` solo para nombres de variables sin valores sensibles.
-- Dos comportamientos preexistentes están documentados y preservados a propósito (ver DOCUMENTACION_SESION.md §18): las etiquetas de semana de la torre y el subtítulo "Sin afectar tu negocio real" están ocultos por CSS heredado. No los "arregles" silenciosamente dentro de un refactor; si el usuario pide corregirlos, es un cambio de comportamiento con su propio commit y prueba.
+- Las etiquetas de semana de la torre y el subtítulo "Sin afectar tu negocio real" ahora son visibles (corregido en DOCUMENTACION_SESION.md §16; antes estaban ocultos por CSS heredado de la etapa 2D). Si descubres otro comportamiento heredado similar, documéntalo y pregunta antes de "arreglarlo" dentro de un refactor no relacionado.
 
 ## Forma de trabajar
 

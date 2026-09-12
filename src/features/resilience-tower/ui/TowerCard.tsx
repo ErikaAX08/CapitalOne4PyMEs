@@ -75,11 +75,17 @@ export function TowerCard({
           resetKey={resetKey}
           reduced={reduced}
         />
-        <div className="hidden">
-          SEMANA 12<span>Ingresos futuros</span>
+        <div className="pointer-events-none absolute top-[50px] right-[22px] text-[10px] tracking-[1px] text-[#8e9eb2] before:absolute before:top-[4px] before:left-[-30px] before:h-px before:w-[22px] before:bg-[#c3ceda] before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[10px]">
+          SEMANA 12
+          <span className="mt-1 block text-[11px] tracking-normal text-[#a0adbd] max-[700px]:text-[9px]">
+            Ingresos futuros
+          </span>
         </div>
-        <div className="hidden">
-          SEMANA 1<span>Tu base de hoy</span>
+        <div className="pointer-events-none absolute bottom-[75px] right-[22px] text-[10px] tracking-[1px] text-[#8e9eb2] before:absolute before:top-[4px] before:left-[-30px] before:h-px before:w-[22px] before:bg-[#c3ceda] before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[10px]">
+          SEMANA 1
+          <span className="mt-1 block text-[11px] tracking-normal text-[#a0adbd] max-[700px]:text-[9px]">
+            Tu base de hoy
+          </span>
         </div>
         <div className="pointer-events-none absolute right-0 bottom-0 left-0 flex items-center justify-center gap-[7px] text-[11px] text-[#8c9aaa]">
           <Hand size={15} /> Cada gasto retira soporte · Toca un bloque
