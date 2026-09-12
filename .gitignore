@@ -43,3 +43,27 @@ yarn.lock
 
 # Claude Code local session state
 .claude/
+
+# Go build output
+services/domain/bin/
+services/domain/**/*.test
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl
+
+# Build artifacts for Lambda packaging
+**/build/
+*.zip
