@@ -36,8 +36,9 @@ test("contract cash gap and advance mitigation remain deterministic", () => {
       recovered.fragilityScore,
       recovered.survivalWeeks,
       recovered.recommendedBuffer,
+      recovered.minimumProjectedBalance,
     ],
-    [43, 12, 18000],
+    [43, 12, 18000, 32000],
   );
   assert.ok(recovered.weeklyProjections.every((w) => w.balance > 0));
   assert.deepEqual(
@@ -60,6 +61,35 @@ test("contract cash gap and advance mitigation remain deterministic", () => {
       previous = week.balance;
     }
   }
+});
+
+test("equipment and delay scenarios keep documented risk metrics", () => {
+  const equipment = simulateFinancialDecision(
+    business,
+    transactions,
+    scenarios[1],
+  );
+  const delay = simulateFinancialDecision(business, transactions, scenarios[2]);
+  assert.equal(scenarios[1].id, "equipment");
+  assert.deepEqual(
+    [
+      equipment.fragilityScore,
+      equipment.survivalWeeks,
+      equipment.recommendedBuffer,
+      equipment.minimumProjectedBalance,
+    ],
+    [49, 10, 42000, 92000],
+  );
+  assert.equal(scenarios[2].id, "delay");
+  assert.deepEqual(
+    [
+      delay.fragilityScore,
+      delay.survivalWeeks,
+      delay.recommendedBuffer,
+      delay.minimumProjectedBalance,
+    ],
+    [64, 8, 72000, 4000],
+  );
 });
 
 test("each additional expense removes support and undo restores the baseline", () => {
@@ -105,4 +135,31 @@ test("each additional expense removes support and undo restores the baseline", (
       [{ ...first, amount: -1 }],
     ),
   );
+});
+
+test("$191,000 in combined expenses matches the documented worked example", () => {
+  const third = { id: "expense-3", category: "Renta", amount: 24000 };
+  const combined = simulateFinancialDecision(
+    business,
+    transactions,
+    null,
+    [],
+    [
+      { id: "expense-1", category: "Nómina", amount: 72000 },
+      { id: "expense-2", category: "Inventario", amount: 95000 },
+      third,
+    ],
+  );
+  assert.equal(combined.simulatedExpenseTotal, 191000);
+  assert.equal(business.balance - combined.simulatedExpenseTotal, 89000);
+  assert.deepEqual(
+    [
+      combined.removedExpenseBlocks,
+      combined.fragilityScore,
+      combined.survivalWeeks,
+      combined.recommendedBuffer,
+    ],
+    [8, 95, 4, 52650],
+  );
+  assert.equal(combined.status, "Crítico");
 });
