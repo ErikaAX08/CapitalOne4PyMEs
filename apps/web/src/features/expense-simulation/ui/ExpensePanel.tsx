@@ -123,7 +123,7 @@ export function ExpensePanel({
           disabled={disabled}
           className="w-full gap-3 max-[700px]:min-h-[46px] max-[700px]:text-[12px]"
         >
-          <Plus size={18} /> Agregar gasto a la simulación
+          <Plus size={18} /> Simular gasto
         </Button>
       </form>
       <div className="my-[15px] flex flex-wrap gap-[6px]">
