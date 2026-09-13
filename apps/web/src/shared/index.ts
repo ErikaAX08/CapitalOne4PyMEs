@@ -1,6 +1,7 @@
 export { formatMoney } from "./lib/formatMoney";
 export { cn } from "./lib/utils";
 export { Modal } from "./ui/Modal";
+export { InfoTooltip } from "./ui/InfoTooltip";
 export { Button, buttonVariants } from "./ui/button";
 export {
   Card,

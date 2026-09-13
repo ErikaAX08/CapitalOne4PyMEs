@@ -1,2 +1,7 @@
 pnpm-lock.yaml
 dist/
+test-results/
+# Written by services/engine/scripts/generate_states.py and checked byte for
+# byte by the CI data gate. Reformatting them would break `generate_states.py
+# --check` without changing a single figure.
+public/states/

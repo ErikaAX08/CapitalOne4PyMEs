@@ -61,6 +61,14 @@
   --color-warning: #ab570a;
   --color-warning-accent: #f5a623;
   --color-warning-soft: #ffefcf;
+  /* Tension state, PRD 4.2. The scale is deliberately its own pair rather than
+     a reuse of --color-warning-soft: that token sits at hue 40.0, exactly on
+     the boundary the PRD forbids, and restyling it would change components
+     outside the structural-fragility view. --color-warning (hue 28.7) is
+     already compliant and is reused as the foreground. */
+  --color-tension: #e8622a;
+  --color-tension-soft: #fdeee6;
+
   --color-danger: #b9271a;
   --color-danger-soft: #fbeae8;
   --color-info: #004878;

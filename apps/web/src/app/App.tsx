@@ -10,6 +10,7 @@ import {
 import {
   ChevronRight,
   CircleHelp,
+  Gauge,
   Layers3,
   ScanSearch,
   ShieldCheck,
@@ -37,6 +38,7 @@ import {
   useExpenses,
 } from "@features/expense-simulation";
 import { Badge, Button, cn } from "@shared";
+import AnalysisPage from "./AnalysisPage";
 type BusinessDataState =
   | { status: "loading" }
   | {
@@ -142,6 +144,7 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const isDashboard = location.pathname === "/dashboard";
+  const isAnalysis = location.pathname === "/analysis";
   const data = useBusinessData();
   const {
     expenses,
@@ -202,6 +205,17 @@ export default function App() {
         : EMPTY_OUTPUT,
     [data, flow.scenario, expenses],
   );
+  // The structural-fragility view is fed by the engine through /v1/analysis; it
+  // shares no state with the mock business data source, so it must not wait
+  // behind that load. Every hook above has already run, so the order is stable.
+  if (isAnalysis) {
+    return (
+      <div>
+        <AppHeader showDashboardContext />
+        <AnalysisPage />
+      </div>
+    );
+  }
   if (data.status !== "ready") {
     return (
       <div>
@@ -294,13 +308,22 @@ export default function App() {
                     Hola, Mariana. Así se ve el futuro de Distribuidora Luna.
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="inline-flex items-center gap-[7px] py-[10px] text-[12px] no-underline hover:underline max-[700px]:mt-[6px] max-[700px]:pb-0 max-[700px]:text-[11px]"
-                  onClick={() => setTechnical(true)}
-                >
-                  <CircleHelp size={17} /> ¿Cómo lo calculamos?
-                </Button>
+                <div className="flex items-center gap-1 max-[700px]:mt-[6px]">
+                  <Button
+                    variant="ghost"
+                    className="inline-flex items-center gap-[7px] py-[10px] text-[12px] no-underline hover:underline max-[700px]:pb-0 max-[700px]:text-[11px]"
+                    onClick={() => navigate("/analysis")}
+                  >
+                    <Gauge size={17} /> Fragilidad estructural
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="inline-flex items-center gap-[7px] py-[10px] text-[12px] no-underline hover:underline max-[700px]:pb-0 max-[700px]:text-[11px]"
+                    onClick={() => setTechnical(true)}
+                  >
+                    <CircleHelp size={17} /> ¿Cómo lo calculamos?
+                  </Button>
+                </div>
               </div>
               <div className="mb-6 grid rounded-xl border border-hairline bg-canvas min-[701px]:grid-cols-3 max-[700px]:divide-y max-[700px]:divide-hairline min-[701px]:divide-x min-[701px]:divide-hairline">
                 {[
