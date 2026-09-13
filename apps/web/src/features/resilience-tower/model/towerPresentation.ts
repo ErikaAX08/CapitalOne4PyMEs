@@ -1,6 +1,7 @@
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
-export const BLOCK_HEX_COLORS = ["#4389dc", "#58b69b", "#afbac9", "#df6b35"];
+// Capital One palette: solid, active, uncertain, stressed.
+export const BLOCK_HEX_COLORS = ["#004878", "#2a7fa8", "#78a6bd", "#d22e1e"];
 export const TOWER_LEVELS = [
   ["Efectivo", "Crédito disponible", "Reservas"],
   ["Cuentas por cobrar", "Efectivo", "Reservas"],

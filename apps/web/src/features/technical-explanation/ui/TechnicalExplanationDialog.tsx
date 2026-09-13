@@ -11,7 +11,7 @@ export function TechnicalExplanationDialog({
         Dos perspectivas complementarias para entender tu liquidez.
       </p>
       <div className="mt-[25px]">
-        <span className="mr-[9px] inline-block bg-brand-blue-soft p-[6px] text-[12px] text-brand-blue">
+        <span className="mr-[9px] inline-block rounded-md bg-surface-muted p-[6px] font-mono text-[12px] text-ink">
           01
         </span>
         <h3 className="inline text-[16px] font-semibold">Señal estructural</h3>
@@ -19,7 +19,7 @@ export function TechnicalExplanationDialog({
           Analizamos cómo cambia la relación entre ingresos, saldo, tiempos de
           cobro, gastos fijos y concentración de clientes.
         </p>
-        <div className="mt-[14px] border border-hairline bg-surface-subtle p-3">
+        <div className="mt-[14px] rounded-xl border border-hairline bg-surface-muted/60 p-3">
           <span className="text-[11px] text-body-subtle">
             Diagrama de persistencia · ilustrativo
           </span>
@@ -59,7 +59,7 @@ export function TechnicalExplanationDialog({
         </div>
       </div>
       <div className="mt-[25px]">
-        <span className="mr-[9px] inline-block bg-brand-blue-soft p-[6px] text-[12px] text-brand-blue">
+        <span className="mr-[9px] inline-block rounded-md bg-surface-muted p-[6px] font-mono text-[12px] text-ink">
           02
         </span>
         <h3 className="inline text-[16px] font-semibold">Simulación de caja</h3>

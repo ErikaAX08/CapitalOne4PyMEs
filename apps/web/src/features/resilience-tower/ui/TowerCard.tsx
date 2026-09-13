@@ -2,6 +2,7 @@ import { Hand, Layers3, RotateCcw } from "lucide-react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
 import { Card, Badge, Button } from "@shared";
+import { BLOCK_HEX_COLORS } from "../model/towerPresentation";
 import { ResilienceTower } from "./ResilienceTower";
 export function TowerCard({
   flowState,
@@ -37,10 +38,10 @@ export function TowerCard({
     <Card className="tower-card relative flex min-h-[604px] flex-col gap-0 overflow-hidden bg-surface-subtle max-[700px]:min-h-[480px] min-[701px]:sticky min-[701px]:top-[22px] min-[701px]:col-start-2 min-[701px]:row-[1/3] min-[701px]:h-[min(830px,calc(100vh-44px))] min-[701px]:min-h-[620px] min-[701px]:self-start">
       <div className="z-1 flex justify-between p-[24px_25px_0] max-[700px]:p-[20px_20px_0]">
         <div>
-          <span className="font-title text-[11px] font-medium text-body-subtle max-[700px]:text-[9px]">
+          <span className="font-mono text-[11px] font-medium tracking-normal text-body-muted uppercase">
             Mapa visual de dependencias
           </span>
-          <h2 className="font-title mt-[6px] text-[19px] font-semibold tracking-[-0.06em]">
+          <h2 className="font-title mt-1 text-xl font-semibold tracking-[-0.02em]">
             La estructura de tu negocio
           </h2>
           <p className="mt-1.5 max-w-[390px] text-[10px] leading-[1.5] text-body-muted">
@@ -117,17 +118,17 @@ export function TowerCard({
       </div>
       <div className="grid grid-cols-4 border-t border-hairline bg-canvas/65 max-[700px]:grid-cols-2">
         {[
-          ["Sólido", "Alta confianza", "#4389dc"],
-          ["Activo", "Opera normal", "#58b69b"],
-          ["Incierto", "Sin participar", "#afbac9"],
-          ["Estrés", "Nodo frágil", "#df6b35"],
-        ].map(([label, meaning, color]) => (
+          ["Sólido", "Alta confianza"],
+          ["Activo", "Opera normal"],
+          ["Incierto", "Sin participar"],
+          ["Estrés", "Nodo frágil"],
+        ].map(([label, meaning], i) => (
           <span
             key={label}
             className="flex items-center justify-center gap-[7px] border-r border-hairline px-2 py-[11px] text-[9px] text-body-muted last:border-r-0 max-[700px]:justify-start max-[700px]:border-b max-[700px]:px-3"
           >
             <i
-              style={{ background: color }}
+              style={{ background: BLOCK_HEX_COLORS[i] }}
               className="h-[8px] w-[8px] shrink-0"
             />
             <span>

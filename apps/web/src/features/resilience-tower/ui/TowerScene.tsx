@@ -72,7 +72,7 @@ function PhysicsGroup({
       <RigidBody type="fixed" colliders="cuboid" position={[0, -0.18, 0]}>
         <mesh receiveShadow>
           <boxGeometry args={[200, 0.3, 200]} />
-          <meshStandardMaterial color="#eef2f6" roughness={1} />
+          <meshStandardMaterial color="#f2f2f2" roughness={1} />
         </mesh>
       </RigidBody>
     </Physics>
@@ -112,13 +112,13 @@ export function TowerScene({
       dpr={[1, 1.5]}
       camera={{ position: [8, 6.3, 9], fov: 36 }}
     >
-      <color attach="background" args={["#f0f4f8"]} />
-      <fog attach="fog" args={["#f0f4f8", 12, 27]} />
+      <color attach="background" args={["#fafafa"]} />
+      <fog attach="fog" args={["#fafafa", 12, 27]} />
       <ambientLight intensity={1.6} />
       <directionalLight
         position={[5, 10, 4]}
         intensity={2.6}
-        color="#fff5e9"
+        color="#ffffff"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-8}

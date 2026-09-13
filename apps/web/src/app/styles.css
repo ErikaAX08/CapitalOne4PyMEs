@@ -2,91 +2,83 @@
 @import "tw-animate-css";
 
 @font-face {
-  font-family: "Inter";
-  src: url("/fonts/Inter-400.woff2") format("woff2");
+  font-family: "Suit Sans Pro";
+  src: url("/fonts/SuitSansPro-ExtraLight.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Suit Sans Pro";
+  src: url("/fonts/SuitSansPro-ExtraLight.ttf") format("truetype");
+  font-style: normal;
   font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inter";
-  src: url("/fonts/Inter-300.woff2") format("woff2");
-  font-weight: 300;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inter";
-  src: url("/fonts/Inter-500.woff2") format("woff2");
-  font-weight: 500;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inter";
-  src: url("/fonts/Inter-600.woff2") format("woff2");
-  font-weight: 600;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inter";
-  src: url("/fonts/Inter-700.woff2") format("woff2");
-  font-weight: 700;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Inter";
-  src: url("/fonts/Inter-800.woff2") format("woff2");
-  font-weight: 800;
   font-display: swap;
 }
 
 @theme {
-  --font-sans: "Inter", Arial, sans-serif;
-  --font-title: "Inter", Arial, sans-serif;
-  --font-subtitle: "Inter", Arial, sans-serif;
-  --font-body: "Inter", Arial, sans-serif;
+  --font-sans: "Geist Variable", Arial, sans-serif;
+  --font-title: "Suit Sans Pro", "Geist Variable", Arial, sans-serif;
+  --font-subtitle: "Suit Sans Pro", "Geist Variable", Arial, sans-serif;
+  --font-body: "Geist Variable", Arial, sans-serif;
+  --font-mono:
+    "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --radius: 0px;
+  --radius: 0.75rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
 
-  --color-brand-blue: #123465;
-  --color-brand-blue-hover: #0d2850;
-  --color-brand-blue-pressed: #081c3a;
-  --color-brand-blue-soft: #e9eef7;
-  --color-brand-red: #d0192f;
-  --color-brand-red-soft: #fbe9ea;
+  /* Geist foundations with the Capital One For PyMES brand palette. */
+  --color-brand-blue: #004878;
+  --color-brand-blue-hover: #00385e;
+  --color-brand-blue-pressed: #002b49;
+  --color-brand-blue-soft: #e7f1f6;
+  --color-brand-red: #d22e1e;
+  --color-brand-red-hover: #b9271a;
+  --color-brand-red-soft: #fbeae8;
 
-  --color-canvas: #ffffff;
-  --color-surface-subtle: #f4f6fb;
-  --color-surface-muted: #eaeef6;
-  --color-surface-inverse: #0b2143;
+  --color-canvas: #fafafa;
+  --color-surface-subtle: #ffffff;
+  --color-surface-soft: #f4f4f4;
+  --color-surface-muted: #f2f2f2;
+  --color-surface-inverse: #171717;
 
-  --color-ink: #0d1b2f;
-  --color-body: #3b4a5e;
-  --color-body-muted: #64708a;
-  --color-body-subtle: #8a93a8;
+  --color-ink: #171717;
+  --color-body: #333333;
+  --color-body-muted: #666666;
+  --color-body-subtle: #8f8f8f;
   --color-on-brand: #ffffff;
   --color-on-inverse: #ffffff;
 
-  --color-hairline: #e2e6ef;
-  --color-hairline-strong: #c7cede;
-  --color-focus-ring: #2f6fed;
+  --color-hairline: #eaeaea;
+  --color-hairline-strong: #a1a1a1;
+  --color-focus-ring: #004878;
 
-  --color-success: #17845a;
-  --color-success-soft: #e3f7ec;
-  --color-warning: #a86700;
-  --color-warning-soft: #fff4de;
-  --color-danger: #d0192f;
-  --color-danger-soft: #fbe9ea;
-  --color-info: #2f6fed;
-  --color-info-soft: #eaf1fe;
+  --color-success: #004878;
+  --color-success-soft: #e7f1f6;
+  --color-warning: #ab570a;
+  --color-warning-accent: #f5a623;
+  --color-warning-soft: #ffefcf;
+  --color-danger: #b9271a;
+  --color-danger-soft: #fbeae8;
+  --color-info: #004878;
+  --color-info-soft: #e7f1f6;
 
-  --color-chart-1: #123465;
-  --color-chart-2: #2f6fed;
-  --color-chart-3: #7aa2e0;
-  --color-chart-4: #b9c6dc;
-  --color-chart-5: #17845a;
-  --color-chart-6: #7a6aa8;
-  --color-chart-7: #4d7c9a;
-  --color-chart-8: #a86700;
-  --color-chart-anomaly: #d0192f;
+  --color-chart-1: #004878;
+  --color-chart-2: #2a7fa8;
+  --color-chart-3: #78a6bd;
+  --color-chart-4: #d22e1e;
+  --color-chart-5: #e79087;
+  --color-chart-6: #00385e;
+  --color-chart-7: #5f7380;
+  --color-chart-8: #9aaab2;
+  --color-chart-anomaly: #d22e1e;
+
+  --shadow-geist-small: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-geist-floating:
+    0 2px 2px rgb(0 0 0 / 0.04), 0 8px 16px -4px rgb(0 0 0 / 0.08);
 
   /* shadcn/ui contract -- generated primitives (Button, Dialog, Card, ...)
      read these; keep them mapped onto the tokens above rather than letting
@@ -99,12 +91,12 @@
   --color-popover-foreground: var(--color-ink);
   --color-primary: var(--color-brand-blue);
   --color-primary-foreground: var(--color-on-brand);
-  --color-secondary: var(--color-surface-subtle);
+  --color-secondary: var(--color-surface-muted);
   --color-secondary-foreground: var(--color-body);
-  --color-muted: var(--color-surface-muted);
+  --color-muted: var(--color-hairline);
   --color-muted-foreground: var(--color-body-muted);
-  --color-accent: var(--color-brand-blue-soft);
-  --color-accent-foreground: var(--color-brand-blue);
+  --color-accent: var(--color-surface-muted);
+  --color-accent-foreground: var(--color-ink);
   --color-destructive: var(--color-danger);
   --color-destructive-foreground: var(--color-on-brand);
   --color-border: var(--color-hairline);
@@ -112,7 +104,7 @@
   --color-ring: var(--color-focus-ring);
 
   /* Legacy semantic aliases kept so existing status classes keep working
-     while pointing at the Capital One semantic hexes. */
+     while pointing at the Geist semantic scale. */
   --color-stable-bg: var(--color-success-soft);
   --color-stable-fg: var(--color-success);
   --color-warning-bg: var(--color-warning-soft);
@@ -128,12 +120,15 @@
     background: var(--color-canvas);
     font-synthesis: none;
     font-weight: 400;
-    font-size: 14px;
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: normal;
   }
-  @media (min-width: 1550px) {
-    :root {
-      font-size: 16px;
-    }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-title);
+    font-weight: 200;
   }
   h1,
   h2,
@@ -144,6 +139,7 @@
   button {
     font: inherit;
     cursor: pointer;
+    touch-action: manipulation;
   }
   button:disabled {
     cursor: wait;
@@ -152,7 +148,10 @@
   a {
     -webkit-tap-highlight-color: transparent;
   }
-  button:focus-visible {
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  [role="button"]:focus-visible {
     outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
