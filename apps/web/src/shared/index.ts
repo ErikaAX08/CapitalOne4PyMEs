@@ -3,6 +3,7 @@ export { cn } from "./lib/utils";
 export { Modal } from "./ui/Modal";
 export { InfoTooltip } from "./ui/InfoTooltip";
 export { Logo } from "./ui/Logo";
+export { BrandSwoosh } from "./ui/BrandSwoosh";
 export { Button, buttonVariants } from "./ui/button";
 export {
   Card,
