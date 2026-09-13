@@ -45,7 +45,7 @@ hackathon:
 | 7 | **Forms generated from the action schema** | Adding an action does not touch the front-end | Five hand-written forms |
 | 8 | **Precomputed states as fallback, not as mechanism** | Instant initial render and a circuit breaker against API failure | Depending on the API alone |
 | 9 | **No VPC, no NAT Gateway** | NAT is roughly 32 USD/month: a third of the budget on network plumbing | Lambdas in a private VPC |
-| 10 | **No database** | The computation is pure; there is no state to persist in the MVP | DynamoDB / RDS |
+| 10 | **No database inside AWS** | The analysis is pure and persists nothing. The ledger does persist, on Tiger Cloud (PostgreSQL + TimescaleDB) reached over TLS, so there is still no RDS, no Aurora and no VPC | DynamoDB / RDS / Aurora |
 | 11 | **GitHub Actions with OIDC** | Zero static keys in the repository | Access keys in secrets |
 | 12 | **Terraform with S3 backend + native lockfile** | Since TF 1.10 no DynamoDB table is needed for locking | DynamoDB locking |
 
@@ -304,11 +304,27 @@ GET /v1/analysis
 Response: the **state document** from PRD §5.2, identical to the one in the
 precomputed artifacts. One schema for the API and for the fallback.
 
+The ledger is the other half of the contract, and it is not cacheable: it
+changes whenever someone records a movement.
+
+```
+GET  /v1/movements?direction=in&status=delayed&from=2026-09-01&to=2026-09-30
+POST /v1/movements   { node, direction, dueDate, amountCents, description? }
+```
+
+`GET` answers the company's movements, most recent obligation first. `POST`
+answers `201` with the movement as it was stored, `400` for a draft that breaks
+an invariant of `docs/data-model.md` §3, `409` for a re-import that conflicts
+with a recorded fact, and `503` when the database is unreachable. Both answer
+`no-store`: only the analysis is a pure function of its query string.
+
 Rules:
 
 - **Money in cents, integer.** Never floats crossing the boundary.
 - **`seed` explicit in the query.** It is part of the cache key: without it the
   response would not be pure.
+- **A write never degrades.** The interface may fall back to a precomputed
+  answer for a read; a movement is either stored or reported as unsent.
 - **`schema` versioned** in the response. An unknown schema is a visible failure,
   never a silent zero.
 - **`warnings` always present** and always rendered.
@@ -580,7 +596,7 @@ walking through twenty scenarios generates twenty computations, not two hundred.
 | --- | --- | --- |
 | NAT Gateway | ~32 USD/month | No VPC |
 | Application Load Balancer | ~18 USD/month | API Gateway HTTP API |
-| Aurora Serverless v2 without scale-to-zero | ~43 USD/month | No database |
+| Aurora Serverless v2 without scale-to-zero | ~43 USD/month | The ledger lives on Tiger Cloud, outside AWS |
 | Container image in ECR | 0.10 USD/GB-month + slow start | Zip packaging |
 | Secrets Manager | 0.40 USD/secret/month | SSM Parameter Store, or no secret at all |
 | Logs without retention | grows indefinitely | 7-day retention in Terraform |

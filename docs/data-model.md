@@ -5,13 +5,17 @@ the code alone does not: **what does the database look like** when the product
 moves past the stateless MVP, and **what is the shape of one SME cash movement**
 that the engine consumes.
 
-Status: the MVP deploys **no database** (`architecture.md` decision 10). The
-engine is a pure function of its request, and the `company` block of that
-request (`contracts/engine-request.schema.json`) is exactly a projection of the
-tables below. This document fixes the target schema so the request contract, the
-demo profile in `services/engine/fixtures/company_demo_agency.json` and the
-future persistence layer share one vocabulary. The DDL lives in
-`contracts/database/schema.sql`.
+Status: `movements` is **deployed** on Tiger Cloud — PostgreSQL with the
+TimescaleDB extension — and read and written by `services/domain` through
+`GET`/`POST /v1/movements`. Everything else in the system stays on AWS, so no
+RDS or Aurora is involved and `architecture.md` decision 10 (no database inside
+AWS) still holds. The remaining tables are created by the same DDL but no code
+writes to them yet.
+
+The analysis path is unchanged: the engine is still a pure function of its
+request, and the `company` block of that request
+(`contracts/engine-request.schema.json`) is exactly a projection of the tables
+below. The DDL lives in `contracts/database/schema.sql`.
 
 ---
 
@@ -24,7 +28,7 @@ Inherited from `AGENTS.md`, the evaluation report §5 and the engine invariants.
 | Money is an integer count of cents | every `*_cents` column is `BIGINT`; no `NUMERIC`, no floats |
 | An unknown balance is never zero | `company_snapshots.opening_balance_cents` is `NULL`-able; `NULL` counts against coverage and forces abstention |
 | No future information from the cut-off | `movements.known_at` and `movements.available_at` stamp when a fact became knowable; historical runs filter on them |
-| Duplicates are excluded, conflicts are errors | `UNIQUE (company_id, source, source_ref)` on `movements`; a conflicting re-import is rejected by the loader, not merged |
+| Duplicates are excluded, conflicts are errors | `UNIQUE (company_id, source, source_ref, due_date)` on `movements`; `due_date` is in the key only because TimescaleDB requires the partition column in every unique index, so the index alone no longer catches a re-import under a corrected date — `internal/movements/application` rejects that before inserting |
 | Reconciliation is explicit | `0 <= settled_cents <= amount_cents` as a `CHECK`; status is derived, never typed by hand |
 | Every relationship declares its provenance | `provenance` enum `known · declared · learned · hypothetical` on rules and movements |
 | A committed scenario is immutable, seed fixed at creation | `scenarios` rows are insert-only; `parameter_hash` makes them addressable and cacheable |
@@ -251,7 +255,7 @@ uses, and `amount_cents − settled_cents` into the outstanding amount.
 
 | Column | Type | Meaning | Engine field |
 | --- | --- | --- | --- |
-| `movement_id` | `CHAR(26)` | ULID | `id` |
+| `movement_id` | `CHAR(26)` | ULID. Part of the primary key together with `due_date`, which rides along only because it is the partition column | `id` |
 | `company_id` | `CHAR(26)` | owner | request `company.company_id` |
 | `node` | `TEXT` → `graph_nodes` | capability the movement funds or consumes (`payroll`, `collection`, `supplier`, …) | `node` |
 | `counterparty_id` | `CHAR(26)`, nullable | the customer, supplier, lender or authority | — |
@@ -271,6 +275,20 @@ uses, and `amount_cents − settled_cents` into the outstanding amount.
 | `exposure` | enum | `main_customer` when the amount contains the main customer's share | `exposure` |
 | `priority` | `SMALLINT`, nullable | intraday order among commitments; default from `graph_nodes` | `priority` |
 | `provenance` | enum | `known · declared · learned · hypothetical` | `provenance` |
+
+**What being a hypertable costs**
+
+`movements` is partitioned by `due_date`, and TimescaleDB enforces uniqueness
+per chunk: *"Any `UNIQUE` or `PRIMARY KEY` index must include the partition
+column."* Three things follow, and they are the price of the partitioning:
+
+- the primary key is `(movement_id, due_date)`, not `movement_id` alone;
+- the dedup index is `(company_id, source, source_ref, due_date)`, so the same
+  `source_ref` re-imported under a **corrected date** no longer collides — the
+  use case in `services/domain/internal/movements/application` rejects it
+  instead, and a concurrent pair of writes could in principle slip past;
+- `alert_episodes` and `outcome_events` carry `movement_due_date` next to
+  `movement_id`, because a foreign key must reference the whole key.
 
 **Conventions the engine relies on**
 
@@ -304,11 +322,13 @@ profile variables; above 20% unknown the run is an `abstention`.
 
 ## 5. What the MVP stores and what it does not
 
-| Now (MVP) | Later |
+| Now | Later |
 | --- | --- |
+| `movements` and `graph_nodes` on Tiger Cloud, written by `/v1/movements` | the loaders that fill `movements` from bank feeds and CFDI, instead of by hand |
 | Demo profile as a JSON fixture (`company_demo_agency.json`) | `companies`, `company_snapshots`, `recurring_rules`, `counterparties` |
 | Four fallback state documents under `apps/web/public/states/` | `scenarios` + `analysis_runs`, keyed by `parameter_hash` (the CloudFront cache key becomes a row) |
 | Nothing about alerts or outcomes | `alert_episodes`, `outcome_events`, `recommendations` — the tables the evaluation report §5 says are required before any prospective claim |
+| The analysis still builds its request from the fixture, not from `movements` | `company.one_off_movements[]` read from the rows the ledger holds |
 
 Adding the database does not change the engine: `analysis.analyze()` receives
 the same request either way. It changes who builds the request.

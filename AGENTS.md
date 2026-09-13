@@ -28,9 +28,9 @@ cobranza" on screen. Never mix the two inside one layer.
 | Path | Contents | Language |
 | --- | --- | --- |
 | `apps/web/` | Front-end, Vite + React + TypeScript | TypeScript |
-| `services/domain/` | Bounded contexts `scenario` and `risk` | Go |
+| `services/domain/` | Bounded contexts `scenario`, `risk` and `movements` | Go |
 | `services/engine/` | Cash calendar, Monte Carlo, tension sweep | Python |
-| `contracts/` | JSON schemas shared across services | JSON Schema |
+| `contracts/` | JSON schemas shared across services, and the SQL schema | JSON Schema, SQL |
 | `infra/` | Terraform modules and environments | HCL |
 | `docs/` | Product and architecture documents | Markdown |
 
@@ -46,7 +46,12 @@ cobranza" on screen. Never mix the two inside one layer.
 - **Contracts change in `contracts/` first**, then in the services that read
   them. A schema mismatch must fail the build, never degrade silently.
 - **No number reaches the screen without an engine run behind it.** Do not
-  hand-write figures into fixtures or components.
+  hand-write figures into fixtures or components. The ledger (`/movements`) is
+  the one exception in kind, not in spirit: its figures come from the
+  `movements` table, and nothing in the interface derives or recomputes one.
+- **A read may degrade; a write never does.** When a service cannot answer, a
+  view may fall back to a precomputed or bundled state *and say so*. A movement
+  the database did not take is reported as unsent — never rendered as stored.
 - **No secrets in the repository.** Use `.env.example` for variable names only.
 
 ## Toolchains

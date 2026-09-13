@@ -8,7 +8,7 @@ Front-end rules. Repository-wide conventions live in the root
 Resilia is a React + TypeScript + Vite demo that lets you explore the impact of
 simulated decisions and expenses on an SME's liquidity.
 
-There are two views, and they do not share a data path:
+There are three views, and they do not share a data path:
 
 - `/dashboard` — the 3D tower demo. The tower is a visual representation; its
   computations are deterministic and **mocked** (`simulateFinancialDecision`),
@@ -17,6 +17,12 @@ There are two views, and they do not share a data path:
   A to E. **Every figure on it comes from a state document the engine produced**
   through `GET /v1/analysis`. It derives nothing, interpolates nothing, and
   rounds nothing in a way that changes a number.
+- `/movements` — the company's ledger: the `movements` table of
+  `docs/data-model.md` §3, read and written through `/v1/movements`. It is the
+  only view backed by a database (Tiger Cloud, PostgreSQL with TimescaleDB).
+  Reading degrades to `entities/business/fixtures/movements.ts` and labels
+  itself "Libro aproximado"; **writing never degrades** — a movement the service
+  could not take is queued as unsent and never shown inside the ledger.
 
 The actual tree (`src/app`, `src/features`, `src/entities`, `src/shared`) is the
 source of truth on the current structure.
@@ -25,12 +31,21 @@ source of truth on the current structure.
 
 - Feature-based architecture with the direction `app -> features -> entities -> shared`,
   verified by `pnpm check:boundaries`.
-- `/dashboard` and `/analysis` are wrapped by `features/app-shell`: a sidebar with
+- `/dashboard`, `/movements` and `/analysis` are wrapped by `features/app-shell`: a sidebar with
   the two real routes, the current page's section anchors and its in-page
   commands, plus a top bar that names the view. Both views fill all three groups.
   The landing page (`/`) sits outside it and keeps its centred wordmark header.
   The sidebar collapses below 1000px, where `TopBar` surfaces the same routes and
   commands as a compact row.
+- `app/MovementsView` (in `App.tsx`) owns the `useMovements` controller the same
+  way, and for the same reason: the ledger's read loop must not run on the
+  landing page or the dashboard.
+- Money crosses the `/v1/movements` boundary as `amountCents`, an integer. The
+  form multiplies by 100 once, at the edge; nothing downstream sees pesos.
+- The Spanish a movement reads as (`Nómina`, `Esperado`, `CFDI`) is built in
+  `entities/business/model/movementPresentation.ts`. The contract stays English
+  (`payroll`, `expected`, `cfdi`) — the boundary is that module, not the
+  component.
 - `app/AnalysisView` (in `App.tsx`) owns the `useAnalysis` controller and passes
   it to `AnalysisPage`, so the shell's commands and the page's own controls drive
   one state. Keep the hook behind that route component: calling it higher up
@@ -125,7 +140,12 @@ Add `typecheck`, `test`, `test:e2e`, `check:boundaries`, `format` and
 - The landing header carries no account context: `Demo con datos simulados`,
   `Mariana Luna` and `Administradora` belong to the shell's top bar, and the
   wordmark stays horizontally centred on `/` (an e2e assertion checks both).
-- Demo assets stay local; do not add external calls without authorization.
+- Demo assets stay local; do not add external calls without authorization. The
+  one service the interface talks to is `services/domain` on the same origin,
+  through the `/v1` proxy.
+- The dashboard's simulated expenses and the ledger's movements are different
+  things and must stay distinguishable on screen: the first explores a scenario
+  and is forgotten, the second is stored. Do not merge them without asking.
 - Do not change figures and formulas documented as part of a refactor.
 - Flow state (`SimulationFlowState`, in `features/scenario-simulation`) and
   financial state (`SimulationOutput.status`) are distinct concepts; they no

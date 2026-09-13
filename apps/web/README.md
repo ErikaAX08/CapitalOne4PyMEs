@@ -42,12 +42,14 @@ Organized by feature, with the dependency direction
   entry point (tokens in `@theme`, reset in `@layer base`).
 - `src/features/`: one folder per product capability — `app-shell` (the sidebar
   and top bar the in-app views share), `onboarding`, `financial-overview` (the
-  statistics row and the business signals card), `expense-simulation`,
+  statistics row and the business signals card), `movements-ledger` (the
+  company's ledger and the form that records one), `expense-simulation`,
   `scenario-simulation` (includes the `useSimulationFlow` reducer),
   `resilience-tower` (includes the pure view model `towerPresentation.ts` and the
   3D runtime) and `technical-explanation`.
-- `src/entities/`: domain without React — `business` (types, fixtures and
-  `mockFinancialDataSource`), `scenario` and `simulation`
+- `src/entities/`: domain without React — `business` (types, fixtures,
+  `mockFinancialDataSource`, and the `Movement` model with its
+  `/v1/movements` data source), `scenario` and `simulation`
   (`simulateFinancialDecision`, the deterministic engine).
 - `src/shared/`: domain-agnostic — `Modal`, `Logo` and `formatMoney`.
 

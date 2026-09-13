@@ -37,7 +37,11 @@ Native S3 locking — no DynamoDB table needed since Terraform 1.10.
 
 - **No VPC.** A NAT Gateway is roughly 32 USD per month, a third of the budget
   spent on networking plumbing with nothing to isolate.
-- **No database.** The computation is pure; there is no state to persist.
+- **No database inside AWS.** The analysis is pure, so it persists nothing. The
+  ledger does persist, but it lives on Tiger Cloud (PostgreSQL with
+  TimescaleDB), reached over TLS from the Go function — so there is still no
+  RDS, no Aurora, and no VPC to put them in. The connection string is
+  configuration, not Terraform state: keep it in SSM Parameter Store.
 - The site bucket is private, reachable only through Origin Access Control.
   Never public website hosting.
 - **Log groups are declared in Terraform** with `retention_in_days = 7`. Created

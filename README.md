@@ -14,7 +14,8 @@ Design documents live in [`docs/`](docs/). Start with `prd-mvp.md` for scope and
 apps/web/            Front-end. Vite + React + TypeScript.
 services/domain/     Go. Bounded contexts: scenario, risk. Owns business invariants.
 services/engine/     Python + NumPy. Cash calendar, Monte Carlo, tension sweep.
-contracts/           JSON schemas shared by every service. The single source of truth.
+contracts/           JSON schemas shared by every service, and the SQL schema of
+                     the database. The single source of truth.
 infra/               Terraform. S3, CloudFront, API Gateway, Lambda, CI/CD roles.
 docs/                Product and architecture documents.
 ```
@@ -38,6 +39,14 @@ cd services/engine && python3 -m pip install -e ".[dev]"   # once
 cd services/domain && go run ./cmd/analysis                # :8080
 cd apps/web && pnpm dev                                    # :5173, proxies /v1
 ```
+
+The company's ledger (`/movements`) is the one part backed by a database:
+`movements` lives on **Tiger Cloud**, which is PostgreSQL with TimescaleDB, and
+everything else stays on AWS. Point `DATABASE_CONNECTION_STRING` at it — see
+`services/domain/.env.example` — or leave it unset, in which case every other
+route still works and `/v1/movements` answers 503 instead of pretending to
+store anything. Applying `contracts/database/schema.sql` to any PostgreSQL is
+enough to run it locally.
 
 Then open `/analysis` for the structural-fragility view. The interface renders
 the precomputed base state immediately and degrades back to the nearest
