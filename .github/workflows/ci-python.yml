@@ -1,0 +1,41 @@
+name: ci-python
+
+on:
+  pull_request:
+    paths:
+      - "services/engine/**"
+      - "contracts/**"
+      - ".github/workflows/ci-python.yml"
+  push:
+    branches: [main]
+    paths:
+      - "services/engine/**"
+      - "contracts/**"
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet ".[dev]"
+      - name: Lint
+        run: ruff check .
+      - name: Tests
+        run: pytest -q
+      - name: Data gate — fixtures reproduce byte for byte and match the report
+        run: python scripts/generate_states.py --check
+      - name: Contract gate — fallback states validate against state.schema.json
+        run: |
+          python - <<'PY'
+          import json, pathlib, jsonschema
+          schema = json.loads(pathlib.Path("../../contracts/state.schema.json").read_text())
+          for path in pathlib.Path("fixtures/states").glob("*.json"):
+              jsonschema.Draft202012Validator(schema).validate(json.loads(path.read_text()))
+              print("valid", path.name)
+          PY
