@@ -304,6 +304,14 @@ GET /v1/analysis
 Response: the **state document** from PRD §5.2, identical to the one in the
 precomputed artifacts. One schema for the API and for the fallback.
 
+`/v1/analysis` also accepts the profile variables a stored company may be
+missing — `payroll_cents`, `main_customer_concentration`,
+`contracted_term_days`, `payroll_interval_days`, `average_collection_days`,
+`opening_balance_cents`. A declared value fills an unknown and never overwrites
+a recorded one, so a company the database knows fully is unaffected by them.
+Without them a company below the coverage threshold answers `abstention`, which
+is the correct answer rather than a failure.
+
 The ledger is the other half of the contract, and it is not cacheable: it
 changes whenever someone records a movement.
 

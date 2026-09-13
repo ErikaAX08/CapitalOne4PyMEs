@@ -332,3 +332,109 @@ profile variables; above 20% unknown the run is an `abstention`.
 
 Adding the database does not change the engine: `analysis.analyze()` receives
 the same request either way. It changes who builds the request.
+
+---
+
+## 6. The historical reference set
+
+`company_snapshots.dataset` names the external set a row came from; `NULL` is
+the product's own data. One set is loaded today.
+
+**Source.** The UCI *Polish companies bankruptcy data* (Zieba, Tomczak &
+Tomczak), 43,405 company-year observations of 64 financial **ratios** plus a
+bankruptcy label, covering 2000-2013. Loaded by
+`services/domain/scripts/load_polish_dataset.py`.
+
+| Table | Rows | What they are |
+| --- | --- | --- |
+| `companies` | 43,169 | `vertical = 'reference_dataset'`, named `PL-<file>-<index>` |
+| `company_snapshots` | 43,169 | `dataset = 'uci-polish-bankruptcy'` |
+| `movements` | 675,667 | **derived**, `provenance = 'hypothetical'`, `source = 'rule'` |
+| `outcome_events` | 2,073 | `kind = 'bankruptcy'` — the only observed event |
+
+**What is observed and what is not.** The set is a reference table, not a
+ledger: it has no dates, no individual movements, no counterparties and no
+company identity. What it does have is an absolute scale, because `Attr29` is
+the base-10 logarithm of total assets — verified self-consistent with
+`Attr55 / Attr3` in 97.9% of rows — which lets each ratio be resolved into an
+amount.
+
+- **Observed**: `average_collection_days` (`Attr44`, median 54 days) and the
+  cash balance (`Attr40 x Attr51 x 10^Attr29`), plus the bankruptcy label.
+- **Derived**: every amount in `movements`, from the ratios.
+- **Invented**: every `due_date` in `movements`. The source has no dates at
+  all; the calendar is a convention, which is why each row is stamped
+  `hypothetical` and `rule`. **Never read these as facts the business
+  reported.**
+
+**Coverage, and why these companies abstain unless the caller declares the
+rest.** `GET /v1/analysis` accepts `payroll_cents`,
+`main_customer_concentration`, `contracted_term_days`,
+`payroll_interval_days`, `average_collection_days` and
+`opening_balance_cents` as optional parameters. A declared value only ever fills
+a hole — it never overwrites what the database recorded — and without them a
+reference company answers `abstention` at 4/7 coverage.
+
+ Five of the seven
+coverage variables of §4 — `payroll_cents`, `payroll_interval_days`,
+`main_customer_concentration`, `contracted_term_days` and `recurring_rules` —
+are simply absent from the source, so they are `NULL`. That is 71% unknown
+against a 20% threshold: the engine abstains on every one of them, and it is
+right to. Filling them with plausible values would turn an honest abstention
+into a confident answer about a company nobody measured.
+
+**Two distortions to state plainly.**
+
+1. **Currency.** The amounts are Polish zloty, stated in thousands, converted
+   at one fixed rate of **1 PLN = 4.5494 MXN** (a 2026 rate applied to
+   2000-2013 statements) so they satisfy the `currency = 'MXN'` constraint.
+   Every converted figure carries that distortion.
+2. **Identity.** The dataset publishes no keys, so rows are never joined across
+   its five files. Two rows may be the same firm a year apart and there is no
+   way to tell; each is loaded as its own company.
+
+**Rejections.** 236 of 43,405 rows (0.54%) were refused rather than repaired:
+135 without sales, 68 implying a negative cash balance, 25 with total assets
+outside a credible range, 8 without a scale. A further 542 rows report a
+collection cycle longer than a year — `Attr44` reaches 22,584,000 "days" — and
+for those the variable is left unknown rather than recorded wrong.
+
+**How the derived calendar is built, and what it took to make it honest.**
+Three streams, deliberately disjoint, each spanning the same 180-day horizon so
+they can be weighed against one another:
+
+| Stream | Amount | Cadence |
+| --- | --- | --- |
+| `collection` (in) | the receivables balance, which annualises to sales | the collection cycle, `Attr44` |
+| `supplier` (out) | `Attr58 x sales` — everything the business spends | monthly |
+| `debt` (out) | long-term liabilities amortised over five years | monthly |
+
+`Attr58` (total costs / total sales) is the anchor because it is the ratio that
+decides whether cash accumulates, and it is credible: median 0.939, with 87% of
+the set spending less than it sells. The resulting calendar has a median
+inflow-to-outflow ratio of 0.91 over the horizon, and 28% of companies generate
+cash.
+
+Two earlier attempts did not survive checking, and both are worth recording:
+
+- Charging the payables balance as `supplier`, the inventory balance as
+  `materials` and operating expenses as `tax` counted the same money three
+  times — outflows ran at 7,637M against 2,661M of inflow, and **every** company
+  came out in crisis regardless of its ratios.
+- Deriving the cost of sales from `Attr52` as
+  `short-term liabilities x 365 / Attr52` yields 352 times sales at the median.
+  Whatever that ratio encodes, it is not an annual cost, and it is not used.
+
+**What it does not show.** On a random sample of 25 companies that went bankrupt
+and 25 that did not, the state distribution is the same — crisis 12 vs 15,
+tension 6 vs 4, stable 6 vs 5. **This calendar does not discriminate
+bankruptcy.** Part of the reason is structural: three profile variables must be
+declared per request, and declaring one value across companies whose assets span
+six orders of magnitude makes that declaration, not the company, drive the
+result. Treat these simulations as exercises of the engine over real financial
+structure, never as evidence that it predicts failure.
+
+**What it is for.** `outcome_events` is the table the evaluation report §5 says
+is required before any prospective claim. This set supplies real outcome
+labels — and it is Polish, which is exactly the limitation `/analysis` already
+declares on screen as "Sin validación en población mexicana".
