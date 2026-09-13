@@ -1,0 +1,76 @@
+name: ci-infra
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - ".github/workflows/ci-infra.yml"
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+
+# Read-only, and deliberately no `id-token: write`.
+#
+# docs/architecture.md §9 asks ci-infra for a `plan` on the pull request. That
+# is not done here, because a plan needs AWS credentials and this workflow is
+# triggered by pull_request — the classic path for a malicious PR to exfiltrate
+# whatever the job can reach. The deploy role's trust policy only accepts
+# `refs/heads/main` for the same reason.
+#
+# Everything below catches a broken configuration without touching the account:
+# a syntax error, a bad attribute name, an unused variable, an insecure default.
+# The plan happens in deploy.yml, after merge, where the apply follows it anyway.
+permissions:
+  contents: read
+
+jobs:
+  infra:
+    name: infra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+          terraform_wrapper: false
+
+      - name: fmt
+        run: terraform fmt -recursive -check -diff infra/
+
+      # -backend=false is what lets validate run with no bucket and no
+      # credentials. envs/prod pulls in all five modules, so this covers them.
+      - name: validate — envs/prod
+        working-directory: infra/envs/prod
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+
+      - name: validate — bootstrap
+        working-directory: infra/bootstrap
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.54.0
+
+      - name: tflint
+        run: tflint --recursive --chdir=infra
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: checkov
+        run: |
+          python -m pip install --quiet checkov==3.2.334
+          # soft-fail for now. Checkov's defaults flag things this architecture
+          # rejected on purpose and documented — no WAF on the distribution, no
+          # S3 access logging, no multi-AZ — and a gate that fails for reasons
+          # the team has already decided against is a gate everyone learns to
+          # skip. Triage the findings, add the accepted ones to a skip list with
+          # their reason, then drop --soft-fail.
+          checkov --directory infra --framework terraform --soft-fail --compact
