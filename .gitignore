@@ -64,6 +64,12 @@ venv/
 *.tfplan
 .terraform.lock.hcl
 
+# Terraform configuration that is environment-specific or carries a bucket name.
+# *.tfvars may hold a connection string, so it never gets committed.
+backend.hcl
+*.tfvars
+!*.tfvars.example
+
 # Build artifacts for Lambda packaging
 **/build/
 *.zip
