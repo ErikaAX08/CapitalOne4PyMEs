@@ -1,9 +1,104 @@
-import { Hand, Layers3, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import {
+  Banknote,
+  BriefcaseBusiness,
+  CircleHelp,
+  CreditCard,
+  FileCheck2,
+  FileText,
+  Gauge,
+  Hand,
+  Package,
+  ReceiptText,
+  RotateCcw,
+  Shield,
+  Truck,
+  UserRound,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
-import { Card, Badge, Button } from "@shared";
-import { BLOCK_HEX_COLORS } from "../model/towerPresentation";
+import { Card, Badge, Button, Modal } from "@shared";
 import { ResilienceTower } from "./ResilienceTower";
+
+const BLOCK_GUIDE: {
+  title: string;
+  description: string;
+  items: { label: string; meaning: string; icon: LucideIcon }[];
+}[] = [
+  {
+    title: "Cimientos",
+    description: "Sostienen todo lo que ocurre arriba.",
+    items: [
+      { label: "Efectivo", meaning: "Dinero disponible hoy", icon: Banknote },
+      {
+        label: "Cuentas por cobrar",
+        meaning: "Facturas que tus clientes aún no pagan",
+        icon: ReceiptText,
+      },
+      {
+        label: "Crédito disponible",
+        meaning: "Financiamiento que todavía puedes utilizar",
+        icon: CreditCard,
+      },
+      {
+        label: "Reservas",
+        meaning: "Colchón para absorber imprevistos",
+        icon: Shield,
+      },
+    ],
+  },
+  {
+    title: "Operación",
+    description: "Convierte los recursos en trabajo diario.",
+    items: [
+      { label: "Nómina", meaning: "Pagos comprometidos con tu equipo", icon: Users },
+      {
+        label: "Proveedores",
+        meaning: "Obligaciones con quienes abastecen el negocio",
+        icon: Truck,
+      },
+      {
+        label: "Inventario",
+        meaning: "Recursos y materiales necesarios para operar",
+        icon: Package,
+      },
+      {
+        label: "Capacidad",
+        meaning: "Trabajo que tu operación puede sostener",
+        icon: Gauge,
+      },
+    ],
+  },
+  {
+    title: "Crecimiento",
+    description: "Depende de que los niveles inferiores sigan firmes.",
+    items: [
+      {
+        label: "Contratos",
+        meaning: "Compromisos comerciales vigentes",
+        icon: FileText,
+      },
+      {
+        label: "Proyectos",
+        meaning: "Trabajo que generará ingresos y costos",
+        icon: BriefcaseBusiness,
+      },
+      {
+        label: "Cliente principal",
+        meaning: "Dependencia de tu mayor fuente de ingresos",
+        icon: UserRound,
+      },
+      {
+        label: "Cumplimiento fiscal",
+        meaning: "Impuestos y obligaciones legales",
+        icon: FileCheck2,
+      },
+    ],
+  },
+];
+
 export function TowerCard({
   flowState,
   status,
@@ -27,6 +122,7 @@ export function TowerCard({
   simulationWeeks: number;
   onReset: () => void;
 }) {
+  const [guideOpen, setGuideOpen] = useState(false);
   const currentDay = Math.max(1, Math.ceil(progress * simulationWeeks * 7));
   const statusVariant =
     status === "Crítico"
@@ -34,19 +130,35 @@ export function TowerCard({
       : status === "Precaución"
         ? "warning"
         : "success";
+  const hasCollectionDelay = output.towerBlockChanges.some(
+    ({ action }) => action === "delayIncome",
+  );
+  const hasReinforcement = output.towerBlockChanges.some(
+    ({ action }) => action === "addIncome" || action === "addLiquidity",
+  );
+  const towerGuidance =
+    flowState === "simulating" && hasCollectionDelay
+      ? "El cobro se retrasa: observa cómo la base expone la nómina"
+      : flowState === "mitigating" || hasReinforcement
+        ? "El refuerzo vuelve a sostener la operación y el crecimiento"
+        : status === "Crítico"
+          ? "La base perdió soporte: toca un bloque para entender por qué"
+          : expenseBlocks > 0
+            ? "Cada gasto retira soporte de los cimientos de tu empresa"
+            : "Simula una decisión y observa cómo cambia tu empresa";
   return (
-    <Card className="tower-card relative flex min-h-[604px] flex-col gap-0 overflow-hidden bg-surface-subtle max-[700px]:min-h-[480px] min-[701px]:sticky min-[701px]:top-[22px] min-[701px]:h-[min(830px,calc(100vh-44px))] min-[701px]:min-h-[620px]">
+    <Card className="tower-card relative flex min-h-[604px] flex-col gap-0 overflow-hidden bg-surface-subtle py-0 max-[700px]:min-h-[480px] min-[701px]:sticky min-[701px]:top-[22px] min-[701px]:h-[min(830px,calc(100vh-44px))] min-[701px]:min-h-[620px]">
       <div className="z-1 flex justify-between p-[24px_25px_0] max-[700px]:p-[20px_20px_0]">
         <div>
           <span className="font-mono text-[11px] font-medium tracking-normal text-body-muted uppercase">
             Mapa visual de dependencias
           </span>
           <h2 className="font-title mt-1 text-xl font-semibold tracking-[-0.02em]">
-            La estructura de tu negocio
+            Esta torre representa tu empresa
           </h2>
           <p className="mt-1.5 max-w-[390px] text-[10px] leading-[1.5] text-body-muted">
-            Los niveles conectan los soportes financieros con la operación y el
-            crecimiento.
+            Los cimientos financieros sostienen la operación y el crecimiento.
+            Si la base se debilita, los niveles superiores quedan en riesgo.
           </p>
         </div>
         <Button
@@ -60,7 +172,7 @@ export function TowerCard({
           <RotateCcw size={18} />
         </Button>
       </div>
-      <div className="p-[15px_25px_0] max-[700px]:p-[12px_20px_0]">
+      <div className="flex flex-wrap items-center gap-2 p-[15px_25px_0] max-[700px]:p-[12px_20px_0]">
         <Badge
           variant={statusVariant}
           className="h-auto gap-[6px] px-[10px] py-[6px] text-[12px] font-medium"
@@ -77,10 +189,18 @@ export function TowerCard({
                   : "Una estructura con más perspectiva"}
         </Badge>
         {(flowState === "simulating" || flowState === "mitigating") && (
-          <span className="ml-2 text-[10px] font-medium text-body-muted">
+          <span className="text-[10px] font-medium text-body-muted">
             Día {currentDay} de {simulationWeeks * 7}
           </span>
         )}
+        <Button
+          variant="ghost"
+          size="compact"
+          className="ml-auto h-8 px-2 text-[11px] text-body-muted"
+          onClick={() => setGuideOpen(true)}
+        >
+          <CircleHelp size={14} /> Guía de iconos
+        </Button>
       </div>
       <div className="relative min-h-[360px] flex-1 max-[700px]:h-[390px] max-[700px]:min-h-[390px] [&>.tower-3d]:absolute [&>.tower-3d]:inset-0">
         <ResilienceTower
@@ -93,54 +213,78 @@ export function TowerCard({
           reduced={reduced}
         />
         <div className="pointer-events-none absolute top-[48px] right-[22px] max-w-[145px] text-[10px] text-body-subtle before:absolute before:top-[5px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[9px] max-[700px]:max-w-[100px]">
-          <strong className="font-medium text-body">Cima · Niveles 8–12</strong>
+          <strong className="font-medium text-body">
+            Crecimiento · Niveles 8–12
+          </strong>
           <span className="mt-1 block text-[10px] leading-[1.35] text-body-subtle max-[700px]:text-[8px]">
             Ventas, clientes y entorno
           </span>
         </div>
         <div className="pointer-events-none absolute top-[47%] right-[22px] max-w-[145px] text-[10px] text-body-subtle before:absolute before:top-[5px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[9px] max-[700px]:max-w-[100px]">
           <strong className="font-medium text-body">
-            Centro · Niveles 4–7
+            Operación · Niveles 4–7
           </strong>
           <span className="mt-1 block text-[10px] leading-[1.35] text-body-subtle max-[700px]:text-[8px]">
             Operaciones y personas
           </span>
         </div>
         <div className="pointer-events-none absolute right-[22px] bottom-[63px] max-w-[145px] text-[10px] text-body-subtle before:absolute before:top-[5px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[9px] max-[700px]:max-w-[100px]">
-          <strong className="font-medium text-body">Base · Niveles 1–3</strong>
+          <strong className="font-medium text-body">
+            Cimientos · Niveles 1–3
+          </strong>
           <span className="mt-1 block text-[10px] leading-[1.35] text-body-subtle max-[700px]:text-[8px]">
             Finanzas y liquidez
           </span>
         </div>
-        <div className="pointer-events-none absolute right-0 bottom-0 left-0 flex items-center justify-center gap-[7px] text-[11px] text-body-subtle">
-          <Hand size={15} /> Cada gasto retira soporte · Toca un bloque
+        <div className="pointer-events-none absolute right-0 bottom-0 left-0 flex items-center justify-center gap-[7px] px-4 text-center text-[11px] text-body-subtle">
+          <Hand size={15} className="shrink-0" /> {towerGuidance}
         </div>
       </div>
-      <div className="grid grid-cols-4 border-t border-hairline bg-canvas/65 max-[700px]:grid-cols-2">
-        {[
-          ["Sólido", "Alta confianza"],
-          ["Activo", "Opera normal"],
-          ["Incierto", "Sin participar"],
-          ["Estrés", "Nodo frágil"],
-        ].map(([label, meaning], i) => (
-          <span
-            key={label}
-            className="flex items-center justify-center gap-[7px] border-r border-hairline px-2 py-[11px] text-[9px] text-body-muted last:border-r-0 max-[700px]:justify-start max-[700px]:border-b max-[700px]:px-3"
-          >
-            <i
-              style={{ background: BLOCK_HEX_COLORS[i] }}
-              className="h-[8px] w-[8px] shrink-0"
-            />
-            <span>
-              <strong className="block font-medium text-body">{label}</strong>
-              <small className="text-[8px] text-body-subtle">{meaning}</small>
-            </span>
-          </span>
-        ))}
-      </div>
-      <div className="flex items-center justify-center gap-[7px] border-t border-hairline bg-canvas/40 p-[13px] text-[11px] text-body-muted">
-        <Layers3 size={15} /> 12 niveles · 36 capacidades conectadas
-      </div>
+      {guideOpen && (
+        <Modal
+          title="Qué representa cada bloque"
+          onClose={() => setGuideOpen(false)}
+        >
+          <p className="max-w-[42ch] text-sm leading-6 text-body-muted">
+            El icono identifica la capacidad de la empresa. Su posición muestra
+            de qué nivel depende.
+          </p>
+          <div className="space-y-6">
+            {BLOCK_GUIDE.map((section) => (
+              <section key={section.title}>
+                <div className="mb-3 border-b border-hairline pb-2">
+                  <h3 className="font-title text-sm font-semibold text-ink">
+                    {section.title}
+                  </h3>
+                  <p className="mt-0.5 text-xs text-body-muted">
+                    {section.description}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+                  {section.items.map(({ label, meaning, icon: Icon }) => (
+                    <div
+                      key={label}
+                      className="flex min-h-[72px] items-start gap-3 rounded-lg border border-hairline bg-canvas/45 p-3"
+                    >
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-blue/8 text-brand-blue">
+                        <Icon size={16} strokeWidth={1.8} />
+                      </span>
+                      <span>
+                        <strong className="block text-xs font-medium text-body">
+                          {label}
+                        </strong>
+                        <small className="mt-1 block text-[11px] leading-[1.35] text-body-subtle">
+                          {meaning}
+                        </small>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </Modal>
+      )}
     </Card>
   );
 }
