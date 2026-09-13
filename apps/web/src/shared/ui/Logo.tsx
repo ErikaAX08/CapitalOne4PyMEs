@@ -5,10 +5,10 @@ import { cn } from "../lib/utils";
 export function Logo({ className }: { className?: string }) {
   return (
     <img
-      src="/capital-one-for-pymes.png"
-      alt="Capital One For PyMES"
-      width={738}
-      height={136}
+      src="/stackly-logo.png"
+      alt="Stackly"
+      width={872}
+      height={270}
       className={cn("h-auto object-contain", className)}
     />
   );
