@@ -1,0 +1,200 @@
+{
+  "company_id": "co_demo_agency",
+  "coverage": {
+    "known_variables": 7,
+    "total_variables": 7,
+    "unknown_fraction": 0.0
+  },
+  "currency": "MXN",
+  "cutoff_date": "2026-09-12",
+  "definitions": {
+    "gap_frequency": "Proporción de futuros simulados en los que alguna obligación queda descubierta dentro del horizonte. Condicionada a los supuestos del escenario; no es una probabilidad calibrada.",
+    "survival_weeks": "Semanas completas entre la fecha de corte y la primera obligación que queda descubierta, sobre la ruta determinista del escenario evaluado y sin choque aleatorio. Si no aparece brecha en el horizonte, se reporta la cota que el horizonte permite afirmar.",
+    "tension": "Tensión = 1 − (margen disponible ÷ rango de referencia), acotada a [0, 1]. Es una normalización de tolerancias univariadas, no una atribución causal aprendida. Los rangos marcados como supuesto declarado son supuestos, no mediciones."
+  },
+  "engine_version": "1.0.0",
+  "explanation": "El cobro llega el día 76, después de la nómina del día 75. Faltan $40,000. Un anticipo de 27% ($216,000) elimina esta brecha en este escenario.",
+  "horizon_days": 180,
+  "minimum_reinforcement": {
+    "additional_percentage": 27.0,
+    "amount_cents": 21600000,
+    "before": {
+      "gap_frequency": 0.6642,
+      "state": "tension",
+      "state_label": "Tensión",
+      "upper_bounded": false,
+      "weeks": 10
+    },
+    "ci95_after": [
+      0.03547293459896256,
+      0.046432429948155926
+    ],
+    "found": true,
+    "gap_frequency_after": 0.0406,
+    "grid_points_evaluated": 28,
+    "kind": "advance",
+    "label": "Solicitar un anticipo de 27% ($216,000)",
+    "percentage": 27.0,
+    "required": true,
+    "state_after": "stable",
+    "state_label_after": "Estable",
+    "upper_bounded_after": true,
+    "weeks_after": 25
+  },
+  "notices": [
+    {
+      "code": "synthetic_assumptions",
+      "label": "Escenario sintético en MXN"
+    },
+    {
+      "code": "no_mexico_validation",
+      "label": "Sin validación en población mexicana"
+    },
+    {
+      "code": "declared_reference_range",
+      "label": "Dos rangos de referencia son supuestos declarados"
+    },
+    {
+      "code": "monte_carlo_excludes_distribution_error",
+      "label": "Los intervalos Monte Carlo no cubren el error de distribución"
+    }
+  ],
+  "parameterization": {
+    "action": "accept_project",
+    "advance_pct": 0,
+    "capital_injection_cents": 0,
+    "collection_days": 60,
+    "collection_delay_days": 16,
+    "duration_days": 30,
+    "hires": 2,
+    "initial_cost_cents": 38000000,
+    "main_customer_lost": false,
+    "total_revenue_cents": 80000000
+  },
+  "propagation_path": {
+    "breaking_node": "payroll",
+    "node_labels": {
+      "cash": "Efectivo",
+      "collection": "Cobro",
+      "delivery": "Entrega",
+      "invoice": "Factura",
+      "payroll": "Nómina"
+    },
+    "nodes": [
+      "delivery",
+      "invoice",
+      "collection",
+      "cash",
+      "payroll"
+    ],
+    "origin_node": "collection"
+  },
+  "schema": "v1",
+  "seed": 42,
+  "simulation": {
+    "ci95": [
+      0.6509879633209317,
+      0.6771599233603116
+    ],
+    "event": "uncovered_obligation",
+    "gap_frequency": 0.6642,
+    "gap_frequency_by_horizon": {
+      "30": 0.0038,
+      "60": 0.3078,
+      "90": 0.6642
+    },
+    "horizon_days": 180,
+    "mean_gap_cents": 6179038,
+    "p95_gap_cents": 20498530,
+    "paths": 5000
+  },
+  "state_id": "tension",
+  "state_label": "Tensión",
+  "survival": {
+    "first_obligation": {
+      "date": "2026-11-26",
+      "date_text": "26 de noviembre",
+      "day": 75,
+      "gap_cents": 4000000,
+      "kind": "payroll",
+      "label": "Nómina"
+    },
+    "headline": "La nómina del 26 de noviembre queda descubierta por $40,000. Hay margen para reforzar.",
+    "net_recurring_flow_cents": 2000000,
+    "state": "tension",
+    "state_label": "Tensión",
+    "upper_bounded": false,
+    "weeks": 10
+  },
+  "tension": [
+    {
+      "factor": "payroll_coverage",
+      "label": "Cobertura De Nómina",
+      "margin_cents": -4000000,
+      "range_cents": 12000000,
+      "range_source": "documented",
+      "stack": "people",
+      "stack_label": "Personas",
+      "tension": 1.0
+    },
+    {
+      "factor": "average_collection_period",
+      "label": "Plazo Promedio De Cobro",
+      "margin_days": 15,
+      "range_days": 60,
+      "range_source": "documented",
+      "stack": "finance",
+      "stack_label": "Finanzas",
+      "tension": 0.75
+    },
+    {
+      "factor": "collection_delay_tolerance",
+      "label": "Retraso En Cobranza",
+      "margin_days": 16,
+      "range_days": 60,
+      "range_source": "control_range",
+      "search_bounded": false,
+      "stack": "sales",
+      "stack_label": "Ventas",
+      "tension": 0.73
+    },
+    {
+      "factor": "cost_increase_tolerance",
+      "label": "Incremento De Costos",
+      "margin_pp": 7.0,
+      "range_pp": 20.0,
+      "range_source": "declared_assumption",
+      "search_bounded": false,
+      "stack": "operations",
+      "stack_label": "Operaciones",
+      "tension": 0.65
+    },
+    {
+      "factor": "sales_drop_tolerance",
+      "label": "Caída De Ventas",
+      "margin_pp": 10.0,
+      "range_pp": 20.0,
+      "range_source": "declared_assumption",
+      "search_bounded": false,
+      "stack": "sales",
+      "stack_label": "Ventas",
+      "tension": 0.5
+    },
+    {
+      "factor": "main_customer_concentration",
+      "label": "Concentración De Clientes",
+      "margin": 0.54,
+      "range": 1.0,
+      "range_source": "documented",
+      "stack": "sales",
+      "stack_label": "Ventas",
+      "tension": 0.46
+    }
+  ],
+  "warnings": [
+    "synthetic_assumptions",
+    "no_mexico_validation",
+    "declared_reference_range",
+    "monte_carlo_excludes_distribution_error"
+  ]
+}

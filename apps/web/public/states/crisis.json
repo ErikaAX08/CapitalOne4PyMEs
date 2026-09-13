@@ -1,0 +1,199 @@
+{
+  "company_id": "co_demo_agency",
+  "coverage": {
+    "known_variables": 7,
+    "total_variables": 7,
+    "unknown_fraction": 0.0
+  },
+  "currency": "MXN",
+  "cutoff_date": "2026-09-12",
+  "definitions": {
+    "gap_frequency": "Proporción de futuros simulados en los que alguna obligación queda descubierta dentro del horizonte. Condicionada a los supuestos del escenario; no es una probabilidad calibrada.",
+    "survival_weeks": "Semanas completas entre la fecha de corte y la primera obligación que queda descubierta, sobre la ruta determinista del escenario evaluado y sin choque aleatorio. Si no aparece brecha en el horizonte, se reporta la cota que el horizonte permite afirmar.",
+    "tension": "Tensión = 1 − (margen disponible ÷ rango de referencia), acotada a [0, 1]. Es una normalización de tolerancias univariadas, no una atribución causal aprendida. Los rangos marcados como supuesto declarado son supuestos, no mediciones."
+  },
+  "engine_version": "1.0.0",
+  "explanation": "Sin el cliente principal, los cobros base ya no sostienen la operación. El cobro llega el día 76, después de la nómina del día 45. Faltan $117,200. Ningún refuerzo dentro del rango evaluado elimina esta brecha.",
+  "horizon_days": 180,
+  "minimum_reinforcement": {
+    "amount_cents": null,
+    "before": {
+      "gap_frequency": 1.0,
+      "state": "crisis",
+      "state_label": "Crisis Estructural",
+      "upper_bounded": false,
+      "weeks": 6
+    },
+    "found": false,
+    "grid_points_evaluated": 202,
+    "kind": "capital_injection",
+    "label": "Ningún refuerzo dentro del rango evaluado",
+    "percentage": null,
+    "required": true,
+    "state_label_after": null
+  },
+  "notices": [
+    {
+      "code": "synthetic_assumptions",
+      "label": "Escenario sintético en MXN"
+    },
+    {
+      "code": "no_mexico_validation",
+      "label": "Sin validación en población mexicana"
+    },
+    {
+      "code": "declared_reference_range",
+      "label": "Dos rangos de referencia son supuestos declarados"
+    },
+    {
+      "code": "monte_carlo_excludes_distribution_error",
+      "label": "Los intervalos Monte Carlo no cubren el error de distribución"
+    },
+    {
+      "code": "no_reinforcement_within_grid",
+      "label": "Ningún refuerzo en el rango evaluado elimina la brecha"
+    },
+    {
+      "code": "reinforcement_grid_is_capital_injection",
+      "label": "Refuerzo evaluado como inyección de capital"
+    }
+  ],
+  "parameterization": {
+    "action": "accept_project",
+    "advance_pct": 0,
+    "capital_injection_cents": 0,
+    "collection_days": 60,
+    "collection_delay_days": 16,
+    "duration_days": 30,
+    "hires": 2,
+    "initial_cost_cents": 38000000,
+    "main_customer_lost": true,
+    "total_revenue_cents": 80000000
+  },
+  "propagation_path": {
+    "breaking_node": "payroll",
+    "node_labels": {
+      "cash": "Efectivo",
+      "customer": "Cliente Principal",
+      "payroll": "Nómina",
+      "sales": "Ventas"
+    },
+    "nodes": [
+      "customer",
+      "sales",
+      "cash",
+      "payroll"
+    ],
+    "origin_node": "customer"
+  },
+  "schema": "v1",
+  "seed": 42,
+  "simulation": {
+    "ci95": [
+      0.9992322980549431,
+      1.0000000000000002
+    ],
+    "event": "uncovered_obligation",
+    "gap_frequency": 1.0,
+    "gap_frequency_by_horizon": {
+      "30": 0.1044,
+      "60": 0.9928,
+      "90": 1.0
+    },
+    "horizon_days": 180,
+    "mean_gap_cents": 35167893,
+    "p95_gap_cents": 58068720,
+    "paths": 5000
+  },
+  "state_id": "crisis",
+  "state_label": "Crisis Estructural",
+  "survival": {
+    "first_obligation": {
+      "date": "2026-10-27",
+      "date_text": "27 de octubre",
+      "day": 45,
+      "gap_cents": 11720000,
+      "kind": "payroll",
+      "label": "Nómina"
+    },
+    "headline": "La nómina del día 45 queda descubierta por $117,200. Se requiere acción.",
+    "net_recurring_flow_cents": -12720000,
+    "state": "crisis",
+    "state_label": "Crisis Estructural",
+    "upper_bounded": false,
+    "weeks": 6
+  },
+  "tension": [
+    {
+      "factor": "payroll_coverage",
+      "label": "Cobertura De Nómina",
+      "margin_cents": -33440000,
+      "range_cents": 12000000,
+      "range_source": "documented",
+      "stack": "people",
+      "stack_label": "Personas",
+      "tension": 1.0
+    },
+    {
+      "factor": "collection_delay_tolerance",
+      "label": "Retraso En Cobranza",
+      "margin_days": 0,
+      "range_days": 60,
+      "range_source": "control_range",
+      "search_bounded": false,
+      "stack": "sales",
+      "stack_label": "Ventas",
+      "tension": 1.0
+    },
+    {
+      "factor": "cost_increase_tolerance",
+      "label": "Incremento De Costos",
+      "margin_pp": 0.0,
+      "range_pp": 20.0,
+      "range_source": "declared_assumption",
+      "search_bounded": false,
+      "stack": "operations",
+      "stack_label": "Operaciones",
+      "tension": 1.0
+    },
+    {
+      "factor": "sales_drop_tolerance",
+      "label": "Caída De Ventas",
+      "margin_pp": 0.0,
+      "range_pp": 20.0,
+      "range_source": "declared_assumption",
+      "search_bounded": false,
+      "stack": "sales",
+      "stack_label": "Ventas",
+      "tension": 1.0
+    },
+    {
+      "factor": "average_collection_period",
+      "label": "Plazo Promedio De Cobro",
+      "margin_days": 15,
+      "range_days": 60,
+      "range_source": "documented",
+      "stack": "finance",
+      "stack_label": "Finanzas",
+      "tension": 0.75
+    },
+    {
+      "factor": "main_customer_concentration",
+      "label": "Concentración De Clientes",
+      "margin": 0.54,
+      "range": 1.0,
+      "range_source": "documented",
+      "stack": "sales",
+      "stack_label": "Ventas",
+      "tension": 0.46
+    }
+  ],
+  "warnings": [
+    "synthetic_assumptions",
+    "no_mexico_validation",
+    "declared_reference_range",
+    "monte_carlo_excludes_distribution_error",
+    "no_reinforcement_within_grid",
+    "reinforcement_grid_is_capital_injection"
+  ]
+}
