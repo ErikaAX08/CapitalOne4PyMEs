@@ -7,7 +7,14 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { ChevronRight, CircleHelp, ShieldCheck } from "lucide-react";
+import {
+  ChevronRight,
+  CircleHelp,
+  Layers3,
+  ScanSearch,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { scenarios } from "@entities/scenario";
 import type { Business, FinancialTransaction } from "@entities/business";
 import { mockFinancialDataSource } from "@entities/business";
@@ -143,6 +150,7 @@ export default function App() {
     reset: resetExpenses,
   } = useExpenses();
   const [technical, setTechnical] = useState(false);
+  const [simulationWeeks, setSimulationWeeks] = useState(12);
   const reduced = !!useReducedMotion();
   const [flow, dispatch] = useSimulationFlow(reduced, isDashboard);
   const mitigated = flow.state === "mitigating" || flow.state === "recovered";
@@ -162,7 +170,7 @@ export default function App() {
             data.business,
             data.transactions,
             active ? flow.scenario : null,
-            mitigated ? ["advance40"] : [],
+            mitigated ? ["advance25"] : [],
             expenses,
           )
         : EMPTY_OUTPUT,
@@ -249,14 +257,14 @@ export default function App() {
       : output;
   const phase =
     flow.progress < 0.2
-      ? "Aplicamos la inversión inicial"
+      ? "El nuevo proyecto entra a la estructura"
       : flow.progress < 0.4
-        ? "El efectivo sale hoy. El ingreso llega después."
+        ? "Los costos comienzan antes de recibir el pago"
         : flow.progress < 0.58
-          ? "Los cobros futuros no cubren los pagos de hoy"
+          ? "Cuentas por cobrar pierde alineación con la base"
           : flow.progress < 0.78
-            ? "Tu cliente principal retrasó su pago 30 días"
-            : "Sin liquidez, la estructura pierde su soporte";
+            ? "El cliente retrasa el pago 20 días"
+            : "Día 75: faltan $40,000 para cubrir la nómina";
   return (
     <div>
       <AppHeader showDashboardContext={isDashboard} />
@@ -294,6 +302,45 @@ export default function App() {
                   <CircleHelp size={17} /> ¿Cómo lo calculamos?
                 </Button>
               </div>
+              <div className="mb-6 grid rounded-xl border border-hairline bg-canvas min-[701px]:grid-cols-3 max-[700px]:divide-y max-[700px]:divide-hairline min-[701px]:divide-x min-[701px]:divide-hairline">
+                {[
+                  {
+                    icon: ScanSearch,
+                    title: "1. Revisa tu base",
+                    copy: "Saldo, fragilidad y obligaciones próximas.",
+                  },
+                  {
+                    icon: Layers3,
+                    title: "2. Lee la estructura",
+                    copy: "La torre conecta liquidez, cobros y compromisos.",
+                  },
+                  {
+                    icon: Sparkles,
+                    title: "3. Prueba una decisión",
+                    copy: "Compara el impacto antes de actuar.",
+                  },
+                ].map(({ icon: Icon, title, copy }, index) => (
+                  <div
+                    key={title}
+                    className={cn(
+                      "flex items-center gap-3 p-[13px_16px]",
+                      index === 1 && "bg-brand-blue-soft/55",
+                    )}
+                  >
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-subtle text-brand-blue">
+                      <Icon size={16} />
+                    </span>
+                    <span>
+                      <strong className="block text-[12px] font-semibold text-body">
+                        {title}
+                      </strong>
+                      <small className="mt-0.5 block text-[10px] leading-[1.45] text-body-muted">
+                        {copy}
+                      </small>
+                    </span>
+                  </div>
+                ))}
+              </div>
               <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-6 min-[701px]:max-[1000px]:grid-cols-2 min-[701px]:max-[1000px]:gap-[18px] max-[700px]:grid-cols-1 max-[700px]:gap-[19px]">
                 <FinancialOverview
                   availableBalance={
@@ -319,6 +366,7 @@ export default function App() {
                   output={output}
                   resetKey={flow.resetKey}
                   reduced={reduced}
+                  simulationWeeks={simulationWeeks}
                   onReset={reset}
                 />
                 <section className="pt-[2px] pb-[10px] min-[701px]:col-start-1 min-[701px]:row-start-2 max-[700px]:pt-[5px]">
@@ -357,6 +405,7 @@ export default function App() {
                       isContract={flow.scenario?.id === "contract"}
                       phase={phase}
                       progress={flow.progress}
+                      simulationWeeks={simulationWeeks}
                       onSkip={() =>
                         dispatch({
                           type:
@@ -388,6 +437,7 @@ export default function App() {
                       }
                       survivalAfter={output.survivalWeeks}
                       criticalWeek={output.criticalWeek}
+                      simulationWeeks={simulationWeeks}
                       canMitigate={
                         flow.scenario?.id === "contract" &&
                         flow.state === "result"
@@ -422,6 +472,8 @@ export default function App() {
       {isDashboard && flow.state === "scenarioSelected" && flow.scenario && (
         <ScenarioDialog
           scenario={flow.scenario}
+          simulationWeeks={simulationWeeks}
+          onSimulationWeeksChange={setSimulationWeeks}
           onClose={() => dispatch({ type: "CLOSE_SCENARIO" })}
           onSimulate={simulate}
         />

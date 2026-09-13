@@ -69,10 +69,12 @@ test("decision, collapse, advance, reset and alternative scenarios", async ({
   await page.getByRole("button", { name: "Explorar mi estabilidad" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(
-    page.getByRole("heading", { name: "Torre de estabilidad · 3D" }),
+    page.getByRole("heading", { name: "La estructura de tu negocio" }),
   ).toBeVisible();
   await expect(page.locator("main.dashboard")).toHaveCSS("opacity", "1");
-  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
+  await expect(
+    page.getByRole("group", { name: /Estructura 3D/ }),
+  ).toBeVisible();
   await page.screenshot({
     path: `/tmp/resilia-${testInfo.project.name}-stable.png`,
     fullPage: true,
@@ -82,30 +84,29 @@ test("decision, collapse, advance, reset and alternative scenarios", async ({
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page.getByRole("button", { name: /Aceptar nuevo contrato/ }).click();
+  await page
+    .getByRole("button", { name: /Aceptar proyecto a crédito/ })
+    .click();
   await expect(page.getByRole("dialog")).toBeVisible();
-  await page.getByRole("button", { name: "Simular decisión" }).click();
-  await expect(
-    page.getByText("Tu cliente principal retrasó su pago 30 días", {
-      exact: true,
-    }),
-  ).toBeVisible({ timeout: 10000 });
+  await page.getByRole("button", { name: "Iniciar timelapse" }).click();
   await expect(
     page.getByRole("heading", {
       name: "Rentable no siempre significa sostenible",
     }),
   ).toBeVisible({ timeout: 10000 });
-  await expect(page.getByText("-$96,000 MXN", { exact: true })).toBeVisible();
-  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
+  await expect(page.getByText("-$40,000 MXN", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("group", { name: /Estructura 3D/ }),
+  ).toBeVisible();
   await page.screenshot({
     path: `/tmp/resilia-${testInfo.project.name}-critical.png`,
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Aplicar anticipo del 40%" }).click();
+  await page.getByRole("button", { name: "Pedir anticipo de 25%" }).click();
   await expect(
     page.getByRole("heading", { name: "Una decisión más resiliente" }),
   ).toBeVisible({ timeout: 6000 });
-  await expect(page.getByText("78 → 43", { exact: true })).toBeVisible();
+  await expect(page.getByText("78 → 36", { exact: true })).toBeVisible();
   await page.screenshot({
     path: `/tmp/resilia-${testInfo.project.name}-recovered.png`,
     fullPage: true,
@@ -116,7 +117,7 @@ test("decision, collapse, advance, reset and alternative scenarios", async ({
     .click();
   for (const scenario of ["Comprar equipo", "Retraso de cliente"]) {
     await page.getByRole("button", { name: new RegExp(scenario) }).click();
-    await page.getByRole("button", { name: "Simular decisión" }).click();
+    await page.getByRole("button", { name: "Iniciar timelapse" }).click();
     await page.getByRole("button", { name: "Ver resultado" }).click();
     await expect(
       page.getByRole("heading", { name: "Así cambia tu estabilidad" }),
@@ -140,13 +141,17 @@ test("dashboard supports direct navigation and reload", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(
-    page.getByRole("heading", { name: "Torre de estabilidad · 3D" }),
+    page.getByRole("heading", { name: "La estructura de tu negocio" }),
   ).toBeVisible();
-  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
+  await expect(
+    page.getByRole("group", { name: /Estructura 3D/ }),
+  ).toBeVisible();
 
   await page.reload();
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
+  await expect(
+    page.getByRole("group", { name: /Estructura 3D/ }),
+  ).toBeVisible();
 });
 
 test("reduced motion and keyboard can complete the contract", async ({
@@ -158,16 +163,16 @@ test("reduced motion and keyboard can complete the contract", async ({
     .getByRole("button", { name: "Explorar mi estabilidad" })
     .press("Enter");
   await page
-    .getByRole("button", { name: /Aceptar nuevo contrato/ })
+    .getByRole("button", { name: /Aceptar proyecto a crédito/ })
     .press("Enter");
-  await page.getByRole("button", { name: "Simular decisión" }).press("Enter");
+  await page.getByRole("button", { name: "Iniciar timelapse" }).press("Enter");
   await expect(
     page.getByRole("heading", {
       name: "Rentable no siempre significa sostenible",
     }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Aplicar anticipo del 40%" })
+    .getByRole("button", { name: "Pedir anticipo de 25%" })
     .press("Enter");
   await expect(
     page.getByRole("heading", { name: "Una decisión más resiliente" }),
@@ -199,12 +204,16 @@ test("3D simulation works without WebGL and can skip animations", async ({
     }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Explorar mi estabilidad" }).click();
-  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
-  await page.getByRole("button", { name: /Aceptar nuevo contrato/ }).click();
-  await page.getByRole("button", { name: "Simular decisión" }).click();
+  await expect(
+    page.getByRole("group", { name: /Estructura 3D/ }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: /Aceptar proyecto a crédito/ })
+    .click();
+  await page.getByRole("button", { name: "Iniciar timelapse" }).click();
   await page.getByRole("button", { name: "Ver resultado" }).click();
-  await expect(page.getByText("-$96,000 MXN", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Aplicar anticipo del 40%" }).click();
+  await expect(page.getByText("-$40,000 MXN", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Pedir anticipo de 25%" }).click();
   await expect(
     page.getByRole("heading", { name: "Una decisión más resiliente" }),
   ).toBeVisible();
@@ -217,7 +226,7 @@ test("3D tower falls with expenses, recovers on undo, and resets", async ({
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
   await page.getByRole("button", { name: "Explorar mi estabilidad" }).click();
-  const tower = page.getByRole("group", { name: /Torre 3D/ });
+  const tower = page.getByRole("group", { name: /Estructura 3D/ });
   await expect(tower).toBeVisible();
   await page.getByLabel("Monto del gasto").fill("24000");
   await page

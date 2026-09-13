@@ -31,12 +31,12 @@ export function simulateFinancialDecision(
     ),
   );
   const recovered =
-    scenario?.id === "contract" && mitigations.includes("advance40");
+    scenario?.id === "contract" && mitigations.includes("advance25");
   const key = recovered ? "recovered" : (scenario?.id ?? "stable");
   const metrics = {
     stable: [31, 14, 24000],
-    contract: [78, 7, 96000],
-    recovered: [43, 12, 18000],
+    contract: [78, 11, 40000],
+    recovered: [36, 14, 18000],
     equipment: [49, 10, 42000],
     delay: [64, 8, 72000],
   }[key];
@@ -112,7 +112,7 @@ export function simulateFinancialDecision(
         : recovered
           ? "Con el anticipo, el negocio conserva suficiente liquidez para ejecutar el contrato sin comprometer la nómina."
           : scenario?.id === "contract"
-            ? "Negocia un anticipo mínimo del 40% o consigue un buffer de capital de trabajo de $96,000 antes de aceptar el contrato."
+            ? "Pide un anticipo de 25% para cubrir el desfase entre los costos del proyecto y el cobro del cliente."
             : scenario?.id === "equipment"
               ? "Escalona la compra o reserva $42,000 de capital de trabajo para proteger tu operación."
               : scenario?.id === "delay"

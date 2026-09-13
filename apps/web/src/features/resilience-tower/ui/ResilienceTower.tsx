@@ -7,11 +7,9 @@ import {
 } from "react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
-import { formatMoney } from "@shared";
 import {
   computeTowerViewModel,
-  BLOCK_LABELS,
-  BLOCK_VALUES,
+  getBlockStructure,
 } from "../model/towerPresentation";
 import { TowerScene } from "./TowerScene";
 import { TowerFallback } from "./TowerFallback";
@@ -72,6 +70,10 @@ export function ResilienceTower({
     reduced,
     instantResult,
   });
+  const selectedBlock = selected === null ? null : getBlockStructure(selected);
+  const slidingFailure =
+    output.towerBlockChanges.some((c) => c.action === "delayIncome") &&
+    output.towerBlockChanges.some((c) => c.action === "addIncome");
   return (
     <div
       className="tower-3d relative h-full w-full overflow-hidden [&_canvas]:touch-none"
@@ -86,11 +88,14 @@ export function ResilienceTower({
             <TowerScene
               resetKey={resetKey}
               expenseBlocks={expenseBlocks}
-              collapsed={viewModel.collapsed}
-              staticFall={viewModel.staticFall}
-              lost={viewModel.lost}
+              collapsed={viewModel.collapsed && !slidingFailure}
+              staticFall={viewModel.staticFall && !slidingFailure}
+              lost={slidingFailure ? expenseBlocks : viewModel.lost}
               risk={viewModel.risk}
               blockColors={viewModel.blockColors}
+              blockOffsets={viewModel.blockOffsets}
+              expandedBlocks={viewModel.expandedBlocks}
+              crackedBlocks={viewModel.crackedBlocks}
               onSelect={setSelected}
               reduced={reduced}
             />
@@ -102,7 +107,7 @@ export function ResilienceTower({
           simulando gastos y consultar las métricas.
         </TowerFallback>
       )}
-      {selected !== null && (
+      {selectedBlock && selected !== null && (
         <div className="absolute right-[15px] bottom-[42px] left-[15px] z-[3] rounded-xl border border-hairline bg-surface-subtle p-4 shadow-geist-floating">
           <button
             aria-label="Cerrar detalle de bloque"
@@ -112,22 +117,30 @@ export function ResilienceTower({
             ×
           </button>
           <span className="font-mono block text-xs font-medium tracking-normal text-body-muted uppercase">
-            Semana {Math.floor(selected / 3) + 1}
+            {selectedBlock.tier.name} · Nivel {selectedBlock.level}
           </span>
-          <strong className="my-[7px] block text-[12px]">
-            {BLOCK_LABELS[viewModel.blockColors[selected]]} ·{" "}
-            {formatMoney(BLOCK_VALUES[viewModel.blockColors[selected]])}
+          <strong className="my-[7px] block text-[14px]">
+            {selectedBlock.label}
           </strong>
-          <small className="mt-[5px] block text-[12px] text-body-subtle">
-            Estado:{" "}
-            {viewModel.blockColors[selected] === 4
-              ? "Retrasado"
-              : viewModel.blockColors[selected] === 1
-                ? "Esperado"
-                : "Confirmado"}
+          <span className="text-[11px] text-body">
+            {viewModel.blockOffsets[selected] >= 2.9
+              ? "Retirado: perdió su soporte"
+              : viewModel.crackedBlocks[selected]
+                ? "Agrietado: capacidad en peligro"
+                : "Entero: capacidad disponible"}
+          </span>
+          <small className="mt-[5px] block text-[11px] leading-[1.5] text-body-muted">
+            {selectedBlock.tier.area} · {selectedBlock.tier.role}
+          </small>
+          <small className="mt-[5px] block text-[11px] leading-[1.5] text-body-subtle">
+            {selectedBlock.level <= 3
+              ? "Sostiene directamente las capacidades de los niveles superiores."
+              : selectedBlock.level <= 7
+                ? "Depende de la base financiera y mantiene la operación diaria."
+                : "Depende del motor operativo y está expuesto al entorno."}
           </small>
           <small className="mt-[5px] block text-[12px] text-body-subtle">
-            Bloque ilustrativo · datos simulados
+            Bloque estructural ilustrativo · datos simulados
           </small>
         </div>
       )}

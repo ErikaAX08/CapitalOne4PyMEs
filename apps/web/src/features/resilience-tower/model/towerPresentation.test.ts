@@ -204,25 +204,38 @@ test("risk mirrors the 40-point fragility threshold used for status coloring", (
   );
 });
 
-test("blockColors: delayed-income and added-income weeks are recolored only in their active window", () => {
+test("blockColors: the stable structure separates base, motor and cima", () => {
+  const vm = computeTowerViewModel({
+    state: "stable",
+    progress: 0,
+    output: output(),
+    expenseBlocks: 0,
+    reduced: false,
+    instantResult: false,
+  });
+  assert.deepEqual(vm.blockColors.slice(0, 9), Array(9).fill(0));
+  assert.deepEqual(vm.blockColors.slice(9, 21), Array(12).fill(1));
+  assert.deepEqual(vm.blockColors.slice(21), Array(15).fill(2));
+});
+
+test("credit project moves receivables and stresses payroll near day 75", () => {
   const vm = computeTowerViewModel({
     state: "simulating",
-    progress: 0.6,
+    progress: 0.9,
     output: output({ towerBlockChanges: contractChanges }),
     expenseBlocks: 0,
     reduced: false,
     instantResult: false,
   });
-  // week = floor(index/3)+1; weeks 6-8 -> delayIncome color 4; weeks >=9 -> addIncome color 1
-  const weekOf = (index: number) => Math.floor(index / 3) + 1;
-  for (let index = 0; index < 36; index++) {
-    const week = weekOf(index);
-    if (week >= 6 && week <= 8) assert.equal(vm.blockColors[index], 4);
-    else if (week >= 9) assert.equal(vm.blockColors[index], 1);
-  }
+  assert.equal(vm.blockColors[7], 0, "receivables keeps its blue identity");
+  assert.equal(vm.blockColors[9], 1, "payroll keeps its green identity");
+  assert.ok(vm.blockOffsets[7] > 0.6, "accounts receivable moves out");
+  assert.ok(vm.blockOffsets[9] > 0, "payroll begins sliding after cracking");
+  assert.equal(vm.crackedBlocks[9], true);
+  assert.equal(vm.expandedBlocks[22], true, "the project block grows");
 });
 
-test("blockColors: mitigating/recovered weeks 1-4 turn liquidity-colored (0) regardless of scenario changes", () => {
+test("blockColors: mitigating/recovered base stays liquidity-colored", () => {
   const vm = computeTowerViewModel({
     state: "recovered",
     progress: 1,
@@ -231,11 +244,54 @@ test("blockColors: mitigating/recovered weeks 1-4 turn liquidity-colored (0) reg
     reduced: false,
     instantResult: false,
   });
-  for (let index = 0; index < 12; index++)
+  for (let index = 0; index < 9; index++)
     assert.equal(vm.blockColors[index], 0);
 });
 
-test("description reports collapsed vs the engine status, lost blocks and survival weeks", () => {
+test("payroll cracks before sliding away and retains its color", () => {
+  const at = (progress: number) =>
+    computeTowerViewModel({
+      state: "simulating",
+      progress,
+      output: output({ towerBlockChanges: contractChanges }),
+      expenseBlocks: 0,
+      reduced: false,
+      instantResult: false,
+    });
+  assert.equal(at(0.2).crackedBlocks[9], false);
+  assert.equal(at(0.75).crackedBlocks[9], true);
+  assert.equal(at(0.75).blockOffsets[9], 0);
+  assert.ok(Math.abs(at(1).blockOffsets[9] - 3) < 1e-9);
+  assert.equal(at(0.75).blockColors[9], at(0.2).blockColors[9]);
+});
+
+test("advance mitigation returns stressed blocks to the center", () => {
+  const mitigationChanges: TowerChange[] = [
+    { week: 1, action: "addLiquidity" },
+  ];
+  const mid = computeTowerViewModel({
+    state: "mitigating",
+    progress: 0.2,
+    output: output({ towerBlockChanges: mitigationChanges }),
+    expenseBlocks: 0,
+    reduced: false,
+    instantResult: false,
+  });
+  const recovered = computeTowerViewModel({
+    state: "recovered",
+    progress: 1,
+    output: output({ towerBlockChanges: mitigationChanges }),
+    expenseBlocks: 0,
+    reduced: false,
+    instantResult: false,
+  });
+  assert.ok(mid.blockOffsets[7] > 0);
+  assert.equal(recovered.blockOffsets[7], 0);
+  assert.equal(recovered.blockOffsets[9], 0);
+  assert.equal(recovered.crackedBlocks[9], false);
+});
+
+test("description reports status, lost blocks and the three business tiers", () => {
   const stableVm = computeTowerViewModel({
     state: "stable",
     progress: 0,
@@ -246,7 +302,7 @@ test("description reports collapsed vs the engine status, lost blocks and surviv
   });
   assert.equal(
     stableVm.description,
-    "Torre 3D: estable. 0 bloques retirados. 14 semanas de supervivencia.",
+    "Estructura 3D de la PyME: estable. 0 bloques retirados. Base financiera, motor operativo y cima comercial.",
   );
   const collapsedVm = computeTowerViewModel({
     state: "result",
@@ -263,6 +319,6 @@ test("description reports collapsed vs the engine status, lost blocks and surviv
   });
   assert.equal(
     collapsedVm.description,
-    "Torre 3D: colapsada. 4 bloques retirados. 7 semanas de supervivencia.",
+    "Estructura 3D de la PyME: colapsada. 4 bloques retirados. Base financiera, motor operativo y cima comercial.",
   );
 });

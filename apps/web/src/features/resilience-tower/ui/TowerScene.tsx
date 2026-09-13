@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
 import type { Group } from "three";
+import { getBlockStructure } from "../model/towerPresentation";
 import { TowerBlock } from "./TowerBlock";
 function PhysicsGroup({
   collapsed,
@@ -10,6 +11,9 @@ function PhysicsGroup({
   lost,
   risk,
   blockColors,
+  blockOffsets,
+  expandedBlocks,
+  crackedBlocks,
   onSelect,
   reduced,
 }: {
@@ -18,6 +22,9 @@ function PhysicsGroup({
   lost: number;
   risk: boolean;
   blockColors: number[];
+  blockOffsets: number[];
+  expandedBlocks: boolean[];
+  crackedBlocks: boolean[];
   onSelect: (index: number) => void;
   reduced: boolean;
 }) {
@@ -49,7 +56,11 @@ function PhysicsGroup({
             <TowerBlock
               key={index}
               index={index}
+              label={getBlockStructure(index).label}
               color={blockColors[index]}
+              offset={blockOffsets[index]}
+              expanded={expandedBlocks[index]}
+              cracked={crackedBlocks[index]}
               collapsed={collapsed}
               staticFall={staticFall}
               lost={lost}
@@ -75,6 +86,9 @@ export function TowerScene({
   lost,
   risk,
   blockColors,
+  blockOffsets,
+  expandedBlocks,
+  crackedBlocks,
   onSelect,
   reduced,
 }: {
@@ -85,6 +99,9 @@ export function TowerScene({
   lost: number;
   risk: boolean;
   blockColors: number[];
+  blockOffsets: number[];
+  expandedBlocks: boolean[];
+  crackedBlocks: boolean[];
   onSelect: (index: number) => void;
   reduced: boolean;
 }) {
@@ -115,6 +132,9 @@ export function TowerScene({
         lost={lost}
         risk={risk}
         blockColors={blockColors}
+        blockOffsets={blockOffsets}
+        expandedBlocks={expandedBlocks}
+        crackedBlocks={crackedBlocks}
         onSelect={onSelect}
         reduced={reduced}
       />

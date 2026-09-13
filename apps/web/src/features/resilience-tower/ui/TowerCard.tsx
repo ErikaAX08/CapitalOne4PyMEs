@@ -13,6 +13,7 @@ export function TowerCard({
   output,
   resetKey,
   reduced,
+  simulationWeeks,
   onReset,
 }: {
   flowState: SimulationFlowState;
@@ -23,8 +24,10 @@ export function TowerCard({
   output: SimulationOutput;
   resetKey: number;
   reduced: boolean;
+  simulationWeeks: number;
   onReset: () => void;
 }) {
+  const currentDay = Math.max(1, Math.ceil(progress * simulationWeeks * 7));
   const statusVariant =
     status === "Crítico"
       ? "danger"
@@ -36,11 +39,15 @@ export function TowerCard({
       <div className="z-1 flex justify-between p-[24px_25px_0] max-[700px]:p-[20px_20px_0]">
         <div>
           <span className="font-mono text-[11px] font-medium tracking-normal text-body-muted uppercase">
-            Tu negocio, en perspectiva
+            Mapa visual de dependencias
           </span>
           <h2 className="font-title mt-1 text-xl font-semibold tracking-[-0.02em]">
-            Torre de estabilidad · 3D
+            La estructura de tu negocio
           </h2>
+          <p className="mt-1.5 max-w-[390px] text-[10px] leading-[1.5] text-body-muted">
+            Los niveles conectan los soportes financieros con la operación y el
+            crecimiento.
+          </p>
         </div>
         <Button
           variant="ghost"
@@ -69,6 +76,11 @@ export function TowerCard({
                   ? "La liquidez necesita refuerzo"
                   : "Una estructura con más perspectiva"}
         </Badge>
+        {(flowState === "simulating" || flowState === "mitigating") && (
+          <span className="ml-2 text-[10px] font-medium text-body-muted">
+            Día {currentDay} de {simulationWeeks * 7}
+          </span>
+        )}
       </div>
       <div className="relative min-h-[360px] flex-1 max-[700px]:h-[390px] max-[700px]:min-h-[390px] [&>.tower-3d]:absolute [&>.tower-3d]:inset-0">
         <ResilienceTower
@@ -80,40 +92,54 @@ export function TowerCard({
           resetKey={resetKey}
           reduced={reduced}
         />
-        <div className="pointer-events-none absolute top-[50px] right-[22px] text-[10px] tracking-[1px] text-body-subtle before:absolute before:top-[4px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[10px]">
-          Semana 12
-          <span className="mt-1 block text-[11px] tracking-normal text-body-subtle max-[700px]:text-[9px]">
-            Ingresos futuros
+        <div className="pointer-events-none absolute top-[48px] right-[22px] max-w-[145px] text-[10px] text-body-subtle before:absolute before:top-[5px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[9px] max-[700px]:max-w-[100px]">
+          <strong className="font-medium text-body">Cima · Niveles 8–12</strong>
+          <span className="mt-1 block text-[10px] leading-[1.35] text-body-subtle max-[700px]:text-[8px]">
+            Ventas, clientes y entorno
           </span>
         </div>
-        <div className="pointer-events-none absolute bottom-[75px] right-[22px] text-[10px] tracking-[1px] text-body-subtle before:absolute before:top-[4px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[10px]">
-          Semana 1
-          <span className="mt-1 block text-[11px] tracking-normal text-body-subtle max-[700px]:text-[9px]">
-            Tu base de hoy
+        <div className="pointer-events-none absolute top-[47%] right-[22px] max-w-[145px] text-[10px] text-body-subtle before:absolute before:top-[5px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[9px] max-[700px]:max-w-[100px]">
+          <strong className="font-medium text-body">
+            Centro · Niveles 4–7
+          </strong>
+          <span className="mt-1 block text-[10px] leading-[1.35] text-body-subtle max-[700px]:text-[8px]">
+            Operaciones y personas
+          </span>
+        </div>
+        <div className="pointer-events-none absolute right-[22px] bottom-[63px] max-w-[145px] text-[10px] text-body-subtle before:absolute before:top-[5px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[9px] max-[700px]:max-w-[100px]">
+          <strong className="font-medium text-body">Base · Niveles 1–3</strong>
+          <span className="mt-1 block text-[10px] leading-[1.35] text-body-subtle max-[700px]:text-[8px]">
+            Finanzas y liquidez
           </span>
         </div>
         <div className="pointer-events-none absolute right-0 bottom-0 left-0 flex items-center justify-center gap-[7px] text-[11px] text-body-subtle">
           <Hand size={15} /> Cada gasto retira soporte · Toca un bloque
         </div>
       </div>
-      <div className="flex items-center justify-center gap-4 p-[17px_10px_15px] max-[1000px]:gap-[9px] max-[700px]:p-[14px_8px]">
-        {["Liquidez", "Cobros", "Gastos", "Obligaciones", "Inciertos"].map(
-          (label, i) => (
-            <span
-              key={label}
-              className="flex items-center gap-[5px] text-[11px] text-body-muted max-[700px]:text-[9px]"
-            >
-              <i
-                style={{ background: BLOCK_HEX_COLORS[i] }}
-                className="h-[7px] w-[7px]"
-              />
-              {label}
+      <div className="grid grid-cols-4 border-t border-hairline bg-canvas/65 max-[700px]:grid-cols-2">
+        {[
+          ["Sólido", "Alta confianza"],
+          ["Activo", "Opera normal"],
+          ["Incierto", "Sin participar"],
+          ["Estrés", "Nodo frágil"],
+        ].map(([label, meaning], i) => (
+          <span
+            key={label}
+            className="flex items-center justify-center gap-[7px] border-r border-hairline px-2 py-[11px] text-[9px] text-body-muted last:border-r-0 max-[700px]:justify-start max-[700px]:border-b max-[700px]:px-3"
+          >
+            <i
+              style={{ background: BLOCK_HEX_COLORS[i] }}
+              className="h-[8px] w-[8px] shrink-0"
+            />
+            <span>
+              <strong className="block font-medium text-body">{label}</strong>
+              <small className="text-[8px] text-body-subtle">{meaning}</small>
             </span>
-          ),
-        )}
+          </span>
+        ))}
       </div>
       <div className="flex items-center justify-center gap-[7px] border-t border-hairline bg-canvas/40 p-[13px] text-[11px] text-body-muted">
-        <Layers3 size={15} /> 12 niveles. 12 semanas. Una mirada al futuro.
+        <Layers3 size={15} /> 12 niveles · 36 capacidades conectadas
       </div>
     </Card>
   );

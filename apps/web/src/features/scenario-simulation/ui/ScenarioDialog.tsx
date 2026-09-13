@@ -1,12 +1,23 @@
 import { ArrowRight, Building2, Clock3, TriangleAlert } from "lucide-react";
 import type { Scenario } from "@entities/scenario";
-import { Modal, Button, Alert, AlertDescription } from "@shared";
+import {
+  Modal,
+  Button,
+  Alert,
+  AlertDescription,
+  Input,
+  Label,
+} from "@shared";
 export function ScenarioDialog({
   scenario,
+  simulationWeeks,
+  onSimulationWeeksChange,
   onClose,
   onSimulate,
 }: {
   scenario: Scenario;
+  simulationWeeks: number;
+  onSimulationWeeksChange: (weeks: number) => void;
   onClose: () => void;
   onSimulate: () => void;
 }) {
@@ -31,13 +42,44 @@ export function ScenarioDialog({
         ))}
       </dl>
       {scenario.id === "contract" && (
-        <Alert variant="warning" className="mb-4">
-          <TriangleAlert size={20} className="shrink-0 text-warning" />
-          <AlertDescription className="text-[12px] leading-[1.7]">
-            El inventario y la nómina se pagan antes de cobrar. La simulación
-            también probará un retraso de 30 días de tu cliente principal.
-          </AlertDescription>
-        </Alert>
+        <>
+          <Alert variant="warning" className="mb-4">
+            <TriangleAlert size={20} className="shrink-0 text-warning" />
+            <AlertDescription className="text-[12px] leading-[1.7]">
+              Caso sintético: el cobro llega 20 días tarde. En 20,000 futuros,
+              46.9% presenta una brecha y el punto de ruptura aparece el día 75.
+            </AlertDescription>
+          </Alert>
+          <div className="mb-5 border border-hairline bg-surface-subtle p-4">
+            <div className="flex items-end justify-between gap-4">
+              <Label
+                htmlFor="simulation-weeks"
+                className="block text-[12px] leading-[1.5] text-body"
+              >
+                Duración del timelapse
+                <small className="mt-1 block font-normal text-body-muted">
+                  Elige cuántas semanas recorrerá la simulación.
+                </small>
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="simulation-weeks"
+                  type="number"
+                  min={12}
+                  max={24}
+                  value={simulationWeeks}
+                  onChange={(event) =>
+                    onSimulationWeeksChange(
+                      Math.min(24, Math.max(12, Number(event.target.value))),
+                    )
+                  }
+                  className="w-[76px] text-center font-semibold"
+                />
+                <span className="text-[11px] text-body-muted">semanas</span>
+              </div>
+            </div>
+          </div>
+        </>
       )}
       <p className="my-4 text-[12px] leading-[1.7] text-body-muted max-[700px]:text-[11px]">
         Cifras ilustrativas. El margen considera otros costos del contrato; la
@@ -48,10 +90,10 @@ export function ScenarioDialog({
         className="w-full gap-3 max-[700px]:min-h-[46px]"
         onClick={onSimulate}
       >
-        Simular decisión <ArrowRight size={18} />
+        Iniciar timelapse <ArrowRight size={18} />
       </Button>
       <span className="mt-[14px] flex items-center justify-center gap-[5px] text-[12px] text-body-subtle">
-        <Clock3 size={14} /> 8 segundos para ver una nueva perspectiva
+        <Clock3 size={14} /> {simulationWeeks} semanas resumidas en 8 segundos
       </span>
     </Modal>
   );
