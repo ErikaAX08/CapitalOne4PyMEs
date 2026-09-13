@@ -19,6 +19,7 @@ interface Props {
   output: SimulationOutput;
   resetKey: number;
   reduced: boolean;
+  rotationSpeed: number;
   instantResult?: boolean;
   expenseBlocks?: number;
 }
@@ -58,6 +59,7 @@ export function ResilienceTower({
   output,
   resetKey,
   reduced,
+  rotationSpeed,
   instantResult = false,
   expenseBlocks = 0,
 }: Props) {
@@ -108,6 +110,7 @@ export function ResilienceTower({
             crackedBlocks={viewModel.crackedBlocks}
             onSelect={setSelected}
             reduced={reduced}
+            rotationSpeed={rotationSpeed}
             onReady={handleReady}
           />
           {/* Aviso de carga como capa HTML encima del Canvas: un <Suspense>
