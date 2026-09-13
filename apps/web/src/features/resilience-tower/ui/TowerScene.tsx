@@ -3,6 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
 import type { Group } from "three";
+import { getBlockStructure } from "../model/towerPresentation";
 import { TowerBlock } from "./TowerBlock";
 function PhysicsGroup({
   collapsed,
@@ -55,6 +56,7 @@ function PhysicsGroup({
             <TowerBlock
               key={index}
               index={index}
+              label={getBlockStructure(index).label}
               color={blockColors[index]}
               offset={blockOffsets[index]}
               expanded={expandedBlocks[index]}

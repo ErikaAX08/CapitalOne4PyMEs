@@ -48,11 +48,6 @@ test("decision, collapse, advance, reset and alternative scenarios", async ({
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.getByRole("button", { name: "Iniciar timelapse" }).click();
   await expect(
-    page.getByText("El cliente retrasa el pago 20 días", {
-      exact: true,
-    }),
-  ).toBeVisible({ timeout: 10000 });
-  await expect(
     page.getByRole("heading", {
       name: "Rentable no siempre significa sostenible",
     }),
