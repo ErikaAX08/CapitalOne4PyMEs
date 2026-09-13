@@ -40,12 +40,19 @@ cd services/domain && go run ./cmd/analysis                # :8080
 cd apps/web && pnpm dev                                    # :5173, proxies /v1
 ```
 
+`/analysis` and `/movements` both need `services/domain` running, and `pnpm dev`
+proxies `/v1` to **`http://localhost:8080`** — the port `go run ./cmd/analysis`
+uses by default. A service started on any other port looks exactly like no
+service at all, and the interface then says so and tells you the command.
+
 The company's ledger (`/movements`) is the one part backed by a database:
 `movements` lives on **Tiger Cloud**, which is PostgreSQL with TimescaleDB, and
 everything else stays on AWS. Point `DATABASE_CONNECTION_STRING` at it — see
 `services/domain/.env.example` — or leave it unset, in which case every other
 route still works and `/v1/movements` answers 503 instead of pretending to
-store anything. Applying `contracts/database/schema.sql` to any PostgreSQL is
+store anything. A database that is configured but momentarily unreachable does
+not stop the service from starting: the pool reconnects on its own, and the
+routes that need no database keep working meanwhile. Applying `contracts/database/schema.sql` to any PostgreSQL is
 enough to run it locally.
 
 Then open `/analysis` for the structural-fragility view. The interface renders

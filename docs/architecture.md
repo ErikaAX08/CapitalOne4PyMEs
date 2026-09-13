@@ -312,6 +312,18 @@ a recorded one, so a company the database knows fully is unaffected by them.
 Without them a company below the coverage threshold answers `abstention`, which
 is the correct answer rather than a failure.
 
+```
+GET /v1/companies?q=PL-5year&outcome=bankrupt&limit=50&offset=0
+```
+
+lists the companies available to analyse, with the coverage each one has and
+the profile variables a caller must declare for it. The default company leads
+the list and is described from its fixture rather than mirrored into
+`company_snapshots`, so there is no copy to drift; it is also the only one that
+arrives fully described, which is what makes it the sensible default. Like the ledger it is
+never cached, and it answers 503 without a database: the service still serves
+its default company, there is simply nothing to choose from.
+
 The ledger is the other half of the contract, and it is not cacheable: it
 changes whenever someone records a movement.
 
