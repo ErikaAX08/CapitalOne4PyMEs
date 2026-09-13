@@ -1,0 +1,30 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+
+# Globally unique, and not the state bucket.
+site_bucket_name = "fragility-site-CHANGEME"
+
+# The same name that is in backend.hcl. Terraform reads the backend from there;
+# this repeats it so the deploy role can be scoped to that one bucket.
+state_bucket_name = "fragility-tfstate-CHANGEME"
+
+# Budget thresholds and alarms. Confirm the SNS subscription from the inbox
+# after the first apply, or nothing is ever delivered.
+notification_emails = ["you@example.com"]
+
+# --- Defaults worth knowing about, all optional ------------------------------
+
+# False until services/domain has a Lambda entry point. See infra/README.md.
+# enable_domain_lambda = false
+
+# Set to 1 on the morning of the event, back to 0 afterwards. ~0.50 USD/day.
+# engine_provisioned_concurrency = 1
+
+# Costs more per month than everything else combined. On for the event only.
+# enable_cache_hit_rate_alarm = false
+
+# Both or neither. Empty uses the CloudFront domain, which is enough.
+# domain_name     = "fragility.example.com"
+# route53_zone_id = "Z0123456789ABCDEFGHIJ"
+
+# Leave this alone. The connection string belongs in SSM, not in the state file.
+# database_connection_string = ""
