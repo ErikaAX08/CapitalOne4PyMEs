@@ -1,3 +1,4 @@
+import { CompanyProfileGaps } from "@features/company-picker";
 import { SurvivalIndicator } from "@features/survival-indicator";
 import { DecisionSandbox } from "@features/decision-sandbox";
 import { TensionRadar } from "@features/tension-radar";
@@ -31,6 +32,13 @@ export default function AnalysisPage({
       {/* The identifiers are the scroll targets the application shell's sidebar
           navigates to; they wrap the modules rather than reaching inside them. */}
       <div className="flex flex-col gap-5">
+        <CompanyProfileGaps
+          companyId={analysis.companyId}
+          declared={analysis.declared}
+          running={analysis.pending}
+          abstaining={document.state_id === "abstention"}
+          onDeclare={analysis.setDeclared}
+        />
         <div id="supervivencia">
           <SurvivalIndicator document={document} pending={dimmed} />
         </div>

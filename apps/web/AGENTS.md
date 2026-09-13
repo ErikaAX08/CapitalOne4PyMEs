@@ -17,6 +17,19 @@ There are three views, and they do not share a data path:
   A to E. **Every figure on it comes from a state document the engine produced**
   through `GET /v1/analysis`. It derives nothing, interpolates nothing, and
   rounds nothing in a way that changes a number.
+- The company being looked at is chosen in the shell's header
+  (`features/company-picker`, fed by `GET /v1/companies`) and the selection
+  lives in `App`, because the header owns the control and more than one view
+  reads it. `useAnalysis(companyId)` takes it as a parameter rather than owning
+  it. It defaults to the service's own default company, which the fixture
+  describes fully (7/7) and which therefore answers every action kind without
+  anything being declared. A company the database does not fully describe shows
+  `CompanyProfileGaps` on `/analysis`, which collects the variables it lacks;
+  a complete profile renders nothing at all.
+  **The abstention verdict comes from the engine's own `state_id`, never from a
+  threshold recomputed in the interface** — the catalogue's `knownVariables`
+  counts only the snapshot's columns, so a client-side rule disagrees with the
+  engine and warns about an abstention while a result is on screen.
 - `/movements` — the company's ledger: the `movements` table of
   `docs/data-model.md` §3, read and written through `/v1/movements`. It is the
   only view backed by a database (Tiger Cloud, PostgreSQL with TimescaleDB).

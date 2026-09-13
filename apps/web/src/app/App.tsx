@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import {
   Activity,
+  Building2,
   ChartColumn,
   CircleHelp,
   Info,
@@ -48,6 +49,7 @@ import {
   ExpenseFeedback,
   useExpenses,
 } from "@features/expense-simulation";
+import { CompanySelect } from "@features/company-picker";
 import { useMovements } from "@features/movements-ledger";
 import { AppShell } from "@features/app-shell";
 import type { ShellSection, ShellTool } from "@features/app-shell";
@@ -93,6 +95,7 @@ const DASHBOARD_SECTIONS: ShellSection[] = [
 /** The five PRD modules of the structural-fragility view, in reading order.
  *  The identifiers are the ones `AnalysisPage` puts on their wrappers. */
 const ANALYSIS_SECTIONS: ShellSection[] = [
+  { id: "empresa", label: "Empresa", icon: Building2 },
   { id: "supervivencia", label: "Supervivencia", icon: Activity },
   { id: "simulador", label: "Simulador", icon: SlidersHorizontal },
   { id: "tension", label: "Tensión estructural", icon: ChartColumn },
@@ -143,8 +146,14 @@ function MovementsView() {
 /** The structural-fragility route. It owns the analysis controller so the
  *  shell's commands and the page's own controls drive the same state; keeping
  *  it in its own component means the engine loop only runs on this route. */
-function AnalysisView() {
-  const analysis = useAnalysis();
+function AnalysisView({
+  company,
+  onCompanyChange,
+}: {
+  company: string;
+  onCompanyChange: (companyId: string) => void;
+}) {
+  const analysis = useAnalysis(company);
   const tools: ShellTool[] = [
     {
       label: "Ejecutar simulación",
@@ -173,6 +182,9 @@ function AnalysisView() {
       sections={ANALYSIS_SECTIONS}
       sectionsLabel="Análisis"
       tools={tools}
+      companySelector={
+        <CompanySelect selected={company} onSelect={onCompanyChange} />
+      }
     >
       <AnalysisPage analysis={analysis} />
     </AppShell>
@@ -233,6 +245,11 @@ export default function App() {
     undo: undoExpense,
     reset: resetExpenses,
   } = useExpenses();
+  // Which company the shell is looking at. It lives here because the header
+  // owns the control and more than one view reads the selection; an empty
+  // string means "whatever the service serves by default", which the selector
+  // resolves to a real id as soon as the catalogue answers.
+  const [company, setCompany] = useState("");
   const [technical, setTechnical] = useState(false);
   const [simulationWeeks, setSimulationWeeks] = useState(12);
   const reduced = !!useReducedMotion();
@@ -318,7 +335,7 @@ export default function App() {
   // shares no state with the mock business data source, so it must not wait
   // behind that load. Every hook above has already run, so the order is stable.
   if (isAnalysis) {
-    return <AnalysisView />;
+    return <AnalysisView company={company} onCompanyChange={setCompany} />;
   }
   // The ledger has its own data path too: it reads the database, not the mock
   // business data source, so it must not wait behind that load either.

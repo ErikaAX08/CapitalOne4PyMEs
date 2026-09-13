@@ -20,6 +20,12 @@ import {
 const DEBOUNCE_MS = 400;
 
 export interface AnalysisController {
+  /** The company being analysed; empty means the service's default. */
+  companyId: string;
+  /** Profile variables supplied for this run, for the ones the database
+   *  does not hold. */
+  declared: Record<string, number>;
+  setDeclared: (values: Record<string, number>) => void;
   action: ActionKind;
   parameters: ParameterValues;
   stress: ParameterValues;
@@ -48,7 +54,7 @@ function initialRequest(): AnalysisRequest {
  *  waiting for the network, then requests the real answer. Every later change
  *  debounces, cancels whatever was in flight, and degrades to the nearest
  *  precomputed state if the engine cannot answer within its budget. */
-export function useAnalysis(): AnalysisController {
+export function useAnalysis(companyId: string): AnalysisController {
   const source = useMemo(() => createAnalysisDataSource(), []);
   const [request, setRequest] = useState<AnalysisRequest>(initialRequest);
   const [result, setResult] = useState<AnalysisResult>({
@@ -117,10 +123,29 @@ export function useAnalysis(): AnalysisController {
     }));
   }, []);
 
+  // The selection lives in the shell, because the header owns it and more than
+  // one view reads it. A declaration belongs to the company it was made for, so
+  // changing company drops it: carrying one company's payroll onto another
+  // would quietly analyse the second with the first one's numbers.
+  useEffect(() => {
+    setRequest((current) =>
+      current.companyId === companyId
+        ? current
+        : { ...current, companyId, declared: {} },
+    );
+  }, [companyId]);
+
+  const setDeclared = useCallback((values: Record<string, number>) => {
+    setRequest((current) => ({ ...current, declared: values }));
+  }, []);
+
   const run = useCallback(() => setNonce((value) => value + 1), []);
   const reset = useCallback(() => setRequest(initialRequest()), []);
 
   return {
+    companyId: request.companyId ?? "",
+    declared: request.declared ?? {},
+    setDeclared,
     action: request.action,
     parameters: request.parameters,
     stress: request.stress,

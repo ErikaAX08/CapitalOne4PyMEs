@@ -9,6 +9,13 @@ export interface AnalysisRequest {
   parameters: ParameterValues;
   stress: ParameterValues;
   run: ParameterValues;
+  /** Which company to analyse. Absent means the one the service serves by
+   *  default, which is how the view behaved before a catalogue existed. */
+  companyId?: string;
+  /** Profile variables the database does not hold for this company. They fill
+   *  unknowns on the backend and never overwrite a recorded figure, so sending
+   *  them for a fully-known company changes nothing. */
+  declared?: Record<string, number>;
 }
 
 /** Builds the query string of GET /v1/analysis. Every parameter id travels
@@ -16,10 +23,14 @@ export interface AnalysisRequest {
 export function toQueryString(request: AnalysisRequest): string {
   const query = new URLSearchParams();
   query.set("action", request.action);
+  if (request.companyId) query.set("company_id", request.companyId);
   for (const values of [request.parameters, request.stress, request.run]) {
     for (const [id, value] of Object.entries(values)) {
       query.set(id, String(value));
     }
+  }
+  for (const [id, value] of Object.entries(request.declared ?? {})) {
+    query.set(id, String(value));
   }
   // Sorted so the same parameterization always produces the same URL, and
   // therefore the same cache entry, regardless of the order the interface

@@ -70,11 +70,15 @@ export function TopBar({
   title,
   subtitle,
   tools,
+  companySelector,
 }: {
   eyebrow: string;
   title: ReactNode;
   subtitle?: string;
   tools: ShellTool[];
+  /** Which company the view is looking at. The shell renders it because the
+   *  chrome should answer that at all times; views with no company omit it. */
+  companySelector?: ReactNode;
 }) {
   const today = new Intl.DateTimeFormat("es-MX", {
     weekday: "long",
@@ -115,9 +119,18 @@ export function TopBar({
               {today}
             </span>
           </p>
+          {companySelector && (
+            <div className="mt-[12px] min-[1001px]:hidden">
+              {companySelector}
+            </div>
+          )}
           <CompactNav tools={tools} />
         </div>
         <div className="flex shrink-0 items-center gap-[13px] max-[1000px]:hidden">
+          {companySelector}
+          {companySelector && (
+            <span className="mx-[2px] h-[27px] w-px bg-hairline" />
+          )}
           <Account />
         </div>
       </header>

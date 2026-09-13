@@ -13,6 +13,7 @@ export function AppShell({
   sections = [],
   sectionsLabel = "Mi negocio",
   tools = [],
+  companySelector,
   children,
 }: {
   eyebrow: string;
@@ -20,6 +21,7 @@ export function AppShell({
   subtitle?: string;
   sections?: ShellSection[];
   sectionsLabel?: string;
+  companySelector?: ReactNode;
   tools?: ShellTool[];
   children: ReactNode;
 }) {
@@ -36,6 +38,7 @@ export function AppShell({
           title={title}
           subtitle={subtitle}
           tools={tools}
+          companySelector={companySelector}
         />
         {children}
       </div>
