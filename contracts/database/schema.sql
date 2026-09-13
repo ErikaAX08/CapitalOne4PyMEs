@@ -30,7 +30,9 @@ CREATE TYPE state_t AS ENUM ('stable', 'tension', 'crisis', 'abstention');
 CREATE TYPE reinforcement_kind_t AS ENUM ('advance', 'capital_injection');
 CREATE TYPE range_source_t AS ENUM ('documented', 'control_range', 'declared_assumption');
 CREATE TYPE severity_t AS ENUM ('warning', 'critical');
-CREATE TYPE outcome_kind_t AS ENUM ('payroll_uncovered', 'negative_balance', 'emergency_credit', 'tax_delay', 'supplier_delay');
+-- 'bankruptcy' is the terminal outcome; it exists because the historical
+-- reference set (docs/data-model.md §6) observes exactly that and nothing else.
+CREATE TYPE outcome_kind_t AS ENUM ('payroll_uncovered', 'negative_balance', 'emergency_credit', 'tax_delay', 'supplier_delay', 'bankruptcy');
 
 -- Reference: the universal SME graph reduced to its nodes. Seeded from engine/graph.py.
 CREATE TABLE graph_nodes (
@@ -43,6 +45,9 @@ CREATE TABLE companies (
     company_id              CHAR(26) PRIMARY KEY,
     name                    TEXT NOT NULL,
     vertical                TEXT NOT NULL DEFAULT 'b2b_services',
+    -- The product is MXN only. The historical reference set is Polish, and its
+    -- amounts are converted at one documented rate before they are stored, so
+    -- every row in this table is still MXN (docs/data-model.md §6).
     currency                CHAR(3) NOT NULL DEFAULT 'MXN' CHECK (currency = 'MXN'),
     payroll_interval_days   SMALLINT NOT NULL DEFAULT 15 CHECK (payroll_interval_days > 0),
     project_delivery_day    INTEGER  NOT NULL DEFAULT 30 CHECK (project_delivery_day >= 0),
@@ -54,6 +59,10 @@ CREATE TABLE companies (
 CREATE TABLE company_snapshots (
     snapshot_id                 CHAR(26) PRIMARY KEY,
     company_id                  CHAR(26) NOT NULL REFERENCES companies,
+    -- Where the observation came from. NULL is the product's own data; a value
+    -- names the external reference set the row was loaded from, so a run can
+    -- exclude it. See docs/data-model.md §6.
+    dataset                     TEXT,
     cutoff_date                 DATE NOT NULL,
     opening_balance_cents       BIGINT CHECK (opening_balance_cents >= 0),
     payroll_cents               BIGINT CHECK (payroll_cents >= 0),
