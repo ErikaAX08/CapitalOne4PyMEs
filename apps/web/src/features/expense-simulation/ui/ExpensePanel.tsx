@@ -48,7 +48,7 @@ export function ExpensePanel({
     setAmount("");
   }
   return (
-    <Card className="mb-6 gap-0 p-[22px] max-[700px]:p-[18px]">
+    <Card className="gap-0 p-[22px] max-[700px]:p-[18px]">
       <div className="flex items-center gap-[11px] max-[700px]:gap-[9px]">
         <span className="grid h-[37px] w-[37px] place-items-center rounded-lg bg-surface-muted text-ink">
           <Wallet size={20} />

@@ -8,11 +8,7 @@ export function ExpenseFeedback({
   recommendation: string;
 }) {
   return (
-    <Alert
-      variant={isCritical ? "destructive" : "info"}
-      className="-mt-[10px] mb-[23px]"
-      role="status"
-    >
+    <Alert variant={isCritical ? "destructive" : "info"} role="status">
       <TriangleAlert
         size={18}
         className={`mt-[2px] shrink-0 ${isCritical ? "text-danger" : "text-info"}`}
