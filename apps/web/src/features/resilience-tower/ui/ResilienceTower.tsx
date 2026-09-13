@@ -1,6 +1,6 @@
 import {
   Component,
-  Suspense,
+  useCallback,
   useEffect,
   useState,
   type ReactNode,
@@ -23,12 +23,23 @@ interface Props {
   expenseBlocks?: number;
 }
 class SceneBoundary extends Component<
-  { children: ReactNode },
-  { failed: boolean }
+  { children: ReactNode; resetKey: number },
+  { failed: boolean; seenResetKey: number }
 > {
-  state = { failed: false };
+  state = { failed: false, seenResetKey: this.props.resetKey };
   static getDerivedStateFromError() {
     return { failed: true };
+  }
+  // Al reiniciar la simulacion volvemos a intentar la escena 3D. No usamos
+  // `key` en el componente porque eso remontaria el Canvas (y con el, su
+  // contexto WebGL) en cada reinicio.
+  static getDerivedStateFromProps(
+    props: { resetKey: number },
+    state: { seenResetKey: number },
+  ) {
+    return props.resetKey === state.seenResetKey
+      ? null
+      : { failed: false, seenResetKey: props.resetKey };
   }
   render() {
     return this.state.failed ? (
@@ -51,6 +62,8 @@ export function ResilienceTower({
   expenseBlocks = 0,
 }: Props) {
   const [selected, setSelected] = useState<number | null>(null);
+  const [ready, setReady] = useState(false);
+  const handleReady = useCallback(() => setReady(true), []);
   const [webgl] = useState(() => {
     try {
       const context = document.createElement("canvas").getContext("webgl2");
@@ -81,25 +94,30 @@ export function ResilienceTower({
       aria-label={viewModel.description}
     >
       {webgl ? (
-        <SceneBoundary key={resetKey}>
-          <Suspense
-            fallback={<TowerFallback>Preparando tu torre 3D…</TowerFallback>}
-          >
-            <TowerScene
-              resetKey={resetKey}
-              expenseBlocks={expenseBlocks}
-              collapsed={viewModel.collapsed && !slidingFailure}
-              staticFall={viewModel.staticFall && !slidingFailure}
-              lost={slidingFailure ? expenseBlocks : viewModel.lost}
-              risk={viewModel.risk}
-              blockColors={viewModel.blockColors}
-              blockOffsets={viewModel.blockOffsets}
-              expandedBlocks={viewModel.expandedBlocks}
-              crackedBlocks={viewModel.crackedBlocks}
-              onSelect={setSelected}
-              reduced={reduced}
-            />
-          </Suspense>
+        <SceneBoundary resetKey={resetKey}>
+          <TowerScene
+            resetKey={resetKey}
+            expenseBlocks={expenseBlocks}
+            collapsed={viewModel.collapsed && !slidingFailure}
+            staticFall={viewModel.staticFall && !slidingFailure}
+            lost={slidingFailure ? expenseBlocks : viewModel.lost}
+            risk={viewModel.risk}
+            blockColors={viewModel.blockColors}
+            blockOffsets={viewModel.blockOffsets}
+            expandedBlocks={viewModel.expandedBlocks}
+            crackedBlocks={viewModel.crackedBlocks}
+            onSelect={setSelected}
+            reduced={reduced}
+            onReady={handleReady}
+          />
+          {/* Aviso de carga como capa HTML encima del Canvas: un <Suspense>
+              alrededor del Canvas lo desmontaria y provocaria la perdida del
+              contexto WebGL. */}
+          {!ready && (
+            <div className="absolute inset-0 z-[2] bg-surface-subtle">
+              <TowerFallback>Preparando tu torre 3D…</TowerFallback>
+            </div>
+          )}
         </SceneBoundary>
       ) : (
         <TowerFallback>
