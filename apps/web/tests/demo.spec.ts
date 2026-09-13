@@ -69,7 +69,7 @@ test("decision, collapse, advance, reset and alternative scenarios", async ({
   await page.getByRole("button", { name: "Explorar mi estabilidad" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(
-    page.getByRole("heading", { name: "La estructura de tu negocio" }),
+    page.getByRole("heading", { name: "Esta torre representa tu empresa" }),
   ).toBeVisible();
   await expect(page.locator("main.dashboard")).toHaveCSS("opacity", "1");
   await expect(
@@ -141,7 +141,7 @@ test("dashboard supports direct navigation and reload", async ({ page }) => {
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(
-    page.getByRole("heading", { name: "La estructura de tu negocio" }),
+    page.getByRole("heading", { name: "Esta torre representa tu empresa" }),
   ).toBeVisible();
   await expect(
     page.getByRole("group", { name: /Estructura 3D/ }),
