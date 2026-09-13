@@ -1,0 +1,22 @@
+{
+  "company_id": "co_demo_agency",
+  "currency": "MXN",
+  "opening_balance_cents": 66000000,
+  "payroll_cents": 12000000,
+  "payroll_interval_days": 15,
+  "main_customer_concentration": 0.46,
+  "contracted_term_days": 60,
+  "average_collection_days": 45,
+  "project_delivery_day": 30,
+  "hire_monthly_cost_cents": 4500000,
+  "recurring_rules": [
+    {"id": "base.receipts", "node": "collection", "direction": "in", "amount_cents": 32000000,
+     "first_day": 20, "interval_days": 30, "scale": "sales", "exposure": "main_customer",
+     "provenance": "known"},
+    {"id": "base.suppliers", "node": "supplier", "direction": "out", "amount_cents": 6000000,
+     "first_day": 10, "interval_days": 30, "provenance": "known"},
+    {"id": "base.payroll", "node": "payroll", "direction": "out", "amount_cents": 12000000,
+     "first_day": 15, "interval_days": 15, "provenance": "known"}
+  ],
+  "one_off_movements": []
+}
