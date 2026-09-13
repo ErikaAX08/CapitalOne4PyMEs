@@ -8,7 +8,7 @@ export function BrandSwoosh({ className }: { className?: string }) {
       viewBox="0 0 320 160"
       fill="none"
       className={cn(
-        "pointer-events-none absolute right-[-22px] top-[-18px] h-auto w-[78%] text-chart-2",
+        "pointer-events-none absolute right-[-22px] top-[-18px] h-auto w-[78%] text-brand-blue-accent",
         className,
       )}
     >
