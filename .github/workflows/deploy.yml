@@ -1,0 +1,218 @@
+name: deploy
+
+# Push to main deploys prod. There is one environment (docs/architecture.md §15).
+#
+# No AWS secret exists anywhere in this repository. The job exchanges its
+# short-lived GitHub OIDC token for temporary credentials through
+# AssumeRoleWithWebIdentity, against the role infra/modules/cicd creates. That
+# is decision 11, and it is why `secrets` never appears below.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never cancel an apply mid-flight: a half-applied Terraform run is worse than a
+# queued one.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  id-token: write # required to mint the OIDC token
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # The gates run before anything touches AWS. A build that fails a gate must
+  # not reach the distribution, because the cache would then serve the bad
+  # version until someone notices.
+  # ---------------------------------------------------------------------------
+  gates:
+    name: gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the engine
+        working-directory: services/engine
+        run: python -m pip install --quiet ".[dev]"
+
+      - name: data — fixtures reproduce byte for byte and match the report
+        working-directory: services/engine
+        run: python scripts/generate_states.py --check
+
+      - name: contract — the engine's own suite, including state.schema.json
+        working-directory: services/engine
+        run: pytest -q
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache-dependency-path: services/domain/go.sum
+
+      - name: purity — the domain must not depend on infrastructure
+        working-directory: services/domain
+        run: |
+          ! grep -rl "aws-sdk-go-v2\|/adapters" internal/*/domain/ \
+            || { echo "The domain must not depend on infrastructure"; exit 1; }
+
+      - name: Go tests
+        working-directory: services/domain
+        run: go vet ./... && go test ./...
+
+  # ---------------------------------------------------------------------------
+  # Build, apply, sync, invalidate, warm, smoke.
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: deploy
+    needs: gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Artefacts ---------------------------------------------------------
+      #
+      # The engine zip has to exist before `terraform plan`: Terraform hashes
+      # the file to decide whether the function changed, and a missing file is
+      # an error rather than a no-op.
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Package the Python engine
+        working-directory: services/engine
+        run: |
+          sh scripts/package_lambda.sh
+          ls -lh build/engine.zip
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19"
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+
+      - name: Build the front-end
+        working-directory: apps/web
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm check:boundaries
+          pnpm build
+
+      - name: lexicon — no forbidden vocabulary in the build
+        working-directory: apps/web
+        run: |
+          ! grep -rniE "topol[oó]gic|\bTDA\b|persistencia" dist/ \
+            || { echo "Forbidden lexicon in the build"; exit 1; }
+
+      # --- AWS ---------------------------------------------------------------
+
+      - name: Assume the deploy role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: deploy-${{ github.run_id }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+          terraform_wrapper: false
+
+      - name: terraform init
+        working-directory: infra/envs/prod
+        run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+
+      - name: terraform apply
+        working-directory: infra/envs/prod
+        run: |
+          terraform apply -input=false -auto-approve \
+            -var "state_bucket_name=${{ vars.TF_STATE_BUCKET }}" \
+            -var "site_bucket_name=${{ vars.SITE_BUCKET }}" \
+            -var 'notification_emails=["${{ vars.ALERT_EMAIL }}"]'
+
+      - name: Read the outputs
+        id: tf
+        working-directory: infra/envs/prod
+        run: |
+          {
+            echo "site_bucket=$(terraform output -raw site_bucket_name)"
+            echo "distribution_id=$(terraform output -raw distribution_id)"
+            echo "site_url=$(terraform output -raw site_url)"
+          } >> "$GITHUB_OUTPUT"
+
+      # --- Publish -----------------------------------------------------------
+
+      - name: Sync the site
+        working-directory: apps/web
+        run: |
+          # Hashed assets are immutable and cached hard; the entry document is
+          # not, or a deploy would never be picked up by a returning visitor.
+          aws s3 sync dist/ "s3://${{ steps.tf.outputs.site_bucket }}/" \
+            --delete --exclude "index.html" \
+            --cache-control "public, max-age=31536000, immutable"
+          aws s3 cp dist/index.html "s3://${{ steps.tf.outputs.site_bucket }}/index.html" \
+            --cache-control "no-cache"
+
+      - name: Invalidate the distribution
+        run: |
+          # Mandatory. Without it the previous version keeps being served: a
+          # silent failure, and an expensive one during a pitch.
+          id=$(aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.tf.outputs.distribution_id }}" \
+            --paths "/*" --query 'Invalidation.Id' --output text)
+          echo "invalidation $id"
+          aws cloudfront wait invalidation-completed \
+            --distribution-id "${{ steps.tf.outputs.distribution_id }}" --id "$id"
+
+      # --- Warming and smoke test --------------------------------------------
+
+      - name: Warm the paths the pitch walks through
+        run: |
+          # Two things at once: the Lambdas stay warm, and the CloudFront cache
+          # is populated with the rehearsed scenarios, so they answer in ~20 ms
+          # even the first time someone opens them at the event.
+          url="${{ steps.tf.outputs.site_url }}"
+          for q in \
+            "action=accept_project&seed=42" \
+            "action=accept_project&collection_delay_days=16&seed=42" \
+            "action=accept_project&advance_pct=25&seed=42" \
+            "action=accept_project&main_customer_lost=true&seed=42" ; do
+            code=$(curl -sS -o /dev/null -w '%{http_code} %{time_total}s' "$url/v1/analysis?$q")
+            echo "$code  ?$q"
+          done
+
+      - name: Smoke test
+        run: |
+          url="${{ steps.tf.outputs.site_url }}"
+          # The site answers.
+          curl -fsS -o /dev/null "$url/" || { echo "the site did not answer"; exit 1; }
+          # The analysis answers with a state document, not merely with a 200.
+          body=$(curl -fsS "$url/v1/analysis?action=accept_project&seed=42")
+          echo "$body" | grep -q '"schema"' \
+            || { echo "no schema field in the response:"; echo "$body" | head -c 400; exit 1; }
+          echo "$body" | grep -q '"state_id"' \
+            || { echo "no state_id in the response"; exit 1; }
+          echo "ok — $url"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Deployed"
+            echo ""
+            echo "- Site: ${{ steps.tf.outputs.site_url }}"
+            echo "- Distribution: \`${{ steps.tf.outputs.distribution_id }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
