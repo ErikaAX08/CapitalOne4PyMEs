@@ -37,10 +37,7 @@ import {
   SimulationResult,
 } from "@features/scenario-simulation";
 import { IntroScreen } from "@features/onboarding";
-import {
-  BusinessSignals,
-  FinancialOverview,
-} from "@features/financial-overview";
+import { BusinessSignals } from "@features/financial-overview";
 import { TechnicalExplanationDialog } from "@features/technical-explanation";
 import { TowerCard } from "@features/resilience-tower";
 import {
@@ -85,7 +82,6 @@ const EMPTY_OUTPUT: SimulationOutput = {
 /** The sections of the dashboard the shell's sidebar can scroll to. The
  *  identifiers are the ones the corresponding landmarks carry below. */
 const DASHBOARD_SECTIONS: ShellSection[] = [
-  { id: "resumen", label: "Resumen financiero", icon: ScanSearch },
   { id: "estructura", label: "Estructura 3D", icon: Layers3 },
   { id: "gastos", label: "Gastos simulados", icon: Wallet },
   { id: "decisiones", label: "Prueba una decisión", icon: Sparkles },
@@ -408,16 +404,6 @@ export default function App() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <FinancialOverview
-                  availableBalance={
-                    data.business.balance - output.simulatedExpenseTotal
-                  }
-                  hasExpenses={expenses.length > 0}
-                  expenseTotal={output.simulatedExpenseTotal}
-                  fragilityScore={shown.fragilityScore}
-                  survivalWeeks={shown.survivalWeeks}
-                  recommendedBuffer={shown.recommendedBuffer}
-                />
                 <div className="grid gap-5 max-[700px]:gap-[19px] min-[701px]:grid-cols-[minmax(0,1.28fr)_minmax(0,1fr)] min-[701px]:gap-[18px] min-[1001px]:gap-5">
                   <div
                     id="estructura"

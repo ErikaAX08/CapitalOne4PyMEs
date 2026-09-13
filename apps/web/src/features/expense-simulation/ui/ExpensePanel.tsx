@@ -190,10 +190,6 @@ export function ExpensePanel({
           </Button>
         </div>
       )}
-      <small className="block text-[10px] leading-[1.7] text-body-subtle max-[700px]:text-[11px]">
-        Representación ilustrativa: a mayor gasto, más bloques de soporte se
-        retiran. No modifica tus cuentas reales.
-      </small>
     </Card>
   );
 }

@@ -141,10 +141,6 @@ export function TowerCard({
           <h2 className="font-title mt-1 text-xl font-semibold tracking-[-0.02em]">
             Esta torre representa tu empresa
           </h2>
-          <p className="mt-1.5 max-w-[390px] text-[10px] leading-[1.5] text-body-muted">
-            Los cimientos financieros sostienen la operación y el crecimiento.
-            Si la base se debilita, los niveles superiores quedan en riesgo.
-          </p>
         </div>
         <Button
           variant="ghost"
