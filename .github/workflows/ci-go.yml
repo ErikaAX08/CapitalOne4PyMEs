@@ -18,14 +18,25 @@ jobs:
     defaults:
       run:
         working-directory: services/domain
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fragility
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
-          # The module declares no dependencies, so there is nothing to cache
-          # and no go.sum for the action to key on.
-          cache: false
+          cache-dependency-path: services/domain/go.sum
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -40,9 +51,27 @@ jobs:
         run: |
           ! grep -rl "aws-sdk-go-v2\|/adapters" internal/*/domain/ \
             || { echo "The domain must not depend on infrastructure"; exit 1; }
+      - name: Movements schema
+        # The movements context talks to PostgreSQL. Tiger Cloud, the
+        # deployment target, is PostgreSQL with TimescaleDB; the service
+        # container below is plain PostgreSQL, so everything is exercised here
+        # except the hypertable partitioning itself, which needs the extension.
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d fragility -v ON_ERROR_STOP=1 \
+            -c "CREATE EXTENSION IF NOT EXISTS timescaledb" 2>/dev/null \
+            || echo "timescaledb is unavailable; movements is created as a plain table"
+          sed -e '/CREATE EXTENSION IF NOT EXISTS timescaledb;/d' \
+              -e "s/WITH (tsdb.hypertable = true, tsdb.partition_column = 'due_date');/;/" \
+              ../../contracts/database/schema.sql \
+            | psql -h localhost -U postgres -d fragility -v ON_ERROR_STOP=1
+
       - name: Tests
         # Includes the contract gate (the Go projector against the four fallback
         # states) and the end-to-end path against the live Python engine.
+        env:
+          MOVEMENTS_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/fragility?sslmode=disable
         run: go test ./...
       - name: Captured engine results are current
         run: |
