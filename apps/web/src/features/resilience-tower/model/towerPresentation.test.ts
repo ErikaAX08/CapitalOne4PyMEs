@@ -227,10 +227,10 @@ test("credit project moves receivables and stresses payroll near day 75", () => 
     reduced: false,
     instantResult: false,
   });
-  assert.equal(vm.blockColors[7], 3, "accounts receivable is stressed");
-  assert.equal(vm.blockColors[9], 3, "payroll is stressed");
+  assert.equal(vm.blockColors[7], 0, "receivables keeps its blue identity");
+  assert.equal(vm.blockColors[9], 1, "payroll keeps its green identity");
   assert.ok(vm.blockOffsets[7] > 0.6, "accounts receivable moves out");
-  assert.ok(vm.blockOffsets[9] > 0.7, "payroll moves out");
+  assert.ok(vm.blockOffsets[9] > 0, "payroll begins sliding after cracking");
   assert.equal(vm.crackedBlocks[9], true);
   assert.equal(vm.expandedBlocks[22], true, "the project block grows");
 });
@@ -248,13 +248,30 @@ test("blockColors: mitigating/recovered base stays liquidity-colored", () => {
     assert.equal(vm.blockColors[index], 0);
 });
 
+test("payroll cracks before sliding away and retains its color", () => {
+  const at = (progress: number) =>
+    computeTowerViewModel({
+      state: "simulating",
+      progress,
+      output: output({ towerBlockChanges: contractChanges }),
+      expenseBlocks: 0,
+      reduced: false,
+      instantResult: false,
+    });
+  assert.equal(at(0.2).crackedBlocks[9], false);
+  assert.equal(at(0.75).crackedBlocks[9], true);
+  assert.equal(at(0.75).blockOffsets[9], 0);
+  assert.ok(Math.abs(at(1).blockOffsets[9] - 3) < 1e-9);
+  assert.equal(at(0.75).blockColors[9], at(0.2).blockColors[9]);
+});
+
 test("advance mitigation returns stressed blocks to the center", () => {
   const mitigationChanges: TowerChange[] = [
     { week: 1, action: "addLiquidity" },
   ];
   const mid = computeTowerViewModel({
     state: "mitigating",
-    progress: 0.5,
+    progress: 0.2,
     output: output({ towerBlockChanges: mitigationChanges }),
     expenseBlocks: 0,
     reduced: false,

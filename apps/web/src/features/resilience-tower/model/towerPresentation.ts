@@ -1,11 +1,6 @@
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
-export const BLOCK_HEX_COLORS = [
-  "#4389dc",
-  "#58b69b",
-  "#afbac9",
-  "#df6b35",
-];
+export const BLOCK_HEX_COLORS = ["#4389dc", "#58b69b", "#afbac9", "#df6b35"];
 export const TOWER_LEVELS = [
   ["Efectivo", "Crédito disponible", "Reservas"],
   ["Cuentas por cobrar", "Efectivo", "Reservas"],
@@ -117,12 +112,8 @@ export function computeTowerViewModel({
 
   function colorFor(index: number): number {
     const level = Math.floor(index / 3) + 1;
-    if (
-      ((index === 7 && receivableStress && stressProgress > 0.34) ||
-        (index === 9 && payrollStress && stressProgress > 0.68)) &&
-      !(isRecovering && progress > 0.58)
-    )
-      return 3;
+    if (index === 9 && hasLiquidityMitigation && state === "recovered")
+      return 0;
     if ((state === "mitigating" || state === "recovered") && level <= 3)
       return 0;
     if (level <= 3) return 0;
@@ -132,9 +123,9 @@ export function computeTowerViewModel({
   const blockColors = Array.from({ length: 36 }, (_, i) => colorFor(i));
   const blockOffsets = Array.from({ length: 36 }, (_, index) => {
     if (index === 7 && receivableStress)
-      return 0.65 * Math.max(0, Math.min(1, (stressProgress - 0.28) / 0.35));
+      return 3 * Math.max(0, Math.min(1, (stressProgress - 0.65) / 0.35));
     if (index === 9 && payrollStress)
-      return 0.82 * Math.max(0, Math.min(1, (stressProgress - 0.66) / 0.2));
+      return 3 * Math.max(0, Math.min(1, (stressProgress - 0.89) / 0.11));
     return 0;
   });
   const expandedBlocks = Array.from(
@@ -146,7 +137,9 @@ export function computeTowerViewModel({
   );
   const crackedBlocks = Array.from(
     { length: 36 },
-    (_, index) => index === 9 && payrollStress && stressProgress > 0.68,
+    (_, index) =>
+      (index === 7 && receivableStress && stressProgress > 0.34) ||
+      (index === 9 && payrollStress && stressProgress > 0.68),
   );
   const description = `Estructura 3D de la PyME: ${collapsed ? "colapsada" : output.status.toLowerCase()}. ${lost} bloques retirados. Base financiera, motor operativo y cima comercial.`;
   return {

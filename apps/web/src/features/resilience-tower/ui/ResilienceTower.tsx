@@ -71,6 +71,9 @@ export function ResilienceTower({
     instantResult,
   });
   const selectedBlock = selected === null ? null : getBlockStructure(selected);
+  const slidingFailure =
+    output.towerBlockChanges.some((c) => c.action === "delayIncome") &&
+    output.towerBlockChanges.some((c) => c.action === "addIncome");
   return (
     <div
       className="tower-3d relative h-full w-full overflow-hidden [&_canvas]:touch-none"
@@ -85,9 +88,9 @@ export function ResilienceTower({
             <TowerScene
               resetKey={resetKey}
               expenseBlocks={expenseBlocks}
-              collapsed={viewModel.collapsed}
-              staticFall={viewModel.staticFall}
-              lost={viewModel.lost}
+              collapsed={viewModel.collapsed && !slidingFailure}
+              staticFall={viewModel.staticFall && !slidingFailure}
+              lost={slidingFailure ? expenseBlocks : viewModel.lost}
               risk={viewModel.risk}
               blockColors={viewModel.blockColors}
               blockOffsets={viewModel.blockOffsets}
@@ -119,6 +122,13 @@ export function ResilienceTower({
           <strong className="my-[7px] block text-[14px]">
             {selectedBlock.label}
           </strong>
+          <span className="text-[11px] text-body">
+            {viewModel.blockOffsets[selected] >= 2.9
+              ? "Retirado: perdió su soporte"
+              : viewModel.crackedBlocks[selected]
+                ? "Agrietado: capacidad en peligro"
+                : "Entero: capacidad disponible"}
+          </span>
           <small className="mt-[5px] block text-[11px] leading-[1.5] text-body-muted">
             {selectedBlock.tier.area} · {selectedBlock.tier.role}
           </small>
