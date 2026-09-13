@@ -43,6 +43,11 @@ type Server struct {
 	// than pretending to have stored or read anything.
 	Movements *movementsapp.Service
 
+	// Catalog lists the companies available to analyse. Nil without a
+	// database, in which case /v1/companies answers 503: the service still
+	// serves its default company, there is simply nothing to choose from.
+	Catalog *companyadapter.PostgresRepository
+
 	CompanyID    string
 	Cutoff       kernel.CutoffDate
 	CacheControl string
@@ -55,6 +60,7 @@ func (s *Server) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/analysis", s.analysis)
 	mux.HandleFunc("GET /v1/actions", s.actions)
+	mux.HandleFunc("GET /v1/companies", s.listCompanies)
 	mux.HandleFunc("GET /v1/movements", s.listMovements)
 	mux.HandleFunc("POST /v1/movements", s.addMovement)
 	mux.HandleFunc("GET /health", s.health)

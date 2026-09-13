@@ -40,8 +40,17 @@ const columns = `rtrim(movement_id), rtrim(company_id), node, direction, due_dat
 // Repository reads and writes the `movements` table.
 type Repository struct{ Pool *pgxpool.Pool }
 
-// Open connects to PostgreSQL and verifies the connection before returning, so
-// a bad DSN fails at start-up rather than on the first request.
+// Open builds the connection pool. A malformed connection string fails here,
+// because no amount of retrying fixes it.
+//
+// It does not require the database to be reachable. pgxpool connects lazily and
+// reconnects on its own, so a database that is briefly unavailable — a cold
+// start on a shared instance, a moment of bad network — heals by itself on the
+// next request. Refusing to start in that case would take down the routes that
+// need no database at all, which is the opposite of how the rest of this system
+// behaves when a dependency is slow (PRD 5.5).
+//
+// Call Probe to find out whether it is actually reachable right now.
 func Open(ctx context.Context, dsn string) (*Repository, error) {
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
@@ -51,11 +60,16 @@ func Open(ctx context.Context, dsn string) (*Repository, error) {
 	if err != nil {
 		return nil, fmt.Errorf("movements: cannot create the connection pool: %w", err)
 	}
-	if err := pool.Ping(ctx); err != nil {
-		pool.Close()
-		return nil, fmt.Errorf("movements: cannot reach the database: %w", err)
-	}
 	return &Repository{Pool: pool}, nil
+}
+
+// Probe reports whether the database answers right now. A failure is worth
+// logging, not worth aborting on.
+func (r *Repository) Probe(ctx context.Context) error {
+	if err := r.Pool.Ping(ctx); err != nil {
+		return fmt.Errorf("movements: cannot reach the database: %w", err)
+	}
+	return nil
 }
 
 // Close releases the pool.

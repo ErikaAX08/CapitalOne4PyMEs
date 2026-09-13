@@ -103,9 +103,13 @@ func run(log *slog.Logger) error {
 	// With a database, the analysis can run on any company it holds; the demo
 	// company keeps coming from its fixture, so the product works unchanged
 	// whether or not the database is reachable.
-	var profiles riskapp.CompanyRepository = companies
+	var (
+		profiles  riskapp.CompanyRepository = companies
+		companyDB *companyadapter.PostgresRepository
+	)
 	if pool != nil {
-		profiles = companyadapter.NewPostgresRepository(pool, cutoff, companies)
+		companyDB = companyadapter.NewPostgresRepository(pool, cutoff, companies)
+		profiles = companyDB
 		log.Info("company profiles served from the database",
 			"fallback_company", companies.DefaultCompanyID())
 	}
@@ -120,15 +124,21 @@ func run(log *slog.Logger) error {
 				"DOMAIN_COMPANY_ID is %s but no database is configured to read it from",
 				defaultCompany)
 		}
-		// Fail at start-up rather than on the first request: an unknown default
-		// would turn every unqualified call into a 404.
-		checkCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		if _, err := profiles.Profile(checkCtx, defaultCompany); err != nil {
-			cancel()
-			return fmt.Errorf("DOMAIN_COMPANY_ID: %w", err)
-		}
+		// A company that does not exist is a typo in the configuration and is
+		// worth refusing to start over, because every unqualified call would
+		// then answer 404. A database that did not answer is not: it heals.
+		checkCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		_, checkErr := profiles.Profile(checkCtx, defaultCompany)
 		cancel()
-		log.Info("default company overridden", "company_id", defaultCompany)
+		switch {
+		case checkErr == nil:
+			log.Info("default company overridden", "company_id", defaultCompany)
+		case errors.Is(checkErr, companyadapter.ErrNotFound):
+			return fmt.Errorf("DOMAIN_COMPANY_ID: %w", checkErr)
+		default:
+			log.Warn("could not verify the default company at start-up",
+				"company_id", defaultCompany, "error", checkErr.Error())
+		}
 	}
 
 	server := &Server{
@@ -136,6 +146,7 @@ func run(log *slog.Logger) error {
 		Analyzer:     riskapp.Analyzer{Engine: engineadapter.NewClient(transport)},
 		Companies:    profiles,
 		Movements:    movements,
+		Catalog:      companyDB,
 		ActionsRaw:   catalog.Raw(),
 		CompanyID:    defaultCompany,
 		Cutoff:       cutoff,
@@ -192,14 +203,25 @@ func openMovements(ctx context.Context, cutoff kernel.CutoffDate, log *slog.Logg
 			"detail", "set DATABASE_CONNECTION_STRING to enable /v1/movements")
 		return nil, nil, func() {}, nil
 	}
-	connectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	repo, err := movementspg.Open(connectCtx, dsn)
+	repo, err := movementspg.Open(ctx, dsn)
 	if err != nil {
+		// Only a malformed connection string reaches here, and retrying that
+		// is pointless.
 		return nil, nil, func() {}, err
 	}
-	log.Info("movements database connected")
+
+	// Whether it answers right now is worth knowing and worth saying, but not
+	// worth refusing to start over: the pool reconnects on its own, and the
+	// routes that need no database keep working meanwhile.
+	probeCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	if probeErr := repo.Probe(probeCtx); probeErr != nil {
+		log.Warn("the movements database did not answer at start-up",
+			"error", probeErr.Error(),
+			"detail", "/v1/companies and /v1/movements will answer 503 until it does")
+	} else {
+		log.Info("movements database connected")
+	}
 	return &movementsapp.Service{Repo: repo, Cutoff: cutoff}, repo.Pool, repo.Close, nil
 }
 
