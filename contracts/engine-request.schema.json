@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://capitalone4pymes.example/contracts/engine-request.schema.json",
+  "title": "Engine request",
+  "description": "Payload the Go domain sends to the Python engine on lambda:Invoke. The company block is the engine's view of the data model (companies, recurring_rules, movements). Unknown values are null, never zero.",
+  "type": "object",
+  "required": ["schema", "company", "action", "stress", "paths", "seed", "horizon_days"],
+  "properties": {
+    "schema": {"const": "engine-request/v1"},
+    "cutoff_date": {"type": "string", "format": "date"},
+    "format": {"enum": ["result", "state"]},
+    "correlation_id": {"type": "string"},
+    "company": {
+      "type": "object",
+      "required": ["company_id", "opening_balance_cents", "payroll_cents", "main_customer_concentration", "contracted_term_days", "average_collection_days", "recurring_rules"],
+      "properties": {
+        "company_id": {"type": "string"},
+        "currency": {"const": "MXN"},
+        "opening_balance_cents": {"type": ["integer", "null"], "minimum": 0},
+        "payroll_cents": {"type": ["integer", "null"], "minimum": 0},
+        "payroll_interval_days": {"type": ["integer", "null"], "minimum": 1},
+        "main_customer_concentration": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "contracted_term_days": {"type": ["integer", "null"], "minimum": 0},
+        "average_collection_days": {"type": ["integer", "null"], "minimum": 0},
+        "project_delivery_day": {"type": "integer", "minimum": 0},
+        "hire_monthly_cost_cents": {"type": "integer", "minimum": 0},
+        "recurring_rules": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "required": ["id", "node", "direction", "amount_cents", "first_day", "interval_days"],
+            "properties": {
+              "id": {"type": "string"},
+              "node": {"type": "string"},
+              "direction": {"enum": ["in", "out"]},
+              "amount_cents": {"type": "integer", "minimum": 0},
+              "first_day": {"type": "integer", "minimum": 0},
+              "interval_days": {"type": "integer", "minimum": 1},
+              "shift": {"enum": ["none", "delivery", "collection"]},
+              "scale": {"enum": ["none", "sales", "cost"]},
+              "exposure": {"enum": ["none", "main_customer"]},
+              "provenance": {"enum": ["known", "declared", "learned", "hypothetical"]}
+            }
+          }
+        },
+        "one_off_movements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "node", "direction", "day", "amount_cents"],
+            "properties": {
+              "id": {"type": "string"},
+              "node": {"type": "string"},
+              "direction": {"enum": ["in", "out"]},
+              "day": {"type": "integer", "minimum": 0},
+              "amount_cents": {"type": "integer", "minimum": 0},
+              "shift": {"enum": ["none", "delivery", "collection"]},
+              "scale": {"enum": ["none", "sales", "cost"]},
+              "exposure": {"enum": ["none", "main_customer"]},
+              "priority": {"type": ["integer", "null"]},
+              "known_at": {"type": "integer"},
+              "settled_cents": {"type": "integer", "minimum": 0},
+              "provenance": {"enum": ["known", "declared", "learned", "hypothetical"]}
+            }
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["kind", "parameters"],
+      "properties": {
+        "kind": {"enum": ["none", "accept_project", "extend_credit", "hire_staff", "buy_asset", "request_financing"]},
+        "parameters": {"type": "object"}
+      }
+    },
+    "stress": {
+      "type": "object",
+      "properties": {
+        "collection_delay_days": {"type": "integer", "minimum": 0},
+        "main_customer_lost": {"type": "boolean"},
+        "capital_injection_cents": {"type": "integer", "minimum": 0}
+      }
+    },
+    "paths": {"type": "integer", "minimum": 100, "maximum": 20000},
+    "seed": {"type": "integer", "minimum": 0},
+    "horizon_days": {"type": "integer", "minimum": 30, "maximum": 365}
+  }
+}

@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://capitalone4pymes.example/contracts/state.schema.json",
+  "title": "State document",
+  "description": "Response of GET /v1/analysis and format of the fallback states under apps/web/public/states/. Money is integer cents. Field names are English; `label` and `explanation` are Spanish.",
+  "type": "object",
+  "required": ["schema", "state_id", "state_label", "company_id", "cutoff_date", "currency", "seed", "engine_version", "horizon_days", "coverage", "parameterization", "survival", "simulation", "tension", "propagation_path", "minimum_reinforcement", "explanation", "warnings", "notices", "definitions"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "v1"},
+    "state_id": {"enum": ["stable", "tension", "crisis", "abstention"]},
+    "state_label": {"enum": ["Estable", "Tensión", "Crisis Estructural", "Sin Estimación"]},
+    "company_id": {"type": "string"},
+    "cutoff_date": {"type": "string", "format": "date"},
+    "currency": {"const": "MXN"},
+    "seed": {"type": "integer", "minimum": 0},
+    "engine_version": {"type": "string"},
+    "horizon_days": {"type": "integer", "minimum": 1},
+    "coverage": {
+      "type": "object",
+      "required": ["known_variables", "total_variables", "unknown_fraction"],
+      "properties": {
+        "known_variables": {"type": "integer"},
+        "total_variables": {"type": "integer"},
+        "unknown_fraction": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "parameterization": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["action", "collection_delay_days", "main_customer_lost", "capital_injection_cents"],
+          "properties": {
+            "action": {"enum": ["none", "accept_project", "extend_credit", "hire_staff", "buy_asset", "request_financing"]},
+            "collection_delay_days": {"type": "integer", "minimum": 0},
+            "main_customer_lost": {"type": "boolean"},
+            "capital_injection_cents": {"type": "integer", "minimum": 0}
+          }
+        }
+      ]
+    },
+    "survival": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["weeks", "upper_bounded", "state", "state_label", "headline", "first_obligation"],
+          "additionalProperties": false,
+          "properties": {
+            "weeks": {"type": "integer", "minimum": 0},
+            "upper_bounded": {"type": "boolean"},
+            "state": {"enum": ["stable", "tension", "crisis"]},
+            "state_label": {"enum": ["Estable", "Tensión", "Crisis Estructural"]},
+            "headline": {"type": "string", "minLength": 1, "description": "Module A dynamic text, Spanish, names the concrete obligation."},
+            "net_recurring_flow_cents": {"type": "integer"},
+            "first_obligation": {
+              "oneOf": [
+                {"type": "null"},
+                {
+                  "type": "object",
+                  "required": ["kind", "label", "day", "date", "date_text", "gap_cents"],
+                  "properties": {
+                    "kind": {"type": "string"},
+                    "label": {"type": "string", "description": "Spanish, Title Case, e.g. Nómina"},
+                    "day": {"type": "integer", "minimum": 0},
+                    "date": {"type": "string", "format": "date"},
+                    "date_text": {"type": "string", "description": "Spanish long date, e.g. 26 de noviembre"},
+                    "gap_cents": {"type": "integer", "minimum": 0}
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "simulation": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["event", "horizon_days", "paths", "gap_frequency", "gap_frequency_by_horizon", "ci95", "mean_gap_cents", "p95_gap_cents"],
+          "additionalProperties": false,
+          "properties": {
+            "event": {"const": "uncovered_obligation"},
+            "horizon_days": {"type": "integer", "minimum": 1},
+            "paths": {"type": "integer", "minimum": 100},
+            "gap_frequency": {"type": "number", "minimum": 0, "maximum": 1},
+            "gap_frequency_by_horizon": {
+              "type": "object",
+              "description": "Share of futures whose first uncovered obligation falls within 30, 60 and 90 days.",
+              "required": ["30", "60", "90"],
+              "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+            },
+            "ci95": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+            "mean_gap_cents": {"type": "integer", "minimum": 0},
+            "p95_gap_cents": {"type": "integer", "minimum": 0}
+          }
+        }
+      ]
+    },
+    "tension": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["factor", "stack", "stack_label", "tension", "label", "range_source"],
+        "properties": {
+          "factor": {"enum": ["payroll_coverage", "average_collection_period", "collection_delay_tolerance", "cost_increase_tolerance", "sales_drop_tolerance", "main_customer_concentration"]},
+          "stack": {"enum": ["finance", "sales", "operations", "people", "technology", "compliance"]},
+          "stack_label": {"enum": ["Finanzas", "Ventas", "Operaciones", "Personas", "Tecnología", "Cumplimiento"]},
+          "tension": {"type": "number", "minimum": 0, "maximum": 1},
+          "label": {"type": "string"},
+          "range_source": {"enum": ["documented", "control_range", "declared_assumption"]},
+          "margin_cents": {"type": "integer"},
+          "range_cents": {"type": "integer"},
+          "margin_days": {"type": "integer"},
+          "range_days": {"type": "integer"},
+          "margin_pp": {"type": "number"},
+          "range_pp": {"type": "number"},
+          "margin": {"type": "number"},
+          "range": {"type": "number"},
+          "search_bounded": {"type": "boolean"}
+        }
+      }
+    },
+    "propagation_path": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["nodes", "node_labels", "origin_node", "breaking_node"],
+          "properties": {
+            "nodes": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+            "node_labels": {"type": "object", "additionalProperties": {"type": "string"}, "description": "Spanish label per node id in `nodes`."},
+            "origin_node": {"type": "string"},
+            "breaking_node": {"type": ["string", "null"]}
+          }
+        }
+      ]
+    },
+    "minimum_reinforcement": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["kind", "percentage", "amount_cents", "required", "label", "before"],
+          "properties": {
+            "kind": {"enum": ["advance", "capital_injection"]},
+            "label": {"type": "string", "description": "Module D recommended action, Spanish."},
+            "before": {
+              "type": "object",
+              "description": "Same parameterization without the reinforcement, same Monte Carlo worlds.",
+              "required": ["gap_frequency", "weeks", "upper_bounded", "state", "state_label"],
+              "properties": {
+                "gap_frequency": {"type": "number"},
+                "weeks": {"type": "integer"},
+                "upper_bounded": {"type": "boolean"},
+                "state": {"enum": ["stable", "tension", "crisis"]},
+                "state_label": {"type": "string"}
+              }
+            },
+            "state_label_after": {"type": ["string", "null"]},
+            "percentage": {"type": ["number", "null"]},
+            "amount_cents": {"type": ["integer", "null"]},
+            "additional_percentage": {"type": "number"},
+            "required": {"type": "boolean"},
+            "found": {"type": "boolean"},
+            "gap_frequency_after": {"type": "number"},
+            "ci95_after": {"type": "array", "items": {"type": "number"}},
+            "weeks_after": {"type": "integer"},
+            "upper_bounded_after": {"type": "boolean"},
+            "state_after": {"enum": ["stable", "tension", "crisis"]},
+            "grid_points_evaluated": {"type": "integer"}
+          }
+        }
+      ]
+    },
+    "explanation": {"type": "string", "minLength": 1},
+    "warnings": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "notices": {
+      "type": "array",
+      "description": "Module E chips: one Spanish label per warning code, same order as `warnings`.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["code", "label"],
+        "properties": {"code": {"type": "string"}, "label": {"type": "string"}}
+      }
+    },
+    "definitions": {
+      "type": "object",
+      "description": "Tooltip definitions the PRD requires next to each headline figure.",
+      "required": ["survival_weeks", "tension", "gap_frequency"],
+      "additionalProperties": {"type": "string"}
+    }
+  }
+}

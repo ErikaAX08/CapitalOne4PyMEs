@@ -6,7 +6,9 @@ This directory is the single source of truth for every cross-service payload.
 | File | Purpose |
 | --- | --- |
 | `actions.schema.json` | The five decisions and their editable parameters. Drives form generation in the front-end and validation in Go. |
-| `state.schema.json` | The state document: survival, simulation, tension, propagation path, minimum reinforcement, warnings. Returned by the API and used for the offline fallback states. |
+| `state.schema.json` | The state document: survival, simulation, tension, propagation path, minimum reinforcement, warnings, notices, definitions. Returned by the API and used for the offline fallback states. Field-by-field mapping to the PRD cards in `docs/module-contract.md`. |
+| `engine-request.schema.json` | Payload the Go domain sends to the Python engine on `lambda:Invoke`: company profile, action, stress controls, run parameters. |
+| `database/schema.sql` | Target relational schema (PostgreSQL). Not deployed in the MVP; documented in `docs/data-model.md`. |
 
 ## Rules
 

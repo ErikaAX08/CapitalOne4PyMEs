@@ -1,0 +1,285 @@
+{
+  "$comment": "The five decisions, the stress controls and the run parameters of GET /v1/analysis. Field ids are English; labels, hints and marks are Spanish because they render on screen. Money is integer cents. Defaults reproduce the scenario of docs/evaluation-report.md section 3.",
+  "schema": "actions/v1",
+  "actions": {
+    "none": {
+      "label": "Operación Actual",
+      "parameters": [],
+      "hint": "Sin decisión aplicada: la operación tal como está"
+    },
+    "accept_project": {
+      "label": "Aceptar Proyecto",
+      "default": true,
+      "parameters": [
+        {
+          "id": "total_revenue_cents",
+          "label": "Ingreso total",
+          "type": "money",
+          "min": 10000000,
+          "max": 500000000,
+          "default": 80000000,
+          "step": 1000000
+        },
+        {
+          "id": "initial_cost_cents",
+          "label": "Costo inicial",
+          "type": "money",
+          "min": 0,
+          "max": 400000000,
+          "default": 38000000,
+          "step": 1000000
+        },
+        {
+          "id": "advance_pct",
+          "label": "Anticipo",
+          "type": "percentage",
+          "min": 0,
+          "max": 60,
+          "default": 0,
+          "step": 1,
+          "mark": {
+            "value": 25,
+            "text": "refuerzo mínimo a 0 días de retraso"
+          }
+        },
+        {
+          "id": "collection_days",
+          "label": "Plazo de cobro",
+          "type": "days",
+          "min": 0,
+          "max": 120,
+          "default": 60,
+          "step": 1,
+          "hint": "Días desde la decisión hasta el cobro del saldo del proyecto"
+        },
+        {
+          "id": "hires",
+          "label": "Contrataciones",
+          "type": "integer",
+          "min": 0,
+          "max": 10,
+          "default": 2,
+          "step": 1
+        },
+        {
+          "id": "duration_days",
+          "label": "Duración",
+          "type": "days",
+          "min": 0,
+          "max": 120,
+          "default": 30,
+          "step": 1,
+          "hint": "Días hasta la entrega y facturación"
+        }
+      ]
+    },
+    "extend_credit": {
+      "label": "Otorgar Crédito A Cliente",
+      "parameters": [
+        {
+          "id": "amount_cents",
+          "label": "Monto",
+          "type": "money",
+          "min": 1000000,
+          "max": 200000000,
+          "default": 32000000,
+          "step": 1000000
+        },
+        {
+          "id": "collection_days",
+          "label": "Plazo de cobro",
+          "type": "days",
+          "min": 1,
+          "max": 120,
+          "default": 60,
+          "step": 1
+        },
+        {
+          "id": "main_customer",
+          "label": "Es el cliente principal",
+          "type": "boolean",
+          "default": true
+        }
+      ]
+    },
+    "hire_staff": {
+      "label": "Contratar Personal",
+      "parameters": [
+        {
+          "id": "headcount",
+          "label": "Personas",
+          "type": "integer",
+          "min": 1,
+          "max": 20,
+          "default": 2,
+          "step": 1
+        },
+        {
+          "id": "monthly_unit_cost_cents",
+          "label": "Costo mensual por persona",
+          "type": "money",
+          "min": 500000,
+          "max": 20000000,
+          "default": 4500000,
+          "step": 100000
+        },
+        {
+          "id": "start_day",
+          "label": "Inicio",
+          "type": "days",
+          "min": 0,
+          "max": 90,
+          "default": 0,
+          "step": 1
+        }
+      ]
+    },
+    "buy_asset": {
+      "label": "Comprar Inventario O Maquinaria",
+      "parameters": [
+        {
+          "id": "amount_cents",
+          "label": "Monto",
+          "type": "money",
+          "min": 1000000,
+          "max": 300000000,
+          "default": 40000000,
+          "step": 1000000
+        },
+        {
+          "id": "financed_pct",
+          "label": "Porcentaje financiado",
+          "type": "percentage",
+          "min": 0,
+          "max": 100,
+          "default": 50,
+          "step": 1
+        },
+        {
+          "id": "financing_term_months",
+          "label": "Plazo del financiamiento",
+          "type": "integer",
+          "min": 1,
+          "max": 60,
+          "default": 12,
+          "step": 1
+        },
+        {
+          "id": "delivery_days",
+          "label": "Días de entrega",
+          "type": "days",
+          "min": 0,
+          "max": 120,
+          "default": 15,
+          "step": 1
+        }
+      ]
+    },
+    "request_financing": {
+      "label": "Solicitar Financiamiento",
+      "parameters": [
+        {
+          "id": "amount_cents",
+          "label": "Monto",
+          "type": "money",
+          "min": 1000000,
+          "max": 300000000,
+          "default": 30000000,
+          "step": 1000000
+        },
+        {
+          "id": "annual_rate_pct",
+          "label": "Tasa anual",
+          "type": "percentage",
+          "min": 0,
+          "max": 80,
+          "default": 24,
+          "step": 0.5
+        },
+        {
+          "id": "term_months",
+          "label": "Plazo",
+          "type": "integer",
+          "min": 1,
+          "max": 60,
+          "default": 12,
+          "step": 1
+        },
+        {
+          "id": "grace_months",
+          "label": "Meses de gracia",
+          "type": "integer",
+          "min": 0,
+          "max": 12,
+          "default": 0,
+          "step": 1
+        }
+      ]
+    }
+  },
+  "stress": {
+    "label": "Estrés",
+    "parameters": [
+      {
+        "id": "collection_delay_days",
+        "label": "Retraso en cobranza",
+        "type": "days",
+        "min": 0,
+        "max": 60,
+        "default": 0,
+        "step": 1,
+        "mark": {
+          "value": 16,
+          "text": "punto de ruptura"
+        }
+      },
+      {
+        "id": "main_customer_lost",
+        "label": "Pérdida del cliente principal",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "id": "capital_injection_cents",
+        "label": "Inyección de capital",
+        "type": "money",
+        "min": 0,
+        "max": 40000000,
+        "default": 0,
+        "step": 1000000,
+        "mark": {
+          "value": 20000000,
+          "text": "refuerzo mínimo"
+        }
+      }
+    ]
+  },
+  "run": {
+    "parameters": [
+      {
+        "id": "paths",
+        "label": "Trayectorias",
+        "type": "integer",
+        "min": 100,
+        "max": 20000,
+        "default": 5000
+      },
+      {
+        "id": "seed",
+        "label": "Semilla",
+        "type": "integer",
+        "min": 0,
+        "max": 2147483647,
+        "default": 42
+      },
+      {
+        "id": "horizon_days",
+        "label": "Horizonte",
+        "type": "days",
+        "min": 30,
+        "max": 365,
+        "default": 180
+      }
+    ]
+  }
+}
