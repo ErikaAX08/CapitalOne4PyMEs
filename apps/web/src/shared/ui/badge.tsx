@@ -4,16 +4,16 @@ import { cn } from "cn";
 import { Slot } from "radix-ui";
 
 const badgeVariants = cva(
-  "inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-none px-2 py-0.5 font-title text-[0.8125rem] font-semibold tracking-[-0.04em] whitespace-nowrap [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "inline-flex min-h-6 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2.5 py-1 font-title text-xs font-medium tracking-normal whitespace-nowrap [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
-        neutral: "bg-surface-muted text-body",
-        success: "bg-success-soft text-success",
-        warning: "bg-warning-soft text-warning",
-        danger: "bg-danger-soft text-danger",
-        info: "bg-info-soft text-info",
-        brand: "bg-brand-blue-soft text-brand-blue",
+        neutral: "border-hairline bg-surface-subtle text-body",
+        success: "border-brand-blue/15 bg-success-soft text-success",
+        warning: "border-warning/15 bg-warning-soft text-warning",
+        danger: "border-danger/15 bg-danger-soft text-danger",
+        info: "border-brand-blue/15 bg-info-soft text-info",
+        brand: "border-brand-blue/15 bg-brand-blue-soft text-brand-blue",
       },
     },
     defaultVariants: {

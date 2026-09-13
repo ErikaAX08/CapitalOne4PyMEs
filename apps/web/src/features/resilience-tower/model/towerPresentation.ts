@@ -1,11 +1,11 @@
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
 export const BLOCK_HEX_COLORS = [
-  "#4389dc",
-  "#58b69b",
-  "#afbac9",
-  "#e48b7d",
-  "#e3bd56",
+  "#004878",
+  "#2a7fa8",
+  "#78a6bd",
+  "#d22e1e",
+  "#e79087",
 ];
 export const BLOCK_LABELS = [
   "Liquidez disponible",

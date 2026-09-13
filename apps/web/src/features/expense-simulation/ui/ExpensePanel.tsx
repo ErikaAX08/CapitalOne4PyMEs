@@ -50,14 +50,14 @@ export function ExpensePanel({
   return (
     <Card className="mb-6 gap-0 p-[22px] max-[700px]:p-[18px]">
       <div className="flex items-center gap-[11px] max-[700px]:gap-[9px]">
-        <span className="grid h-[37px] w-[37px] place-items-center bg-brand-blue-soft text-brand-blue">
+        <span className="grid h-[37px] w-[37px] place-items-center rounded-lg bg-surface-muted text-ink">
           <Wallet size={20} />
         </span>
         <div>
-          <span className="font-title block text-[9px] font-semibold tracking-[0.12em] text-brand-blue uppercase max-[700px]:text-[8px]">
+          <span className="font-mono block text-[11px] font-medium tracking-normal text-body-muted uppercase">
             Cada gasto cambia tu base
           </span>
-          <h2 className="font-title mt-[5px] text-[17px] font-semibold tracking-[-0.06em] max-[700px]:text-[16px]">
+          <h2 className="font-title mt-1 text-xl font-semibold tracking-[-0.02em] max-[700px]:text-lg">
             Agrega un gasto. Ve el impacto.
           </h2>
         </div>
@@ -98,7 +98,7 @@ export function ExpensePanel({
             <span className="float-right text-[10px] text-body-subtle">
               MXN
             </span>
-            <div className="mt-[7px] flex h-[46px] w-full items-center gap-2 border border-hairline-strong bg-canvas px-3 text-[14px] text-ink focus-within:outline-2 focus-within:outline-focus-ring focus-within:outline-offset-0">
+            <div className="mt-[7px] flex h-[46px] w-full items-center gap-2 rounded-md border border-hairline bg-surface-subtle px-3 text-[14px] text-ink shadow-geist-small transition-colors hover:border-hairline-strong focus-within:border-brand-blue focus-within:outline-2 focus-within:outline-focus-ring focus-within:outline-offset-1">
               <span className="text-body-subtle">$</span>
               <input
                 aria-label="Monto del gasto"
@@ -137,7 +137,7 @@ export function ExpensePanel({
         ].map(([label, value]) => (
           <Button
             key={label}
-            variant="ghost"
+            variant="tertiary"
             disabled={disabled}
             onClick={() => onAdd(String(label), Number(value))}
             className="h-auto gap-[5px] p-2 text-[10px] font-normal max-[700px]:min-h-[40px]"
@@ -181,7 +181,7 @@ export function ExpensePanel({
               ))}
           </ol>
           <Button
-            variant="tertiary"
+            variant="ghost"
             className="gap-[7px] py-[10px] text-[11px]"
             onClick={onUndo}
             disabled={disabled}

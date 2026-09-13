@@ -21,11 +21,53 @@ test("decision, collapse, advance, reset and alternative scenarios", async ({
       external.push(r.url());
   });
   await page.goto("/");
+  await expect(page).toHaveTitle("Capital One | ForPyMEs");
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
+    "href",
+    "/COF.svg",
+  );
+  const landingHeader = page.locator("header");
+  const logo = landingHeader.getByRole("img", {
+    name: "Capital One For PyMES",
+  });
+  await expect(logo).toBeVisible();
+  await expect(
+    landingHeader.getByText("Demo con datos simulados", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    landingHeader.getByText("Mariana Luna", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    landingHeader.getByText("Administradora", { exact: true }),
+  ).toHaveCount(0);
+  const logoBox = await logo.boundingBox();
+  const viewportWidth = await page.evaluate(() => window.innerWidth);
+  expect(logoBox).not.toBeNull();
+  expect(
+    Math.abs((logoBox?.x ?? 0) + (logoBox?.width ?? 0) / 2 - viewportWidth / 2),
+  ).toBeLessThan(1);
   await expect(
     page.getByRole("button", { name: "Explorar mi estabilidad" }),
   ).toBeVisible();
-  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: "Emprendedora sosteniendo documentos y una calculadora",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Tu negocio merece perspectiva.", { exact: true }),
+  ).toHaveCSS("color", "rgb(23, 23, 23)");
+  await expect(
+    page.getByText("Explora decisiones antes de llevarlas a la realidad.", {
+      exact: true,
+    }),
+  ).toHaveCSS("color", "rgb(23, 23, 23)");
+  await expect(page.locator("main .bg-surface-soft")).toHaveCSS(
+    "background-color",
+    "rgb(244, 244, 244)",
+  );
   await page.getByRole("button", { name: "Explorar mi estabilidad" }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
   await expect(
     page.getByRole("heading", { name: "Torre de estabilidad · 3D" }),
   ).toBeVisible();
@@ -93,6 +135,20 @@ test("decision, collapse, advance, reset and alternative scenarios", async ({
   expect(errors).toEqual([]);
   expect(external).toEqual([]);
 });
+
+test("dashboard supports direct navigation and reload", async ({ page }) => {
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(
+    page.getByRole("heading", { name: "Torre de estabilidad · 3D" }),
+  ).toBeVisible();
+  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
+
+  await page.reload();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
+});
+
 test("reduced motion and keyboard can complete the contract", async ({
   page,
 }) => {
@@ -137,8 +193,13 @@ test("3D simulation works without WebGL and can skip animations", async ({
     } as typeof original;
   });
   await page.goto("/");
-  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: "Emprendedora sosteniendo documentos y una calculadora",
+    }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Explorar mi estabilidad" }).click();
+  await expect(page.getByRole("group", { name: /Torre 3D/ })).toBeVisible();
   await page.getByRole("button", { name: /Aceptar nuevo contrato/ }).click();
   await page.getByRole("button", { name: "Simular decisión" }).click();
   await page.getByRole("button", { name: "Ver resultado" }).click();

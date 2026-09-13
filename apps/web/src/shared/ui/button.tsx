@@ -4,24 +4,26 @@ import { cn } from "cn";
 import { Slot } from "radix-ui";
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-none font-title text-[0.9375rem] font-semibold tracking-[-0.04em] whitespace-nowrap outline-none select-none transition-colors focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-sm font-title text-sm font-medium tracking-normal whitespace-nowrap border border-transparent outline-none select-none transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:outline-2 focus-visible:outline-focus-ring focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         primary:
-          "bg-brand-blue text-on-brand hover:bg-brand-blue-hover active:bg-brand-blue-pressed",
+          "border-brand-blue bg-brand-blue text-on-brand shadow-geist-small hover:border-brand-blue-hover hover:bg-brand-blue-hover active:border-brand-blue-pressed active:bg-brand-blue-pressed",
         secondary:
-          "border border-brand-blue bg-canvas text-brand-blue hover:bg-brand-blue-soft",
-        tertiary: "bg-transparent px-0 text-brand-blue hover:underline",
-        danger: "bg-danger text-on-brand hover:bg-danger/90",
+          "border-hairline bg-surface-subtle text-ink shadow-geist-small hover:border-hairline-strong hover:bg-surface-muted active:bg-hairline",
+        tertiary:
+          "bg-surface-muted text-ink hover:bg-hairline active:bg-hairline-strong/30",
+        danger:
+          "border-danger bg-danger text-on-brand hover:border-brand-red-hover hover:bg-brand-red-hover active:bg-brand-red-hover",
         ghost:
-          "border border-hairline-strong bg-canvas text-body hover:bg-surface-subtle",
+          "bg-transparent text-body hover:bg-surface-muted hover:text-ink active:bg-hairline",
         link: "bg-transparent p-0 text-brand-blue underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-11 px-[1.125rem]",
-        compact: "h-[2.375rem] px-3 text-[0.8125rem]",
-        icon: "size-11",
+        default: "h-11 px-4",
+        compact: "h-10 px-3 text-sm",
+        icon: "size-11 rounded-full",
       },
     },
     defaultVariants: {

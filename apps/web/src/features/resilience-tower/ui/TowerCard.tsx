@@ -2,6 +2,7 @@ import { Hand, Layers3, RotateCcw } from "lucide-react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
 import { Card, Badge, Button } from "@shared";
+import { BLOCK_HEX_COLORS } from "../model/towerPresentation";
 import { ResilienceTower } from "./ResilienceTower";
 export function TowerCard({
   flowState,
@@ -34,10 +35,10 @@ export function TowerCard({
     <Card className="tower-card relative flex min-h-[604px] flex-col gap-0 overflow-hidden bg-surface-subtle max-[700px]:min-h-[480px] min-[701px]:sticky min-[701px]:top-[22px] min-[701px]:col-start-2 min-[701px]:row-[1/3] min-[701px]:h-[min(830px,calc(100vh-44px))] min-[701px]:min-h-[620px] min-[701px]:self-start">
       <div className="z-1 flex justify-between p-[24px_25px_0] max-[700px]:p-[20px_20px_0]">
         <div>
-          <span className="font-title text-[11px] font-semibold tracking-[0.12em] text-body-subtle uppercase max-[700px]:text-[9px]">
+          <span className="font-mono text-[11px] font-medium tracking-normal text-body-muted uppercase">
             Tu negocio, en perspectiva
           </span>
-          <h2 className="font-title mt-[6px] text-[19px] font-semibold tracking-[-0.06em]">
+          <h2 className="font-title mt-1 text-xl font-semibold tracking-[-0.02em]">
             Torre de estabilidad · 3D
           </h2>
         </div>
@@ -103,15 +104,7 @@ export function TowerCard({
               className="flex items-center gap-[5px] text-[11px] text-body-muted max-[700px]:text-[9px]"
             >
               <i
-                style={{
-                  background: [
-                    "#4285dc",
-                    "#54b69a",
-                    "#b1bac7",
-                    "#e88478",
-                    "#e5bb54",
-                  ][i],
-                }}
+                style={{ background: BLOCK_HEX_COLORS[i] }}
                 className="h-[7px] w-[7px]"
               />
               {label}
