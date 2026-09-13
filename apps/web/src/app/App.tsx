@@ -8,13 +8,19 @@ import {
   useNavigate,
 } from "react-router-dom";
 import {
-  ChevronRight,
+  Activity,
+  ChartColumn,
   CircleHelp,
-  Gauge,
+  Info,
   Layers3,
+  Play,
+  RotateCcw,
   ScanSearch,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
+  Wallet,
+  Wrench,
 } from "lucide-react";
 import { scenarios } from "@entities/scenario";
 import type { Business, FinancialTransaction } from "@entities/business";
@@ -29,7 +35,10 @@ import {
   SimulationResult,
 } from "@features/scenario-simulation";
 import { IntroScreen } from "@features/onboarding";
-import { FinancialOverview } from "@features/financial-overview";
+import {
+  BusinessSignals,
+  FinancialOverview,
+} from "@features/financial-overview";
 import { TechnicalExplanationDialog } from "@features/technical-explanation";
 import { TowerCard } from "@features/resilience-tower";
 import {
@@ -37,8 +46,11 @@ import {
   ExpenseFeedback,
   useExpenses,
 } from "@features/expense-simulation";
-import { Badge, Button, cn } from "@shared";
+import { AppShell } from "@features/app-shell";
+import type { ShellSection, ShellTool } from "@features/app-shell";
+import { Logo } from "@shared";
 import AnalysisPage from "./AnalysisPage";
+import { useAnalysis } from "./useAnalysis";
 type BusinessDataState =
   | { status: "loading" }
   | {
@@ -61,6 +73,69 @@ const EMPTY_OUTPUT: SimulationOutput = {
   recommendation: "",
   status: "Estable",
 };
+/** The sections of the dashboard the shell's sidebar can scroll to. The
+ *  identifiers are the ones the corresponding landmarks carry below. */
+const DASHBOARD_SECTIONS: ShellSection[] = [
+  { id: "resumen", label: "Resumen financiero", icon: ScanSearch },
+  { id: "estructura", label: "Estructura 3D", icon: Layers3 },
+  { id: "gastos", label: "Gastos simulados", icon: Wallet },
+  { id: "decisiones", label: "Prueba una decisión", icon: Sparkles },
+];
+/** The five PRD modules of the structural-fragility view, in reading order.
+ *  The identifiers are the ones `AnalysisPage` puts on their wrappers. */
+const ANALYSIS_SECTIONS: ShellSection[] = [
+  { id: "supervivencia", label: "Supervivencia", icon: Activity },
+  { id: "simulador", label: "Simulador", icon: SlidersHorizontal },
+  { id: "tension", label: "Tensión estructural", icon: ChartColumn },
+  { id: "refuerzo", label: "Refuerzo mínimo", icon: Wrench },
+  { id: "limitaciones", label: "Alcance y límites", icon: Info },
+];
+/** The structural-fragility route. It owns the analysis controller so the
+ *  shell's commands and the page's own controls drive the same state; keeping
+ *  it in its own component means the engine loop only runs on this route. */
+function AnalysisView() {
+  const analysis = useAnalysis();
+  const tools: ShellTool[] = [
+    {
+      label: "Ejecutar simulación",
+      icon: Play,
+      onClick: analysis.run,
+      disabled: analysis.pending,
+    },
+    {
+      label: "Restablecer valores",
+      icon: RotateCcw,
+      onClick: analysis.reset,
+      disabled: analysis.pending,
+    },
+  ];
+  return (
+    <AppShell
+      eyebrow="Fragilidad estructural"
+      title={
+        <>
+          Antes de decidir,{" "}
+          <span className="font-subtitle font-semibold text-body-subtle">
+            mira qué se debilita.
+          </span>
+        </>
+      }
+      sections={ANALYSIS_SECTIONS}
+      sectionsLabel="Análisis"
+      tools={tools}
+    >
+      <AnalysisPage analysis={analysis} />
+    </AppShell>
+  );
+}
+const DASHBOARD_TITLE = (
+  <>
+    Una visión clara.{" "}
+    <span className="font-subtitle font-semibold text-body-subtle max-[1000px]:mt-1 max-[1000px]:block min-[701px]:max-[1000px]:inline">
+      Mejores decisiones.
+    </span>
+  </>
+);
 function useBusinessData(): BusinessDataState {
   const [state, setState] = useState<BusinessDataState>({ status: "loading" });
   useEffect(() => {
@@ -86,57 +161,12 @@ function useBusinessData(): BusinessDataState {
   }, []);
   return state;
 }
-function Logo() {
+/** The landing page sits outside the application shell: it has no navigation
+ *  and no account context, only the centred wordmark. */
+function LandingHeader() {
   return (
-    <img
-      src="/capital-one-for-pymes.png"
-      alt="Capital One For PyMES"
-      width={738}
-      height={136}
-      className="h-auto w-[250px] object-contain max-[700px]:w-[175px]"
-    />
-  );
-}
-function DemoBadge() {
-  return (
-    <Badge
-      variant="neutral"
-      className="h-auto gap-[7px] px-[11px] py-[8px] text-[12px] max-[700px]:px-[8px] max-[700px]:py-[7px] max-[700px]:text-[11px]"
-    >
-      <span className="h-[5px] w-[5px] rounded-full bg-body-subtle" />
-      <span className="max-[420px]:hidden">Demo con datos simulados</span>
-      <span className="hidden max-[420px]:inline">Demo</span>
-    </Badge>
-  );
-}
-function AppHeader({
-  showDashboardContext,
-}: {
-  showDashboardContext: boolean;
-}) {
-  return (
-    <header
-      className={cn(
-        "flex h-[72px] items-center border-b border-hairline bg-canvas p-[0_max(5vw,24px)] max-[700px]:h-14 max-[700px]:p-[0_16px]",
-        showDashboardContext ? "justify-between" : "justify-center",
-      )}
-    >
-      <Logo />
-      {showDashboardContext && (
-        <div className="flex items-center gap-[13px]">
-          <DemoBadge />
-          <span className="mx-[9px] h-[27px] w-px bg-hairline max-[700px]:hidden" />
-          <div className="grid size-9 place-items-center rounded-full border border-hairline bg-surface-subtle text-xs font-medium text-ink max-[700px]:hidden">
-            ML
-          </div>
-          <span className="text-[12px] font-semibold max-[700px]:hidden">
-            Mariana Luna
-            <small className="mt-1 block text-[11px] font-normal text-body-subtle">
-              Administradora
-            </small>
-          </span>
-        </div>
-      )}
+    <header className="flex h-[72px] items-center justify-center border-b border-hairline bg-canvas p-[0_max(5vw,24px)] max-[700px]:h-14 max-[700px]:p-[0_16px]">
+      <Logo className="w-[250px] max-[700px]:w-[175px]" />
     </header>
   );
 }
@@ -205,31 +235,6 @@ export default function App() {
         : EMPTY_OUTPUT,
     [data, flow.scenario, expenses],
   );
-  // The structural-fragility view is fed by the engine through /v1/analysis; it
-  // shares no state with the mock business data source, so it must not wait
-  // behind that load. Every hook above has already run, so the order is stable.
-  if (isAnalysis) {
-    return (
-      <div>
-        <AppHeader showDashboardContext />
-        <AnalysisPage />
-      </div>
-    );
-  }
-  if (data.status !== "ready") {
-    return (
-      <div>
-        <AppHeader showDashboardContext={isDashboard} />
-        <main role="status" aria-live="polite" style={{ padding: "3rem" }}>
-          {data.status === "loading"
-            ? "Cargando datos del negocio…"
-            : data.status === "empty"
-              ? "No hay transacciones disponibles para simular."
-              : "No pudimos cargar los datos del negocio. Intenta de nuevo."}
-        </main>
-      </div>
-    );
-  }
   function reset() {
     resetExpenses();
     dispatch({ type: "RESET" });
@@ -249,6 +254,46 @@ export default function App() {
   function enterDashboard() {
     dispatch({ type: "ENTER_DASHBOARD" });
     navigate("/dashboard");
+  }
+  const tools: ShellTool[] = [
+    {
+      label: "¿Cómo lo calculamos?",
+      icon: CircleHelp,
+      onClick: () => setTechnical(true),
+    },
+    { label: "Reiniciar simulación", icon: RotateCcw, onClick: reset },
+  ];
+  // The structural-fragility view is fed by the engine through /v1/analysis; it
+  // shares no state with the mock business data source, so it must not wait
+  // behind that load. Every hook above has already run, so the order is stable.
+  if (isAnalysis) {
+    return <AnalysisView />;
+  }
+  if (data.status !== "ready") {
+    const message =
+      data.status === "loading"
+        ? "Cargando datos del negocio…"
+        : data.status === "empty"
+          ? "No hay transacciones disponibles para simular."
+          : "No pudimos cargar los datos del negocio. Intenta de nuevo.";
+    return isDashboard ? (
+      <AppShell
+        eyebrow="Estabilidad financiera"
+        title={DASHBOARD_TITLE}
+        subtitle="Hola, Mariana. Así se ve el futuro de Distribuidora Luna."
+      >
+        <main role="status" aria-live="polite" className="p-[24px_32px]">
+          {message}
+        </main>
+      </AppShell>
+    ) : (
+      <div>
+        <LandingHeader />
+        <main role="status" aria-live="polite" style={{ padding: "3rem" }}>
+          {message}
+        </main>
+      </div>
+    );
   }
   const shown =
     flow.state === "simulating"
@@ -281,213 +326,212 @@ export default function App() {
             : "Día 75: faltan $40,000 para cubrir la nómina";
   return (
     <div>
-      <AppHeader showDashboardContext={isDashboard} />
       <Routes location={location}>
-        <Route path="/" element={<IntroScreen onEnter={enterDashboard} />} />
+        <Route
+          path="/"
+          element={
+            <div>
+              <LandingHeader />
+              <IntroScreen onEnter={enterDashboard} />
+            </div>
+          }
+        />
         <Route
           path="/dashboard"
           element={
-            <motion.main
-              key="dashboard"
-              className="dashboard mx-auto max-w-[1200px] p-[48px_24px_0] min-[701px]:max-[1000px]:p-[32px_24px_0] max-[700px]:p-[24px_16px_0]"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
+            <AppShell
+              eyebrow="Estabilidad financiera"
+              title={DASHBOARD_TITLE}
+              subtitle="Hola, Mariana. Así se ve el futuro de Distribuidora Luna."
+              sections={DASHBOARD_SECTIONS}
+              tools={tools}
             >
-              <div className="mb-[30px] flex items-center justify-between min-[1550px]:mb-[35px] max-[700px]:block max-[700px]:mb-[17px]">
-                <div>
-                  <div className="font-mono mb-3 flex items-center gap-2 text-xs font-medium tracking-normal text-body-muted uppercase max-[700px]:text-[11px]">
-                    Mi negocio <ChevronRight size={12} /> Estabilidad financiera
-                  </div>
-                  <h1 className="font-title text-[2rem] leading-10 font-semibold tracking-[-0.04em] min-[701px]:max-[1000px]:text-[1.75rem] max-[700px]:text-2xl max-[700px]:leading-8">
-                    Una visión clara.{" "}
-                    <span className="font-subtitle font-semibold text-body-subtle min-[701px]:max-[1000px]:mt-1 min-[701px]:max-[1000px]:block max-[700px]:inline">
-                      Mejores decisiones.
-                    </span>
-                  </h1>
-                  <p className="mt-[9px] text-[13px] text-body-muted max-[700px]:text-[11px] max-[700px]:leading-[1.7]">
-                    Hola, Mariana. Así se ve el futuro de Distribuidora Luna.
-                  </p>
+              <motion.main
+                key="dashboard"
+                className="dashboard flex flex-col gap-5 p-[0_32px_0] max-[1000px]:gap-[18px] max-[1000px]:p-[0_16px_0]"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="grid rounded-xl border border-hairline bg-canvas min-[701px]:grid-cols-3 max-[700px]:divide-y max-[700px]:divide-hairline min-[701px]:divide-x min-[701px]:divide-hairline">
+                  {[
+                    {
+                      icon: ScanSearch,
+                      title: "1. Revisa tu base",
+                      copy: "Saldo, fragilidad y obligaciones próximas.",
+                    },
+                    {
+                      icon: Layers3,
+                      title: "2. Lee la estructura",
+                      copy: "La torre conecta liquidez, cobros y compromisos.",
+                    },
+                    {
+                      icon: Sparkles,
+                      title: "3. Prueba una decisión",
+                      copy: "Compara el impacto antes de actuar.",
+                    },
+                  ].map(({ icon: Icon, title, copy }, index) => (
+                    <div
+                      key={title}
+                      className={`flex items-center gap-3 p-[13px_16px] ${
+                        index === 1 ? "bg-brand-blue-soft/55" : ""
+                      }`}
+                    >
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-subtle text-brand-blue">
+                        <Icon size={16} />
+                      </span>
+                      <span>
+                        <strong className="block text-[12px] font-semibold text-body">
+                          {title}
+                        </strong>
+                        <small className="mt-0.5 block text-[10px] leading-[1.45] text-body-muted">
+                          {copy}
+                        </small>
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-1 max-[700px]:mt-[6px]">
-                  <Button
-                    variant="ghost"
-                    className="inline-flex items-center gap-[7px] py-[10px] text-[12px] no-underline hover:underline max-[700px]:pb-0 max-[700px]:text-[11px]"
-                    onClick={() => navigate("/analysis")}
-                  >
-                    <Gauge size={17} /> Fragilidad estructural
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="inline-flex items-center gap-[7px] py-[10px] text-[12px] no-underline hover:underline max-[700px]:pb-0 max-[700px]:text-[11px]"
-                    onClick={() => setTechnical(true)}
-                  >
-                    <CircleHelp size={17} /> ¿Cómo lo calculamos?
-                  </Button>
-                </div>
-              </div>
-              <div className="mb-6 grid rounded-xl border border-hairline bg-canvas min-[701px]:grid-cols-3 max-[700px]:divide-y max-[700px]:divide-hairline min-[701px]:divide-x min-[701px]:divide-hairline">
-                {[
-                  {
-                    icon: ScanSearch,
-                    title: "1. Revisa tu base",
-                    copy: "Saldo, fragilidad y obligaciones próximas.",
-                  },
-                  {
-                    icon: Layers3,
-                    title: "2. Lee la estructura",
-                    copy: "La torre conecta liquidez, cobros y compromisos.",
-                  },
-                  {
-                    icon: Sparkles,
-                    title: "3. Prueba una decisión",
-                    copy: "Compara el impacto antes de actuar.",
-                  },
-                ].map(({ icon: Icon, title, copy }, index) => (
-                  <div
-                    key={title}
-                    className={cn(
-                      "flex items-center gap-3 p-[13px_16px]",
-                      index === 1 && "bg-brand-blue-soft/55",
-                    )}
-                  >
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-subtle text-brand-blue">
-                      <Icon size={16} />
-                    </span>
-                    <span>
-                      <strong className="block text-[12px] font-semibold text-body">
-                        {title}
-                      </strong>
-                      <small className="mt-0.5 block text-[10px] leading-[1.45] text-body-muted">
-                        {copy}
-                      </small>
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-6 min-[701px]:max-[1000px]:grid-cols-2 min-[701px]:max-[1000px]:gap-[18px] max-[700px]:grid-cols-1 max-[700px]:gap-[19px]">
                 <FinancialOverview
                   availableBalance={
-                    (data.status === "ready" ? data.business.balance : 0) -
-                    output.simulatedExpenseTotal
+                    data.business.balance - output.simulatedExpenseTotal
                   }
                   hasExpenses={expenses.length > 0}
+                  expenseTotal={output.simulatedExpenseTotal}
                   fragilityScore={shown.fragilityScore}
                   survivalWeeks={shown.survivalWeeks}
                   recommendedBuffer={shown.recommendedBuffer}
-                  contextMessage={
-                    active || expenses.length > 0
-                      ? `${shown.survivalWeeks} semanas de operación estimadas en este escenario simulado.`
-                      : baseline.recommendation
-                  }
                 />
-                <TowerCard
-                  flowState={flow.state}
-                  status={output.status}
-                  expenseBlocks={output.removedExpenseBlocks}
-                  instantResult={flow.skipAnimation}
-                  progress={active ? flow.progress : 0}
-                  output={output}
-                  resetKey={flow.resetKey}
-                  reduced={reduced}
-                  simulationWeeks={simulationWeeks}
-                  onReset={reset}
-                />
-                <section className="pt-[2px] pb-[10px] min-[701px]:col-start-1 min-[701px]:row-start-2 max-[700px]:pt-[5px]">
-                  <ExpensePanel
-                    expenses={expenses}
-                    onAdd={addExpense}
-                    onUndo={undoExpense}
-                    disabled={
-                      flow.state === "simulating" || flow.state === "mitigating"
-                    }
-                  />
-                  {expenses.length > 0 && (
-                    <ExpenseFeedback
-                      isCritical={output.minimumProjectedBalance < 0}
-                      recommendation={output.recommendation}
-                    />
-                  )}
-                  <div className="mb-4 flex items-end justify-between">
-                    <div>
-                      <span className="font-mono text-xs font-medium tracking-normal text-body-muted uppercase max-[700px]:text-[11px]">
-                        Explora antes de actuar
-                      </span>
-                      <h2 className="font-title mt-1 text-2xl font-semibold tracking-[-0.04em] max-[700px]:text-xl">
-                        Prueba una decisión
-                      </h2>
-                    </div>
-                    <span className="text-[11px] font-normal text-body-muted">
-                      Sin afectar tu negocio real
-                    </span>
-                  </div>
-                  {flow.state === "simulating" ||
-                  flow.state === "mitigating" ? (
-                    <SimulationProgress
-                      mitigating={flow.state === "mitigating"}
-                      scenarioTitle={flow.scenario?.title}
-                      isContract={flow.scenario?.id === "contract"}
-                      phase={phase}
-                      progress={flow.progress}
-                      simulationWeeks={simulationWeeks}
-                      onSkip={() =>
-                        dispatch({
-                          type:
-                            flow.state === "mitigating"
-                              ? "FINISH_MITIGATION"
-                              : "SHOW_RESULT",
-                          skip: true,
-                        })
-                      }
-                    />
-                  ) : flow.state === "result" || flow.state === "recovered" ? (
-                    <SimulationResult
-                      recovered={flow.state === "recovered"}
-                      isContract={flow.scenario?.id === "contract"}
+                <div className="grid gap-5 max-[700px]:gap-[19px] min-[701px]:grid-cols-[minmax(0,1.28fr)_minmax(0,1fr)] min-[701px]:gap-[18px] min-[1001px]:gap-5">
+                  <div
+                    id="estructura"
+                    className="min-[701px]:col-start-1 min-[701px]:row-[1/4]"
+                  >
+                    <TowerCard
+                      flowState={flow.state}
                       status={output.status}
-                      minimumProjectedBalance={output.minimumProjectedBalance}
-                      recommendedBuffer={output.recommendedBuffer}
-                      recommendation={output.recommendation}
-                      fragilityBefore={
-                        flow.state === "recovered"
-                          ? beforeMitigation.fragilityScore
-                          : starting.fragilityScore
-                      }
-                      fragilityAfter={output.fragilityScore}
-                      survivalBefore={
-                        flow.state === "recovered"
-                          ? beforeMitigation.survivalWeeks
-                          : starting.survivalWeeks
-                      }
-                      survivalAfter={output.survivalWeeks}
-                      criticalWeek={output.criticalWeek}
+                      expenseBlocks={output.removedExpenseBlocks}
+                      instantResult={flow.skipAnimation}
+                      progress={active ? flow.progress : 0}
+                      output={output}
+                      resetKey={flow.resetKey}
+                      reduced={reduced}
                       simulationWeeks={simulationWeeks}
-                      canMitigate={
-                        flow.scenario?.id === "contract" &&
-                        flow.state === "result"
-                      }
-                      onMitigate={() => dispatch({ type: "START_MITIGATION" })}
                       onReset={reset}
                     />
-                  ) : (
-                    <ScenarioList
-                      scenarios={scenarios}
-                      onSelect={(s) =>
-                        dispatch({ type: "SELECT_SCENARIO", scenario: s })
+                  </div>
+                  <section
+                    id="gastos"
+                    aria-label="Gastos simulados"
+                    className="flex flex-col gap-4"
+                  >
+                    <ExpensePanel
+                      expenses={expenses}
+                      onAdd={addExpense}
+                      onUndo={undoExpense}
+                      disabled={
+                        flow.state === "simulating" ||
+                        flow.state === "mitigating"
                       }
                     />
-                  )}
-                </section>
-              </div>
-              <footer className="mt-3 flex justify-between border-t border-hairline p-[23px_0] text-[11px] text-body-muted max-[700px]:p-[18px_0] max-[700px]:leading-[1.7]">
-                <span className="flex items-center gap-[6px]">
-                  <ShieldCheck size={14} /> Un espacio seguro para explorar tus
-                  decisiones.
-                </span>
-                <span className="flex items-center gap-[6px] max-[700px]:hidden">
-                  Cada decisión cuenta. Cada gasto tiene un impacto.
-                </span>
-              </footer>
-            </motion.main>
+                    {expenses.length > 0 && (
+                      <ExpenseFeedback
+                        isCritical={output.minimumProjectedBalance < 0}
+                        recommendation={output.recommendation}
+                      />
+                    )}
+                  </section>
+                  <BusinessSignals
+                    contextMessage={
+                      active || expenses.length > 0
+                        ? `${shown.survivalWeeks} semanas de operación estimadas en este escenario simulado.`
+                        : baseline.recommendation
+                    }
+                  />
+                  <section id="decisiones" aria-label="Prueba una decisión">
+                    <div className="mb-4 flex items-end justify-between">
+                      <div>
+                        <span className="font-mono text-xs font-medium tracking-normal text-body-muted uppercase max-[700px]:text-[11px]">
+                          Explora antes de actuar
+                        </span>
+                        <h2 className="font-title mt-1 text-2xl font-semibold tracking-[-0.04em] max-[700px]:text-xl">
+                          Prueba una decisión
+                        </h2>
+                      </div>
+                      <span className="text-[11px] font-normal text-body-muted">
+                        Sin afectar tu negocio real
+                      </span>
+                    </div>
+                    {flow.state === "simulating" ||
+                    flow.state === "mitigating" ? (
+                      <SimulationProgress
+                        mitigating={flow.state === "mitigating"}
+                        scenarioTitle={flow.scenario?.title}
+                        isContract={flow.scenario?.id === "contract"}
+                        phase={phase}
+                        progress={flow.progress}
+                        simulationWeeks={simulationWeeks}
+                        onSkip={() =>
+                          dispatch({
+                            type:
+                              flow.state === "mitigating"
+                                ? "FINISH_MITIGATION"
+                                : "SHOW_RESULT",
+                            skip: true,
+                          })
+                        }
+                      />
+                    ) : flow.state === "result" ||
+                      flow.state === "recovered" ? (
+                      <SimulationResult
+                        recovered={flow.state === "recovered"}
+                        isContract={flow.scenario?.id === "contract"}
+                        status={output.status}
+                        minimumProjectedBalance={output.minimumProjectedBalance}
+                        recommendedBuffer={output.recommendedBuffer}
+                        recommendation={output.recommendation}
+                        fragilityBefore={
+                          flow.state === "recovered"
+                            ? beforeMitigation.fragilityScore
+                            : starting.fragilityScore
+                        }
+                        fragilityAfter={output.fragilityScore}
+                        survivalBefore={
+                          flow.state === "recovered"
+                            ? beforeMitigation.survivalWeeks
+                            : starting.survivalWeeks
+                        }
+                        survivalAfter={output.survivalWeeks}
+                        criticalWeek={output.criticalWeek}
+                        simulationWeeks={simulationWeeks}
+                        canMitigate={
+                          flow.scenario?.id === "contract" &&
+                          flow.state === "result"
+                        }
+                        onMitigate={() =>
+                          dispatch({ type: "START_MITIGATION" })
+                        }
+                        onReset={reset}
+                      />
+                    ) : (
+                      <ScenarioList
+                        scenarios={scenarios}
+                        onSelect={(s) =>
+                          dispatch({ type: "SELECT_SCENARIO", scenario: s })
+                        }
+                      />
+                    )}
+                  </section>
+                </div>
+                <footer className="mt-3 flex justify-between border-t border-hairline p-[23px_0] text-[11px] text-body-muted max-[700px]:p-[18px_0] max-[700px]:leading-[1.7]">
+                  <span className="flex items-center gap-[6px]">
+                    <ShieldCheck size={14} /> Un espacio seguro para explorar
+                    tus decisiones.
+                  </span>
+                  <span className="flex items-center gap-[6px] max-[700px]:hidden">
+                    Cada decisión cuenta. Cada gasto tiene un impacto.
+                  </span>
+                </footer>
+              </motion.main>
+            </AppShell>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
