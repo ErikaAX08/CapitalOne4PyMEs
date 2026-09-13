@@ -23,7 +23,7 @@ export function SimulationProgress({
           {mitigating ? "Un anticipo cambia la historia" : scenarioTitle}
         </strong>
         <Button
-          variant="tertiary"
+          variant="ghost"
           className="ml-auto gap-[7px] py-[10px] text-[12px] max-[700px]:text-[11px]"
           onClick={onSkip}
         >

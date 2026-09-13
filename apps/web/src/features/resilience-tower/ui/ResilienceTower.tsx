@@ -103,7 +103,7 @@ export function ResilienceTower({
         </TowerFallback>
       )}
       {selected !== null && (
-        <div className="absolute right-[15px] bottom-[42px] left-[15px] z-[3] border border-hairline-strong bg-canvas p-4 shadow-[0_0.5rem_1.5rem_rgba(16,42,58,0.10)]">
+        <div className="absolute right-[15px] bottom-[42px] left-[15px] z-[3] rounded-xl border border-hairline bg-surface-subtle p-4 shadow-geist-floating">
           <button
             aria-label="Cerrar detalle de bloque"
             onClick={() => setSelected(null)}
@@ -111,7 +111,7 @@ export function ResilienceTower({
           >
             ×
           </button>
-          <span className="font-title block text-[11px] tracking-[0.08em] text-brand-blue uppercase">
+          <span className="font-mono block text-xs font-medium tracking-normal text-body-muted uppercase">
             Semana {Math.floor(selected / 3) + 1}
           </span>
           <strong className="my-[7px] block text-[12px]">

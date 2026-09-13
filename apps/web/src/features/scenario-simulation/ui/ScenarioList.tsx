@@ -25,15 +25,15 @@ export function ScenarioList({
         <button
           key={s.id}
           onClick={() => onSelect(s)}
-          className={`min-h-[175px] border p-[17px_19px] text-left text-inherit transition-colors min-[701px]:grid min-[701px]:min-h-0 min-[701px]:grid-cols-[42px_1fr_auto] min-[701px]:items-start min-[701px]:gap-x-3 min-[701px]:p-[15px_17px] ${
+          className={`min-h-[175px] rounded-xl border p-[17px_19px] text-left text-inherit shadow-geist-small transition-[background-color,border-color,box-shadow] min-[701px]:grid min-[701px]:min-h-0 min-[701px]:grid-cols-[42px_1fr_auto] min-[701px]:items-start min-[701px]:gap-x-3 min-[701px]:p-[15px_17px] ${
             i === 0
               ? "border-brand-blue bg-brand-blue-soft hover:border-brand-blue-hover"
-              : "border-hairline bg-canvas hover:border-brand-blue"
+              : "border-hairline bg-surface-subtle hover:border-hairline-strong hover:shadow-geist-floating"
           }`}
         >
           <div className="flex items-center gap-[10px] min-[701px]:col-start-1 min-[701px]:row-[1/4] min-[701px]:self-center">
             <span
-              className={`grid h-[35px] w-[35px] place-items-center min-[701px]:h-[37px] min-[701px]:w-[37px] ${ICON_STYLES[i]}`}
+              className={`grid h-[35px] w-[35px] place-items-center rounded-lg min-[701px]:h-[37px] min-[701px]:w-[37px] ${ICON_STYLES[i]}`}
             >
               {i === 0 ? (
                 <TrendingUp size={21} />

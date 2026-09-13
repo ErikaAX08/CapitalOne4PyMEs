@@ -7,8 +7,14 @@ import {
 } from "./simulationFlow";
 export function useSimulationFlow(
   reduced: boolean,
+  startInDashboard = false,
 ): [FlowState, Dispatch<FlowEvent>] {
-  const [flow, dispatch] = useReducer(flowReducer, initialFlowState);
+  const [flow, dispatch] = useReducer(
+    flowReducer,
+    startInDashboard,
+    (isDashboard): FlowState =>
+      isDashboard ? { ...initialFlowState, state: "stable" } : initialFlowState,
+  );
   useEffect(() => {
     if (flow.state !== "simulating" && flow.state !== "mitigating") return;
     const wasMitigating = flow.state === "mitigating";
