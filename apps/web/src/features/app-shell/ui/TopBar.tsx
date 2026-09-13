@@ -77,9 +77,8 @@ export function TopBar({
   tools: ShellTool[];
 }) {
   const today = new Intl.DateTimeFormat("es-MX", {
-    weekday: "long",
     day: "numeric",
-    month: "long",
+    month: "short",
     year: "numeric",
   }).format(new Date());
   return (
@@ -103,22 +102,17 @@ export function TopBar({
             {title}
           </h1>
           <p className="mt-[9px] text-[13px] text-body-muted max-[700px]:text-[11px] max-[700px]:leading-[1.7]">
-            {subtitle && (
-              <>
-                {subtitle}
-                <span className="mx-2 text-body-subtle max-[700px]:hidden">
-                  ·
-                </span>
-              </>
-            )}
-            <span className="text-body-subtle first-letter:uppercase max-[700px]:mt-1 max-[700px]:block">
-              {today}
-            </span>
+            {subtitle}
           </p>
           <CompactNav tools={tools} />
         </div>
-        <div className="flex shrink-0 items-center gap-[13px] max-[1000px]:hidden">
-          <Account />
+        <div className="flex shrink-0 items-center gap-4 pt-1">
+          <time className="font-mono whitespace-nowrap text-[11px] text-body-subtle first-letter:uppercase">
+            {today}
+          </time>
+          <div className="max-[1000px]:hidden">
+            <Account />
+          </div>
         </div>
       </header>
     </>

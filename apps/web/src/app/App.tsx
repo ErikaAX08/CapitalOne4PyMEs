@@ -40,7 +40,6 @@ import { IntroScreen } from "@features/onboarding";
 import { BusinessSignals } from "@features/financial-overview";
 import {
   AssumptionsPanel,
-  DashboardBrief,
   ScenarioComparator,
   SimulationHistory,
 } from "@features/dashboard-guidance";
@@ -423,11 +422,6 @@ export default function App() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <DashboardBrief
-                  balance={data.business.balance}
-                  output={shown}
-                  hasScenario={active}
-                />
                 <div className="grid gap-5 max-[700px]:gap-[19px] min-[701px]:grid-cols-[minmax(0,1.28fr)_minmax(0,1fr)] min-[701px]:gap-[18px] min-[1001px]:gap-5">
                   <section
                     id="decisiones"
