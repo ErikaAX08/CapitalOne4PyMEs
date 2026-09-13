@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronRight, Gauge, LayoutDashboard } from "lucide-react";
+import {
+  ChevronRight,
+  Gauge,
+  LayoutDashboard,
+  ReceiptText,
+} from "lucide-react";
 import { Badge, Button, Logo, cn } from "@shared";
 import type { ShellTool } from "../model/navigation";
 
@@ -37,22 +42,26 @@ function Account() {
  *  in-page commands it holds are surfaced here instead. */
 function CompactNav({ tools }: { tools: ShellTool[] }) {
   const { pathname } = useLocation();
-  const other =
-    pathname === "/analysis"
-      ? { to: "/dashboard", label: "Panel", icon: LayoutDashboard }
-      : { to: "/analysis", label: "Fragilidad estructural", icon: Gauge };
+  const routes = [
+    { to: "/dashboard", label: "Panel", icon: LayoutDashboard },
+    { to: "/movements", label: "Movimientos", icon: ReceiptText },
+    { to: "/analysis", label: "Fragilidad", icon: Gauge },
+  ].filter((route) => route.to !== pathname);
   return (
     <div className="-mx-1 flex flex-wrap items-center gap-1 min-[1001px]:hidden">
-      <Button
-        variant="ghost"
-        size="compact"
-        className="gap-[7px] text-[12px] no-underline hover:underline max-[700px]:text-[11px]"
-        asChild
-      >
-        <Link to={other.to}>
-          <other.icon size={16} /> {other.label}
-        </Link>
-      </Button>
+      {routes.map((route) => (
+        <Button
+          key={route.to}
+          variant="ghost"
+          size="compact"
+          className="gap-[7px] text-[12px] no-underline hover:underline max-[700px]:text-[11px]"
+          asChild
+        >
+          <Link to={route.to}>
+            <route.icon size={16} /> {route.label}
+          </Link>
+        </Button>
+      ))}
       {tools.map(({ label, icon: Icon, onClick, disabled }) => (
         <Button
           key={label}

@@ -14,6 +14,8 @@ import {
   Info,
   Layers3,
   Play,
+  Plus,
+  ReceiptText,
   RotateCcw,
   ScanSearch,
   ShieldCheck,
@@ -46,11 +48,18 @@ import {
   ExpenseFeedback,
   useExpenses,
 } from "@features/expense-simulation";
+import { useMovements } from "@features/movements-ledger";
 import { AppShell } from "@features/app-shell";
 import type { ShellSection, ShellTool } from "@features/app-shell";
 import { Logo } from "@shared";
 import AnalysisPage from "./AnalysisPage";
+import MovementsPage from "./MovementsPage";
 import { useAnalysis } from "./useAnalysis";
+
+/** The cut-off the domain service dates its runs from; it matches
+ *  DOMAIN_CUTOFF_DATE and ENGINE_CUTOFF_DATE, so a movement entered here is
+ *  dated the same way the engine reads it. */
+const CUTOFF_DATE = "2026-09-12";
 type BusinessDataState =
   | { status: "loading" }
   | {
@@ -90,6 +99,47 @@ const ANALYSIS_SECTIONS: ShellSection[] = [
   { id: "refuerzo", label: "Refuerzo mínimo", icon: Wrench },
   { id: "limitaciones", label: "Alcance y límites", icon: Info },
 ];
+/** The ledger route. It owns the movements controller so the shell's sections
+ *  and commands and the page's own controls drive one state. */
+function MovementsView() {
+  const movements = useMovements();
+  const sections: ShellSection[] = [
+    { id: "resumen-libro", label: "Resumen del libro", icon: ScanSearch },
+    {
+      id: "lista-movimientos",
+      label: "Lista de movimientos",
+      icon: ReceiptText,
+    },
+    { id: "registrar", label: "Registrar movimiento", icon: Plus },
+  ];
+  const tools: ShellTool[] = [
+    {
+      label: "Actualizar libro",
+      icon: RotateCcw,
+      onClick: movements.refresh,
+      disabled: movements.loading,
+    },
+  ];
+  return (
+    <AppShell
+      eyebrow="Movimientos"
+      title={
+        <>
+          Todo lo que entra{" "}
+          <span className="font-subtitle font-semibold text-body-subtle">
+            y todo lo que sale.
+          </span>
+        </>
+      }
+      sections={sections}
+      sectionsLabel="Libro"
+      tools={tools}
+    >
+      <MovementsPage movements={movements} cutoffDate={CUTOFF_DATE} />
+    </AppShell>
+  );
+}
+
 /** The structural-fragility route. It owns the analysis controller so the
  *  shell's commands and the page's own controls drive the same state; keeping
  *  it in its own component means the engine loop only runs on this route. */
@@ -175,6 +225,7 @@ export default function App() {
   const navigate = useNavigate();
   const isDashboard = location.pathname === "/dashboard";
   const isAnalysis = location.pathname === "/analysis";
+  const isMovements = location.pathname === "/movements";
   const data = useBusinessData();
   const {
     expenses,
@@ -268,6 +319,11 @@ export default function App() {
   // behind that load. Every hook above has already run, so the order is stable.
   if (isAnalysis) {
     return <AnalysisView />;
+  }
+  // The ledger has its own data path too: it reads the database, not the mock
+  // business data source, so it must not wait behind that load either.
+  if (isMovements) {
+    return <MovementsView />;
   }
   if (data.status !== "ready") {
     const message =

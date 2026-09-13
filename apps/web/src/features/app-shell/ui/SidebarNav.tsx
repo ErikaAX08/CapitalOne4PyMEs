@@ -1,6 +1,12 @@
 import { useReducedMotion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, Gauge, LayoutDashboard, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Gauge,
+  LayoutDashboard,
+  ReceiptText,
+  ShieldCheck,
+} from "lucide-react";
 import { Button, Logo, cn } from "@shared";
 import type { ShellRoute, ShellSection, ShellTool } from "../model/navigation";
 
@@ -11,6 +17,12 @@ const ROUTES: ShellRoute[] = [
     label: "Panel de estabilidad",
     description: "Resumen, estructura y decisiones",
     icon: LayoutDashboard,
+  },
+  {
+    to: "/movements",
+    label: "Movimientos",
+    description: "El libro de entradas y salidas",
+    icon: ReceiptText,
   },
   {
     to: "/analysis",
@@ -42,7 +54,8 @@ export function SidebarNav({
 }) {
   const { pathname } = useLocation();
   const reduced = !!useReducedMotion();
-  const promo = pathname === "/analysis" ? ROUTES[0] : ROUTES[1];
+  // The promo card points somewhere the reader is not.
+  const promo = ROUTES.find((route) => route.to !== pathname) ?? ROUTES[0];
 
   function goToSection(id: string) {
     document.getElementById(id)?.scrollIntoView({
