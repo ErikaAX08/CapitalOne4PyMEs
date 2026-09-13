@@ -1,10 +1,19 @@
--- Structural fragility engine — target relational schema (PostgreSQL 15+).
--- Companion to docs/data-model.md. Not deployed in the MVP (architecture.md, decision 10);
--- fixed here so the engine request contract and the future persistence layer agree.
+-- Structural fragility engine — relational schema (PostgreSQL 15+ with TimescaleDB).
+-- Companion to docs/data-model.md. Deployed on Tiger Cloud, which is PostgreSQL with the
+-- TimescaleDB extension; everything else stays on AWS (architecture.md §3).
 --
 -- Conventions: ULIDs as CHAR(26); money as BIGINT cents; an unknown value is NULL, never 0.
+--
+-- `movements` is a hypertable partitioned by `due_date`. TimescaleDB enforces uniqueness per
+-- chunk, so "Any UNIQUE or PRIMARY KEY index must include the partition column"; that is why
+-- the primary key and the dedup index below carry `due_date`, and why the tables that point at
+-- a movement carry `movement_due_date` to form a composite foreign key. The consequence is
+-- recorded in docs/data-model.md §1: the database no longer rejects a conflicting re-import on
+-- its own, so internal/movements/application enforces it before the insert.
 
 BEGIN;
+
+CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 CREATE TYPE direction_t   AS ENUM ('in', 'out');
 CREATE TYPE shift_t       AS ENUM ('none', 'delivery', 'collection');
@@ -89,7 +98,7 @@ CREATE TABLE recurring_rules (
 
 -- The SME's dated cash movements. One row = one receipt or obligation.
 CREATE TABLE movements (
-    movement_id     CHAR(26) PRIMARY KEY,
+    movement_id     CHAR(26) NOT NULL,
     company_id      CHAR(26) NOT NULL REFERENCES companies,
     node            TEXT NOT NULL REFERENCES graph_nodes,
     counterparty_id CHAR(26) REFERENCES counterparties,
@@ -115,10 +124,17 @@ CREATE TABLE movements (
     CONSTRAINT movements_reconciliation CHECK (settled_cents BETWEEN 0 AND amount_cents),
     CONSTRAINT movements_settled_consistent CHECK (
         (status = 'settled') = (settled_cents = amount_cents AND amount_cents > 0)
-        OR status = 'cancelled')
-);
--- Exact duplicates from the same source are one row; a conflicting re-import must be rejected by the loader.
-CREATE UNIQUE INDEX movements_dedup ON movements (company_id, source, source_ref) WHERE source_ref IS NOT NULL;
+        OR status = 'cancelled'),
+    -- `due_date` rides along because it is the partition column, not because a movement is
+    -- identified by its date: `movement_id` alone is still unique in practice, and the
+    -- application treats it as the identity.
+    PRIMARY KEY (movement_id, due_date)
+)
+WITH (tsdb.hypertable = true, tsdb.partition_column = 'due_date');
+-- Exact duplicates from the same source are one row. `due_date` is in the key only to satisfy
+-- the hypertable requirement, which means the index alone no longer rejects the same
+-- source_ref re-imported under a different date: internal/movements/application does that.
+CREATE UNIQUE INDEX movements_dedup ON movements (company_id, source, source_ref, due_date) WHERE source_ref IS NOT NULL;
 CREATE INDEX movements_calendar ON movements (company_id, due_date) WHERE status NOT IN ('settled', 'cancelled');
 CREATE INDEX movements_known_at ON movements (company_id, known_at);
 
@@ -200,14 +216,16 @@ CREATE TABLE recommendations (
 CREATE TABLE alert_episodes (
     episode_id          CHAR(26) PRIMARY KEY,
     company_id          CHAR(26) NOT NULL REFERENCES companies,
-    movement_id         CHAR(26) NOT NULL REFERENCES movements,
+    movement_id         CHAR(26) NOT NULL,
+    movement_due_date   DATE NOT NULL,
     opened_on           DATE NOT NULL,
     resolved_on         DATE,
     severity            severity_t NOT NULL,
     streak              SMALLINT NOT NULL DEFAULT 1,
     last_sent_gap_cents BIGINT,
     last_sent_severity  severity_t,
-    quality_ok          BOOLEAN NOT NULL DEFAULT true
+    quality_ok          BOOLEAN NOT NULL DEFAULT true,
+    FOREIGN KEY (movement_id, movement_due_date) REFERENCES movements (movement_id, due_date)
 );
 CREATE UNIQUE INDEX alert_episodes_open ON alert_episodes (company_id, movement_id) WHERE resolved_on IS NULL;
 
@@ -215,11 +233,14 @@ CREATE UNIQUE INDEX alert_episodes_open ON alert_episodes (company_id, movement_
 CREATE TABLE outcome_events (
     event_id     CHAR(26) PRIMARY KEY,
     company_id   CHAR(26) NOT NULL REFERENCES companies,
-    movement_id  CHAR(26) REFERENCES movements,
+    movement_id       CHAR(26),
+    movement_due_date DATE,
     kind         outcome_kind_t NOT NULL,
     occurred_on  DATE NOT NULL,
     amount_cents BIGINT CHECK (amount_cents >= 0),
-    evidence     TEXT
+    evidence     TEXT,
+    CHECK ((movement_id IS NULL) = (movement_due_date IS NULL)),
+    FOREIGN KEY (movement_id, movement_due_date) REFERENCES movements (movement_id, due_date)
 );
 CREATE INDEX outcome_events_company ON outcome_events (company_id, occurred_on);
 
