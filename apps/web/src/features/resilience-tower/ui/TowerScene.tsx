@@ -130,6 +130,7 @@ export function TowerScene({
   crackedBlocks,
   onSelect,
   reduced,
+  rotationSpeed,
   onReady,
 }: {
   resetKey: number;
@@ -144,6 +145,7 @@ export function TowerScene({
   crackedBlocks: boolean[];
   onSelect: (index: number) => void;
   reduced: boolean;
+  rotationSpeed: number;
   onReady: () => void;
 }) {
   return (
@@ -193,6 +195,8 @@ export function TowerScene({
       </Suspense>
       <OrbitControls
         makeDefault
+        autoRotate={rotationSpeed > 0}
+        autoRotateSpeed={rotationSpeed}
         target={[0, 2.3, 0]}
         enablePan={false}
         minDistance={9}

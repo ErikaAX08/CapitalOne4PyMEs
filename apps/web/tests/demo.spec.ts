@@ -87,6 +87,12 @@ test("decision, collapse, advance, reset and alternative scenarios", async ({
   await expect(
     page.getByRole("group", { name: /Estructura 3D/ }),
   ).toBeVisible();
+  const rotationSpeed = page.getByLabel("Velocidad de giro de la torre");
+  await expect(rotationSpeed).toHaveValue("0.5");
+  await rotationSpeed.selectOption("2");
+  await expect(rotationSpeed).toHaveValue("2");
+  await rotationSpeed.selectOption("0");
+  await expect(rotationSpeed).toHaveValue("0");
   await page.screenshot({
     path: `/tmp/resilia-${testInfo.project.name}-stable.png`,
     fullPage: true,

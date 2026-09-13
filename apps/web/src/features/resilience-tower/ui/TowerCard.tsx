@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { CircleHelp, Hand, Icon, RotateCcw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CircleHelp, Gauge, Hand, Icon, RotateCcw } from "lucide-react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
 import { Card, Badge, Button, Modal } from "@shared";
@@ -73,6 +73,13 @@ const BLOCK_GUIDE: {
   },
 ];
 
+const ROTATION_SPEEDS = [
+  { value: 0, label: "Pausada" },
+  { value: 0.5, label: "Lenta" },
+  { value: 1, label: "Media" },
+  { value: 2, label: "Rápida" },
+] as const;
+
 export function TowerCard({
   flowState,
   status,
@@ -97,6 +104,10 @@ export function TowerCard({
   onReset: () => void;
 }) {
   const [guideOpen, setGuideOpen] = useState(false);
+  const [rotationSpeed, setRotationSpeed] = useState(reduced ? 0 : 0.5);
+  useEffect(() => {
+    if (reduced) setRotationSpeed(0);
+  }, [reduced]);
   const currentDay = Math.max(1, Math.ceil(progress * simulationWeeks * 7));
   const statusVariant =
     status === "Crítico"
@@ -167,10 +178,26 @@ export function TowerCard({
             Día {currentDay} de {simulationWeeks * 7}
           </span>
         )}
+        <label className="ml-auto flex h-8 items-center gap-1.5 rounded-lg border border-hairline bg-canvas px-2 text-[11px] text-body-muted focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue/15">
+          <Gauge size={14} aria-hidden="true" />
+          <span>Giro</span>
+          <select
+            aria-label="Velocidad de giro de la torre"
+            className="cursor-pointer border-0 bg-transparent pr-1 font-medium text-body outline-none"
+            value={rotationSpeed}
+            onChange={(event) => setRotationSpeed(Number(event.target.value))}
+          >
+            {ROTATION_SPEEDS.map((speed) => (
+              <option key={speed.value} value={speed.value}>
+                {speed.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <Button
           variant="ghost"
           size="compact"
-          className="ml-auto h-8 px-2 text-[11px] text-body-muted"
+          className="h-8 px-2 text-[11px] text-body-muted"
           onClick={() => setGuideOpen(true)}
         >
           <CircleHelp size={14} /> Guía de iconos
@@ -185,6 +212,7 @@ export function TowerCard({
           output={output}
           resetKey={resetKey}
           reduced={reduced}
+          rotationSpeed={rotationSpeed}
         />
         <div className="pointer-events-none absolute top-[48px] right-[22px] max-w-[145px] text-[10px] text-body-subtle before:absolute before:top-[5px] before:left-[-30px] before:h-px before:w-[22px] before:bg-hairline-strong before:content-[''] min-[701px]:max-[1000px]:right-[12px] max-[1000px]:before:left-[-14px] max-[1000px]:before:w-[10px] max-[700px]:right-[9px] max-[700px]:max-w-[100px]">
           <strong className="font-medium text-body">
