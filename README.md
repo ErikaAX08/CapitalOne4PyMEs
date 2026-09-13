@@ -29,6 +29,21 @@ The engine is deterministic given a fixed seed, so a response is a pure function
 of its query parameters. That is why CloudFront caches it and why the seed is
 part of the cache key.
 
+Locally the same path runs without any of the AWS pieces: the Go service listens
+on `:8080` and drives the engine as a child process, and `pnpm dev` proxies
+`/v1` to it.
+
+```sh
+cd services/engine && python3 -m pip install -e ".[dev]"   # once
+cd services/domain && go run ./cmd/analysis                # :8080
+cd apps/web && pnpm dev                                    # :5173, proxies /v1
+```
+
+Then open `/analysis` for the structural-fragility view. The interface renders
+the precomputed base state immediately and degrades back to the nearest
+precomputed state, labelled as approximate, whenever the engine cannot answer
+within three seconds.
+
 ## Language policy
 
 - **English** for everything the team writes: code, identifiers, file and
@@ -66,5 +81,13 @@ architecture rules, testing, boundary checks — are in
 ## Verification
 
 ```sh
-cd apps/web && pnpm typecheck && pnpm test && pnpm check:boundaries
+cd apps/web        && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build
+cd services/domain && go vet ./... && go test ./...
+cd services/engine && python3 -m pytest -q && python3 scripts/generate_states.py --check
+```
+
+`apps/web` end-to-end tests need both servers running:
+
+```sh
+cd apps/web && pnpm test:e2e
 ```

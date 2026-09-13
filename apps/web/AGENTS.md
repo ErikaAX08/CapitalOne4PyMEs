@@ -6,9 +6,17 @@ Front-end rules. Repository-wide conventions live in the root
 ## Repository purpose
 
 Resilia is a React + TypeScript + Vite demo that lets you explore the impact of
-simulated decisions and expenses on an SME's liquidity. The 3D tower is a visual
-representation; the current computations are deterministic and mocked, not real
-financial predictions.
+simulated decisions and expenses on an SME's liquidity.
+
+There are two views, and they do not share a data path:
+
+- `/dashboard` — the 3D tower demo. The tower is a visual representation; its
+  computations are deterministic and **mocked** (`simulateFinancialDecision`),
+  not real financial predictions.
+- `/analysis` — the structural-fragility view of `docs/prd-mvp.md` §3, Modules
+  A to E. **Every figure on it comes from a state document the engine produced**
+  through `GET /v1/analysis`. It derives nothing, interpolates nothing, and
+  rounds nothing in a way that changes a number.
 
 The actual tree (`src/app`, `src/features`, `src/entities`, `src/shared`) is the
 source of truth on the current structure.
@@ -18,6 +26,13 @@ source of truth on the current structure.
 - Feature-based architecture with the direction `app -> features -> entities -> shared`,
   verified by `pnpm check:boundaries`.
 - pnpm is the only package manager, with `packageManager` pinned and a single lockfile.
+- `/analysis` is fed by `entities/analysis`: contract types, the action
+  catalogue read from `contracts/actions.schema.json` through the `@contracts`
+  alias, an HTTP data source, and the nearest-fallback selection. The five PRD
+  modules are presentational features; `app/useAnalysis.ts` wires them.
+- `pnpm dev` proxies `/v1` to `http://localhost:8080`, where `services/domain`
+  listens (`VITE_API_ORIGIN` overrides the target). Start it with
+  `cd services/domain && go run ./cmd/analysis`.
 - Styling with Tailwind CSS v4 (utility classes on each component);
   `src/app/styles.css` contains only `@theme`, `@layer base` and the
   `prefers-reduced-motion` reset. There is no per-feature CSS and no monolithic
@@ -78,6 +93,19 @@ Add `typecheck`, `test`, `test:e2e`, `check:boundaries`, `format` and
 ## Contracts to preserve
 
 - All data is simulated and is presented as such.
+- On `/analysis`, no number reaches the screen without an engine run behind it.
+  Do not hand-write a figure into a component, and do not compute one from
+  another: the interface selects, formats and presents.
+- `warnings` and `notices` from a state document are always rendered. A
+  non-empty array that does not appear on screen is a defect.
+- The degradation path is not optional: when the engine cannot answer, the view
+  shows the nearest precomputed state from `public/states/` and labels it
+  "Escenario aproximado". Those files are written by
+  `services/engine/scripts/generate_states.py`; never edit them by hand.
+- No colour token may have a hue between 40 and 75 degrees. `--color-warning-soft`
+  sits at exactly 40.0 and predates this rule being checked; `/analysis` uses
+  `--color-tension-soft` instead rather than restyling components that already
+  depend on it.
 - The tower has 12 levels and 36 blocks; the physics does not compute risk.
 - Keyboard support, reduced motion, the no-WebGL fallback and responsive layout
   must be maintained.
