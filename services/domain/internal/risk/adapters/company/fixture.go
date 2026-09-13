@@ -44,7 +44,7 @@ func LoadFixture(path string) (*FixtureRepository, error) {
 // different id is a bug rather than an empty result.
 func (r *FixtureRepository) Profile(_ context.Context, companyID string) (kernel.Company, error) {
 	if companyID != "" && companyID != r.profile.CompanyID {
-		return kernel.Company{}, fmt.Errorf("unknown company: %s", companyID)
+		return kernel.Company{}, fmt.Errorf("%w: %s", ErrNotFound, companyID)
 	}
 	return r.profile, nil
 }

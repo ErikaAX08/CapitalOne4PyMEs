@@ -29,6 +29,8 @@ import (
 	"time"
 
 	movementspg "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/movements/adapters/postgres"
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	movementsapp "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/movements/application"
 	companyadapter "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/adapters/company"
 	engineadapter "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/adapters/engine"
@@ -92,19 +94,50 @@ func run(log *slog.Logger) error {
 	// and every other route works: only /v1/movements answers 503, because a
 	// ledger that silently forgets what it was told is worse than one that
 	// says it is unavailable.
-	movements, closeMovements, err := openMovements(context.Background(), cutoff, log)
+	movements, pool, closeMovements, err := openMovements(context.Background(), cutoff, log)
 	if err != nil {
 		return err
 	}
 	defer closeMovements()
 
+	// With a database, the analysis can run on any company it holds; the demo
+	// company keeps coming from its fixture, so the product works unchanged
+	// whether or not the database is reachable.
+	var profiles riskapp.CompanyRepository = companies
+	if pool != nil {
+		profiles = companyadapter.NewPostgresRepository(pool, cutoff, companies)
+		log.Info("company profiles served from the database",
+			"fallback_company", companies.DefaultCompanyID())
+	}
+
+	// Which company a request with no company_id gets. It defaults to the demo
+	// one, so the dashboard is unaffected; pointing it at a stored company is
+	// how the reference set is demonstrated without passing an id every time.
+	defaultCompany := env("DOMAIN_COMPANY_ID", companies.DefaultCompanyID())
+	if defaultCompany != companies.DefaultCompanyID() {
+		if pool == nil {
+			return fmt.Errorf(
+				"DOMAIN_COMPANY_ID is %s but no database is configured to read it from",
+				defaultCompany)
+		}
+		// Fail at start-up rather than on the first request: an unknown default
+		// would turn every unqualified call into a 404.
+		checkCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		if _, err := profiles.Profile(checkCtx, defaultCompany); err != nil {
+			cancel()
+			return fmt.Errorf("DOMAIN_COMPANY_ID: %w", err)
+		}
+		cancel()
+		log.Info("default company overridden", "company_id", defaultCompany)
+	}
+
 	server := &Server{
 		Builder:      scenarioapp.Builder{Catalog: catalog},
 		Analyzer:     riskapp.Analyzer{Engine: engineadapter.NewClient(transport)},
-		Companies:    companies,
+		Companies:    profiles,
 		Movements:    movements,
 		ActionsRaw:   catalog.Raw(),
-		CompanyID:    companies.DefaultCompanyID(),
+		CompanyID:    defaultCompany,
 		Cutoff:       cutoff,
 		CacheControl: env("DOMAIN_CACHE_CONTROL", defaultCacheControl),
 		Timeout:      timeout(),
@@ -127,7 +160,7 @@ func run(log *slog.Logger) error {
 			"addr", addr,
 			"contracts", contractsDir,
 			"engine", engineDir,
-			"company", companies.DefaultCompanyID(),
+			"company", defaultCompany,
 			"cutoff_date", cutoff.ISO(),
 		)
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -152,22 +185,22 @@ func run(log *slog.Logger) error {
 // value never appears in the repository or in a log line, only in the
 // environment. A configured-but-unreachable database is a start-up failure: it
 // means the operator intended persistence and did not get it.
-func openMovements(ctx context.Context, cutoff kernel.CutoffDate, log *slog.Logger) (*movementsapp.Service, func(), error) {
+func openMovements(ctx context.Context, cutoff kernel.CutoffDate, log *slog.Logger) (*movementsapp.Service, *pgxpool.Pool, func(), error) {
 	dsn := env("DATABASE_CONNECTION_STRING", "")
 	if dsn == "" {
 		log.Warn("no movements database configured",
 			"detail", "set DATABASE_CONNECTION_STRING to enable /v1/movements")
-		return nil, func() {}, nil
+		return nil, nil, func() {}, nil
 	}
 	connectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	repo, err := movementspg.Open(connectCtx, dsn)
 	if err != nil {
-		return nil, func() {}, err
+		return nil, nil, func() {}, err
 	}
 	log.Info("movements database connected")
-	return &movementsapp.Service{Repo: repo, Cutoff: cutoff}, repo.Close, nil
+	return &movementsapp.Service{Repo: repo, Cutoff: cutoff}, repo.Pool, repo.Close, nil
 }
 
 func env(name, fallback string) string {

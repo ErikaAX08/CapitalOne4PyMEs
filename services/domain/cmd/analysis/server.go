@@ -10,6 +10,7 @@ import (
 	"time"
 
 	movementsapp "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/movements/application"
+	companyadapter "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/adapters/company"
 	engineadapter "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/adapters/engine"
 	"github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/adapters/projection"
 	riskapp "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/application"
@@ -128,9 +129,30 @@ func (s *Server) analysis(w http.ResponseWriter, r *http.Request) {
 	}
 	company, err := s.Companies.Profile(ctx, companyID)
 	if err != nil {
-		s.fail(w, r, http.StatusNotFound, "UnknownCompany", err)
+		// A company that does not exist is the caller's mistake; a database
+		// that did not answer is ours, and saying "unknown company" for it
+		// would send them looking for a bug in their own data.
+		switch {
+		case errors.Is(err, companyadapter.ErrNotFound):
+			s.fail(w, r, http.StatusNotFound, "UnknownCompany", err)
+		case errors.Is(err, context.DeadlineExceeded):
+			s.fail(w, r, http.StatusGatewayTimeout, "StorageTimeout", err)
+		default:
+			s.fail(w, r, http.StatusServiceUnavailable, "StorageError", err)
+		}
 		return
 	}
+
+	// A company stored without every profile variable cannot be analysed until
+	// someone supplies the rest, which is the product's own flow: the person
+	// simulating types their numbers. A declared value only fills a hole; it
+	// never overwrites what the repository knows.
+	declared, err := companyadapter.ParseDeclared(q)
+	if err != nil {
+		s.fail(w, r, http.StatusBadRequest, "ParameterError", err)
+		return
+	}
+	company = declared.Apply(company)
 
 	assessment, err := s.Analyzer.Analyze(ctx, scenario, company)
 	if err != nil {
@@ -153,6 +175,7 @@ func (s *Server) analysis(w http.ResponseWriter, r *http.Request) {
 		"action", string(scenario.Action().Kind()),
 		"seed", document.Seed,
 		"paths", document.Simulation != nil,
+		"declared_profile", declared.Any(),
 		"duration_ms", time.Since(started).Milliseconds(),
 	)
 	writeJSON(w, http.StatusOK, document, s.CacheControl)
