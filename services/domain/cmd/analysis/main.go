@@ -28,6 +28,8 @@ import (
 	"syscall"
 	"time"
 
+	movementspg "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/movements/adapters/postgres"
+	movementsapp "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/movements/application"
 	companyadapter "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/adapters/company"
 	engineadapter "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/adapters/engine"
 	riskapp "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/application"
@@ -85,10 +87,22 @@ func run(log *slog.Logger) error {
 	}
 	defer func() { _ = transport.Close() }()
 
+	// The ledger lives in PostgreSQL — Tiger Cloud in deployment, any
+	// PostgreSQL locally. Without a connection string the service still starts
+	// and every other route works: only /v1/movements answers 503, because a
+	// ledger that silently forgets what it was told is worse than one that
+	// says it is unavailable.
+	movements, closeMovements, err := openMovements(context.Background(), cutoff, log)
+	if err != nil {
+		return err
+	}
+	defer closeMovements()
+
 	server := &Server{
 		Builder:      scenarioapp.Builder{Catalog: catalog},
 		Analyzer:     riskapp.Analyzer{Engine: engineadapter.NewClient(transport)},
 		Companies:    companies,
+		Movements:    movements,
 		ActionsRaw:   catalog.Raw(),
 		CompanyID:    companies.DefaultCompanyID(),
 		Cutoff:       cutoff,
@@ -130,6 +144,30 @@ func run(log *slog.Logger) error {
 		defer cancel()
 		return httpServer.Shutdown(shutdownCtx)
 	}
+}
+
+// openMovements connects the ledger if a connection string is configured.
+//
+// DATABASE_CONNECTION_STRING is the name Tiger Data's own Go guide uses; the
+// value never appears in the repository or in a log line, only in the
+// environment. A configured-but-unreachable database is a start-up failure: it
+// means the operator intended persistence and did not get it.
+func openMovements(ctx context.Context, cutoff kernel.CutoffDate, log *slog.Logger) (*movementsapp.Service, func(), error) {
+	dsn := env("DATABASE_CONNECTION_STRING", "")
+	if dsn == "" {
+		log.Warn("no movements database configured",
+			"detail", "set DATABASE_CONNECTION_STRING to enable /v1/movements")
+		return nil, func() {}, nil
+	}
+	connectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	repo, err := movementspg.Open(connectCtx, dsn)
+	if err != nil {
+		return nil, func() {}, err
+	}
+	log.Info("movements database connected")
+	return &movementsapp.Service{Repo: repo, Cutoff: cutoff}, repo.Close, nil
 }
 
 func env(name, fallback string) string {

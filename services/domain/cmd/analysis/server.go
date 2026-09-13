@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"time"
 
+	movementsapp "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/movements/application"
 	engineadapter "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/adapters/engine"
 	"github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/adapters/projection"
 	riskapp "github.com/ErikaAX08/CapitalOne4PyMEs/services/domain/internal/risk/application"
@@ -36,6 +37,11 @@ type Server struct {
 	Companies  riskapp.CompanyRepository
 	ActionsRaw json.RawMessage
 
+	// Movements is the ledger context. It is nil when no database is
+	// configured, and the two /v1/movements routes then answer 503 rather
+	// than pretending to have stored or read anything.
+	Movements *movementsapp.Service
+
 	CompanyID    string
 	Cutoff       kernel.CutoffDate
 	CacheControl string
@@ -48,6 +54,8 @@ func (s *Server) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/analysis", s.analysis)
 	mux.HandleFunc("GET /v1/actions", s.actions)
+	mux.HandleFunc("GET /v1/movements", s.listMovements)
+	mux.HandleFunc("POST /v1/movements", s.addMovement)
 	mux.HandleFunc("GET /health", s.health)
 	return s.withCommonHeaders(mux)
 }
@@ -56,10 +64,12 @@ func (s *Server) Routes() http.Handler {
 // origin, and the correlation id that travels from the edge to Go to Python.
 func (s *Server) withCommonHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// The API is public and read-only — the MVP has no users and no
-		// authentication (docs/architecture.md §15) — so any origin may read it.
+		// The API has no users and no authentication (docs/architecture.md §15),
+		// so any origin may read it. POST is listed because /v1/movements
+		// writes; the same caveat applies to it, and it is the reason that
+		// route must not be exposed publicly without authentication.
 		w.Header().Set("access-control-allow-origin", "*")
-		w.Header().Set("access-control-allow-methods", "GET, OPTIONS")
+		w.Header().Set("access-control-allow-methods", "GET, POST, OPTIONS")
 		w.Header().Set("access-control-allow-headers", "content-type, x-correlation-id")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
