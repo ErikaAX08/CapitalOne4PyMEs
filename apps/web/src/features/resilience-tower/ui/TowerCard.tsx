@@ -1,8 +1,7 @@
-import { Hand, Layers3, RotateCcw } from "lucide-react";
+import { Hand, RotateCcw } from "lucide-react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
 import { Card, Badge, Button } from "@shared";
-import { BLOCK_HEX_COLORS } from "../model/towerPresentation";
 import { ResilienceTower } from "./ResilienceTower";
 export function TowerCard({
   flowState,
@@ -35,7 +34,7 @@ export function TowerCard({
         ? "warning"
         : "success";
   return (
-    <Card className="tower-card relative flex min-h-[604px] flex-col gap-0 overflow-hidden bg-surface-subtle max-[700px]:min-h-[480px] min-[701px]:sticky min-[701px]:top-[22px] min-[701px]:h-[min(830px,calc(100vh-44px))] min-[701px]:min-h-[620px]">
+    <Card className="tower-card relative flex min-h-[604px] flex-col gap-0 overflow-hidden bg-surface-subtle py-0 max-[700px]:min-h-[480px] min-[701px]:sticky min-[701px]:top-[22px] min-[701px]:h-[min(830px,calc(100vh-44px))] min-[701px]:min-h-[620px]">
       <div className="z-1 flex justify-between p-[24px_25px_0] max-[700px]:p-[20px_20px_0]">
         <div>
           <span className="font-mono text-[11px] font-medium tracking-normal text-body-muted uppercase">
@@ -115,31 +114,6 @@ export function TowerCard({
         <div className="pointer-events-none absolute right-0 bottom-0 left-0 flex items-center justify-center gap-[7px] text-[11px] text-body-subtle">
           <Hand size={15} /> Cada gasto retira soporte · Toca un bloque
         </div>
-      </div>
-      <div className="grid grid-cols-4 border-t border-hairline bg-canvas/65 max-[700px]:grid-cols-2">
-        {[
-          ["Sólido", "Alta confianza"],
-          ["Activo", "Opera normal"],
-          ["Incierto", "Sin participar"],
-          ["Estrés", "Nodo frágil"],
-        ].map(([label, meaning], i) => (
-          <span
-            key={label}
-            className="flex items-center justify-center gap-[7px] border-r border-hairline px-2 py-[11px] text-[9px] text-body-muted last:border-r-0 max-[700px]:justify-start max-[700px]:border-b max-[700px]:px-3"
-          >
-            <i
-              style={{ background: BLOCK_HEX_COLORS[i] }}
-              className="h-[8px] w-[8px] shrink-0"
-            />
-            <span>
-              <strong className="block font-medium text-body">{label}</strong>
-              <small className="text-[8px] text-body-subtle">{meaning}</small>
-            </span>
-          </span>
-        ))}
-      </div>
-      <div className="flex items-center justify-center gap-[7px] border-t border-hairline bg-canvas/40 p-[13px] text-[11px] text-body-muted">
-        <Layers3 size={15} /> 12 niveles · 36 capacidades conectadas
       </div>
     </Card>
   );
