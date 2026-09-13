@@ -69,6 +69,18 @@ test("decision, collapse, advance, reset and alternative scenarios", async ({
   await page.getByRole("button", { name: "Explorar mi estabilidad" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(
+    page.getByText("Demo con datos simulados", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("1. Revisa tu base", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("2. Lee la estructura", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("3. Prueba una decisión", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
     page.getByRole("heading", { name: "Esta torre representa tu empresa" }),
   ).toBeVisible();
   await expect(page.locator("main.dashboard")).toHaveCSS("opacity", "1");

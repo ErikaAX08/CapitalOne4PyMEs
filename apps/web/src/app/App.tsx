@@ -408,44 +408,6 @@ export default function App() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <div className="grid rounded-xl border border-hairline bg-canvas min-[701px]:grid-cols-3 max-[700px]:divide-y max-[700px]:divide-hairline min-[701px]:divide-x min-[701px]:divide-hairline">
-                  {[
-                    {
-                      icon: ScanSearch,
-                      title: "1. Revisa tu base",
-                      copy: "Saldo, fragilidad y obligaciones próximas.",
-                    },
-                    {
-                      icon: Layers3,
-                      title: "2. Lee la estructura",
-                      copy: "La torre conecta liquidez, cobros y compromisos.",
-                    },
-                    {
-                      icon: Sparkles,
-                      title: "3. Prueba una decisión",
-                      copy: "Compara el impacto antes de actuar.",
-                    },
-                  ].map(({ icon: Icon, title, copy }, index) => (
-                    <div
-                      key={title}
-                      className={`flex items-center gap-3 p-[13px_16px] ${
-                        index === 1 ? "bg-brand-blue-soft/55" : ""
-                      }`}
-                    >
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-subtle text-brand-blue">
-                        <Icon size={16} />
-                      </span>
-                      <span>
-                        <strong className="block text-[12px] font-semibold text-body">
-                          {title}
-                        </strong>
-                        <small className="mt-0.5 block text-[10px] leading-[1.45] text-body-muted">
-                          {copy}
-                        </small>
-                      </span>
-                    </div>
-                  ))}
-                </div>
                 <FinancialOverview
                   availableBalance={
                     data.business.balance - output.simulatedExpenseTotal

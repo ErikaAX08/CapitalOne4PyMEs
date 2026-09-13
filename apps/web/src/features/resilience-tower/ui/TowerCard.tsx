@@ -1,51 +1,32 @@
 import { useState } from "react";
-import {
-  Banknote,
-  BriefcaseBusiness,
-  CircleHelp,
-  CreditCard,
-  FileCheck2,
-  FileText,
-  Gauge,
-  Hand,
-  Package,
-  ReceiptText,
-  RotateCcw,
-  Shield,
-  Truck,
-  UserRound,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { CircleHelp, Hand, Icon, RotateCcw } from "lucide-react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
 import { Card, Badge, Button, Modal } from "@shared";
+import { BLOCK_ICON_NODES, type BlockIconLabel } from "../model/blockIcons";
 import { ResilienceTower } from "./ResilienceTower";
 
 const BLOCK_GUIDE: {
   title: string;
   description: string;
-  items: { label: string; meaning: string; icon: LucideIcon }[];
+  items: { label: BlockIconLabel; meaning: string }[];
 }[] = [
   {
     title: "Cimientos",
     description: "Sostienen todo lo que ocurre arriba.",
     items: [
-      { label: "Efectivo", meaning: "Dinero disponible hoy", icon: Banknote },
+      { label: "Efectivo", meaning: "Dinero disponible hoy" },
       {
         label: "Cuentas por cobrar",
         meaning: "Facturas que tus clientes aún no pagan",
-        icon: ReceiptText,
       },
       {
         label: "Crédito disponible",
         meaning: "Financiamiento que todavía puedes utilizar",
-        icon: CreditCard,
       },
       {
         label: "Reservas",
         meaning: "Colchón para absorber imprevistos",
-        icon: Shield,
       },
     ],
   },
@@ -53,21 +34,18 @@ const BLOCK_GUIDE: {
     title: "Operación",
     description: "Convierte los recursos en trabajo diario.",
     items: [
-      { label: "Nómina", meaning: "Pagos comprometidos con tu equipo", icon: Users },
+      { label: "Nómina", meaning: "Pagos comprometidos con tu equipo" },
       {
         label: "Proveedores",
         meaning: "Obligaciones con quienes abastecen el negocio",
-        icon: Truck,
       },
       {
         label: "Inventario",
         meaning: "Recursos y materiales necesarios para operar",
-        icon: Package,
       },
       {
         label: "Capacidad",
         meaning: "Trabajo que tu operación puede sostener",
-        icon: Gauge,
       },
     ],
   },
@@ -78,22 +56,18 @@ const BLOCK_GUIDE: {
       {
         label: "Contratos",
         meaning: "Compromisos comerciales vigentes",
-        icon: FileText,
       },
       {
         label: "Proyectos",
         meaning: "Trabajo que generará ingresos y costos",
-        icon: BriefcaseBusiness,
       },
       {
         label: "Cliente principal",
         meaning: "Dependencia de tu mayor fuente de ingresos",
-        icon: UserRound,
       },
       {
         label: "Cumplimiento fiscal",
         meaning: "Impuestos y obligaciones legales",
-        icon: FileCheck2,
       },
     ],
   },
@@ -172,7 +146,7 @@ export function TowerCard({
           <RotateCcw size={18} />
         </Button>
       </div>
-      <div className="flex flex-wrap items-center gap-2 p-[15px_25px_0] max-[700px]:p-[12px_20px_0]">
+      <div className="mb-3 flex flex-wrap items-center gap-2 p-[15px_25px_0] max-[700px]:p-[12px_20px_0]">
         <Badge
           variant={statusVariant}
           className="h-auto gap-[6px] px-[10px] py-[6px] text-[12px] font-medium"
@@ -261,13 +235,17 @@ export function TowerCard({
                   </p>
                 </div>
                 <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-                  {section.items.map(({ label, meaning, icon: Icon }) => (
+                  {section.items.map(({ label, meaning }) => (
                     <div
                       key={label}
                       className="flex min-h-[72px] items-start gap-3 rounded-lg border border-hairline bg-canvas/45 p-3"
                     >
                       <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-blue/8 text-brand-blue">
-                        <Icon size={16} strokeWidth={1.8} />
+                        <Icon
+                          iconNode={BLOCK_ICON_NODES[label]}
+                          size={16}
+                          strokeWidth={1.8}
+                        />
                       </span>
                       <span>
                         <strong className="block text-xs font-medium text-body">

@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Line, RoundedBox } from "@react-three/drei";
 import { CanvasTexture, Color, LinearFilter, SRGBColorSpace } from "three";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
+import { getBlockIconNode } from "../model/blockIcons";
 import { BLOCK_HEX_COLORS } from "../model/towerPresentation";
 export function TowerBlock({
   index,
@@ -202,186 +203,72 @@ function BlockFaceLabel({
   );
 }
 
-type IconPath = [number, number][];
+const iconTextures = new Map<string, CanvasTexture>();
 
-const ICON_PATHS: Record<string, IconPath[]> = {
-  Efectivo: [
-    [
-      [0, 0.18],
-      [0, -0.18],
-    ],
-    [
-      [0.11, 0.12],
-      [0.05, 0.17],
-      [-0.08, 0.13],
-      [-0.09, 0.03],
-      [0.08, -0.03],
-      [0.09, -0.13],
-      [0.03, -0.17],
-      [-0.11, -0.12],
-    ],
-  ],
-  "Cuentas por cobrar": [
-    [
-      [-0.17, 0.1],
-      [0.05, 0.1],
-      [0.05, -0.11],
-    ],
-    [
-      [-0.02, -0.04],
-      [0.05, -0.12],
-      [0.13, -0.04],
-    ],
-  ],
-  "Crédito disponible": [
-    [
-      [-0.18, 0.13],
-      [0.18, 0.13],
-      [0.18, -0.13],
-      [-0.18, -0.13],
-      [-0.18, 0.13],
-    ],
-    [
-      [-0.16, 0.04],
-      [0.16, 0.04],
-    ],
-  ],
-  Reservas: [
-    [
-      [0, 0.18],
-      [0.15, 0.11],
-      [0.12, -0.08],
-      [0, -0.18],
-      [-0.12, -0.08],
-      [-0.15, 0.11],
-      [0, 0.18],
-    ],
-  ],
-  Nómina: [
-    [
-      [-0.05, 0.13],
-      [0, 0.18],
-      [0.05, 0.13],
-      [0, 0.08],
-      [-0.05, 0.13],
-    ],
-    [
-      [-0.16, -0.16],
-      [-0.1, 0],
-      [0.1, 0],
-      [0.16, -0.16],
-    ],
-  ],
-  Proveedores: [
-    [
-      [-0.19, 0.08],
-      [0.05, 0.08],
-      [0.12, 0],
-      [0.19, 0],
-      [0.19, -0.1],
-      [-0.19, -0.1],
-      [-0.19, 0.08],
-    ],
-    [
-      [0.08, 0.08],
-      [0.08, 0],
-      [0.18, 0],
-    ],
-  ],
-  Inventario: [
-    [
-      [0, 0.18],
-      [0.17, 0.08],
-      [0.17, -0.12],
-      [0, -0.2],
-      [-0.17, -0.12],
-      [-0.17, 0.08],
-      [0, 0.18],
-    ],
-    [
-      [-0.17, 0.08],
-      [0, -0.01],
-      [0.17, 0.08],
-    ],
-  ],
-  Capacidad: [
-    [
-      [-0.18, -0.12],
-      [-0.13, 0.05],
-      [0, 0.14],
-      [0.13, 0.05],
-      [0.18, -0.12],
-    ],
-    [
-      [0, -0.03],
-      [0.1, 0.08],
-    ],
-  ],
-  Contratos: [
-    [
-      [-0.13, 0.18],
-      [0.08, 0.18],
-      [0.15, 0.11],
-      [0.15, -0.18],
-      [-0.13, -0.18],
-      [-0.13, 0.18],
-    ],
-    [
-      [-0.07, 0.04],
-      [0.08, 0.04],
-    ],
-    [
-      [-0.07, -0.05],
-      [0.08, -0.05],
-    ],
-  ],
-  Proyectos: [
-    [
-      [-0.18, 0.09],
-      [0.18, 0.09],
-      [0.18, -0.15],
-      [-0.18, -0.15],
-      [-0.18, 0.09],
-    ],
-    [
-      [-0.07, 0.09],
-      [-0.07, 0.16],
-      [0.07, 0.16],
-      [0.07, 0.09],
-    ],
-  ],
-  "Cliente principal": [
-    [
-      [-0.05, 0.13],
-      [0, 0.18],
-      [0.05, 0.13],
-      [0, 0.08],
-      [-0.05, 0.13],
-    ],
-    [
-      [-0.15, -0.16],
-      [-0.1, -0.01],
-      [0.1, -0.01],
-      [0.15, -0.16],
-    ],
-  ],
-  "Cumplimiento fiscal": [
-    [
-      [0, 0.18],
-      [0.15, 0.1],
-      [0.12, -0.09],
-      [0, -0.18],
-      [-0.12, -0.09],
-      [-0.15, 0.1],
-      [0, 0.18],
-    ],
-    [
-      [-0.08, 0],
-      [-0.02, -0.07],
-      [0.09, 0.07],
-    ],
-  ],
-};
+function drawIconNode(
+  context: CanvasRenderingContext2D,
+  [element, attributes]: ReturnType<typeof getBlockIconNode>[number],
+) {
+  context.beginPath();
+
+  if (element === "path" && attributes.d) {
+    context.stroke(new Path2D(attributes.d));
+    return;
+  }
+
+  if (element === "circle") {
+    context.arc(
+      Number(attributes.cx),
+      Number(attributes.cy),
+      Number(attributes.r),
+      0,
+      Math.PI * 2,
+    );
+  } else if (element === "line") {
+    context.moveTo(Number(attributes.x1), Number(attributes.y1));
+    context.lineTo(Number(attributes.x2), Number(attributes.y2));
+  } else if (element === "rect") {
+    context.roundRect(
+      Number(attributes.x),
+      Number(attributes.y),
+      Number(attributes.width),
+      Number(attributes.height),
+      Number(attributes.rx ?? 0),
+    );
+  }
+
+  context.stroke();
+}
+
+function getIconTexture(label: string, color: string) {
+  const key = `${label}-${color}`;
+  const existing = iconTextures.get(key);
+  if (existing) return existing;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 128;
+  canvas.height = 128;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("No se pudo preparar el icono del bloque.");
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.translate(16, 16);
+  context.scale(4, 4);
+  context.strokeStyle = color;
+  context.lineWidth = 1.8;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  for (const node of getBlockIconNode(label)) {
+    drawIconNode(context, node);
+  }
+
+  const texture = new CanvasTexture(canvas);
+  texture.colorSpace = SRGBColorSpace;
+  texture.minFilter = LinearFilter;
+  texture.needsUpdate = true;
+  iconTextures.set(key, texture);
+  return texture;
+}
 
 function BlockFaceIcon({
   label,
@@ -392,20 +279,14 @@ function BlockFaceIcon({
   color: string;
   side: 1 | -1;
 }) {
+  const texture = useMemo(() => getIconTexture(label, color), [label, color]);
   return (
-    <group
+    <mesh
       position={[0, 0, side * 1.156]}
       rotation={[0, side > 0 ? 0 : Math.PI, 0]}
-      scale={0.68}
     >
-      {(ICON_PATHS[label] ?? ICON_PATHS.Proyectos).map((points, pathIndex) => (
-        <Line
-          key={pathIndex}
-          points={points.map(([x, y]) => [x, y, 0] as [number, number, number])}
-          color={color}
-          lineWidth={1.7}
-        />
-      ))}
-    </group>
+      <planeGeometry args={[0.34, 0.34]} />
+      <meshBasicMaterial map={texture} transparent toneMapped={false} />
+    </mesh>
   );
 }

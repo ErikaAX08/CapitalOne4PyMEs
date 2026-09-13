@@ -6,21 +6,8 @@ import {
   LayoutDashboard,
   ReceiptText,
 } from "lucide-react";
-import { Badge, Button, Logo, cn } from "@shared";
+import { Button, Logo, cn } from "@shared";
 import type { ShellTool } from "../model/navigation";
-
-function DemoBadge() {
-  return (
-    <Badge
-      variant="neutral"
-      className="h-auto gap-[7px] px-[11px] py-[8px] text-[12px] max-[700px]:px-[8px] max-[700px]:py-[7px] max-[700px]:text-[11px]"
-    >
-      <span className="h-[5px] w-[5px] rounded-full bg-body-subtle" />
-      <span className="max-[420px]:hidden">Demo con datos simulados</span>
-      <span className="hidden max-[420px]:inline">Demo</span>
-    </Badge>
-  );
-}
 
 function Account() {
   return (
@@ -101,7 +88,6 @@ export function TopBar({
         <Link to="/" aria-label="Ir al inicio">
           <Logo className="w-[175px]" />
         </Link>
-        <DemoBadge />
       </div>
       <header
         className={cn(
@@ -132,8 +118,6 @@ export function TopBar({
           <CompactNav tools={tools} />
         </div>
         <div className="flex shrink-0 items-center gap-[13px] max-[1000px]:hidden">
-          <DemoBadge />
-          <span className="mx-[9px] h-[27px] w-px bg-hairline" />
           <Account />
         </div>
       </header>

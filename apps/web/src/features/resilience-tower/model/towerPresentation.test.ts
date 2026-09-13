@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { computeTowerViewModel } from "./towerPresentation";
+import { BLOCK_ICON_NODES } from "./blockIcons";
+import { computeTowerViewModel, TOWER_LEVELS } from "./towerPresentation";
 import type { SimulationOutput, TowerChange } from "@entities/simulation";
 
 function output(overrides: Partial<SimulationOutput> = {}): SimulationOutput {
@@ -25,6 +26,13 @@ const contractChanges: TowerChange[] = [
   ...[9, 10, 11, 12].map((week) => ({ week, action: "addIncome" as const })),
   { week: 7, action: "delayIncome" },
 ];
+
+test("every tower capability uses an icon from the visual guide", () => {
+  const towerLabels = [...new Set(TOWER_LEVELS.flat())].sort();
+  const guideLabels = Object.keys(BLOCK_ICON_NODES).sort();
+
+  assert.deepEqual(towerLabels, guideLabels);
+});
 
 test("computeTowerViewModel never touches WebGL/Canvas -- pure data in, data out", () => {
   const vm = computeTowerViewModel({
