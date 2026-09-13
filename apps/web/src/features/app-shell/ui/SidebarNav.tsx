@@ -7,7 +7,7 @@ import {
   ReceiptText,
   ShieldCheck,
 } from "lucide-react";
-import { Button, Logo, cn } from "@shared";
+import { BrandSwoosh, Button, Logo, cn } from "@shared";
 import type { ShellRoute, ShellSection, ShellTool } from "../model/navigation";
 
 /** Every destination the application actually serves inside the shell. */
@@ -147,20 +147,21 @@ export function SidebarNav({
         )}
       </nav>
 
-      <div className="mt-auto rounded-xl bg-brand-blue p-[18px_17px] text-on-brand">
-        <ShieldCheck size={19} />
-        <strong className="font-title mt-[11px] block text-[15px] leading-[1.35] font-semibold tracking-[-0.02em]">
+      <div className="relative mt-auto overflow-hidden rounded-xl bg-brand-blue p-[18px_17px] text-on-brand">
+        <BrandSwoosh className="right-[-30px] top-[-24px] w-[96%]" />
+        <ShieldCheck className="relative z-10" size={19} />
+        <strong className="font-title relative z-10 mt-[11px] block text-[15px] leading-[1.35] font-semibold tracking-[-0.02em]">
           Lleva tu negocio
           <br />
           más lejos
         </strong>
-        <small className="mt-[7px] block text-[11px] leading-[1.6] text-on-brand/75">
+        <small className="relative z-10 mt-[7px] block text-[11px] leading-[1.6] text-on-brand/75">
           {promo.description}.
         </small>
         <Button
           variant="secondary"
           size="compact"
-          className="mt-[14px] w-full justify-between gap-2 text-[12px]"
+          className="relative z-10 mt-[14px] w-full justify-between gap-2 text-[12px]"
           asChild
         >
           <Link to={promo.to}>

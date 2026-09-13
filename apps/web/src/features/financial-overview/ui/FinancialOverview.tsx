@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Clock3, ShieldCheck, TrendingDown, Wallet } from "lucide-react";
-import { formatMoney, Badge, cn } from "@shared";
+import { formatMoney, Badge, BrandSwoosh, cn } from "@shared";
 
 /** One statistic of the base state. The highlighted variant carries the figure
  *  the rest of the view is read against, so it is filled with the brand blue. */
@@ -29,14 +29,15 @@ function StatTile({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col rounded-xl border p-[18px_20px] shadow-geist-small max-[700px]:p-[15px_16px]",
+        "relative flex min-w-0 flex-col overflow-hidden rounded-xl border p-[18px_20px] shadow-geist-small max-[700px]:p-[15px_16px]",
         highlighted
           ? "border-brand-blue bg-brand-blue text-on-brand"
           : "border-hairline bg-surface-subtle",
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-2">
+      {highlighted && <BrandSwoosh />}
+      <div className="relative z-10 flex items-start justify-between gap-2">
         <span
           className={cn(
             "grid h-9 w-9 shrink-0 place-items-center rounded-lg",
@@ -51,13 +52,13 @@ function StatTile({
       </div>
       <span
         className={cn(
-          "mt-[15px] text-[12px]",
+          "relative z-10 mt-[15px] text-[12px]",
           highlighted ? "text-on-brand/75" : "text-body-muted",
         )}
       >
         {label}
       </span>
-      <strong className="font-title mt-[5px] block text-[30px] leading-[1.15] font-semibold tracking-[-0.02em] tabular-nums max-[700px]:text-[25px]">
+      <strong className="font-title relative z-10 mt-[5px] block text-[30px] leading-[1.15] font-semibold tracking-[-0.02em] tabular-nums max-[700px]:text-[25px]">
         {value}
         {unit && (
           <small
@@ -70,10 +71,10 @@ function StatTile({
           </small>
         )}
       </strong>
-      {children}
+      {children && <div className="relative z-10">{children}</div>}
       <span
         className={cn(
-          "mt-auto pt-[11px] text-[11px] leading-[1.5]",
+          "relative z-10 mt-auto pt-[11px] text-[11px] leading-[1.5]",
           highlighted ? "text-on-brand/70" : "text-body-muted",
         )}
       >
