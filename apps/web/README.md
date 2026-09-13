@@ -40,14 +40,16 @@ Organized by feature, with the dependency direction
 - `src/app/`: composition. `App.tsx` loads data, wires the simulation flow and
   distributes props; `main.tsx` mounts React; `styles.css` is the single Tailwind
   entry point (tokens in `@theme`, reset in `@layer base`).
-- `src/features/`: one folder per product capability — `onboarding`,
-  `financial-overview`, `expense-simulation`, `scenario-simulation` (includes the
-  `useSimulationFlow` reducer), `resilience-tower` (includes the pure view model
-  `towerPresentation.ts` and the 3D runtime) and `technical-explanation`.
+- `src/features/`: one folder per product capability — `app-shell` (the sidebar
+  and top bar the in-app views share), `onboarding`, `financial-overview` (the
+  statistics row and the business signals card), `expense-simulation`,
+  `scenario-simulation` (includes the `useSimulationFlow` reducer),
+  `resilience-tower` (includes the pure view model `towerPresentation.ts` and the
+  3D runtime) and `technical-explanation`.
 - `src/entities/`: domain without React — `business` (types, fixtures and
   `mockFinancialDataSource`), `scenario` and `simulation`
   (`simulateFinancialDecision`, the deterministic engine).
-- `src/shared/`: domain-agnostic — `Modal` and `formatMoney`.
+- `src/shared/`: domain-agnostic — `Modal`, `Logo` and `formatMoney`.
 
 Each slice exposes its public API in an `index.ts`; the rest of its folder is
 internal. The aliases `@app`, `@features`, `@entities`, `@shared` (configured in

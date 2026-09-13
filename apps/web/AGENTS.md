@@ -25,6 +25,16 @@ source of truth on the current structure.
 
 - Feature-based architecture with the direction `app -> features -> entities -> shared`,
   verified by `pnpm check:boundaries`.
+- `/dashboard` and `/analysis` are wrapped by `features/app-shell`: a sidebar with
+  the two real routes, the current page's section anchors and its in-page
+  commands, plus a top bar that names the view. Both views fill all three groups.
+  The landing page (`/`) sits outside it and keeps its centred wordmark header.
+  The sidebar collapses below 1000px, where `TopBar` surfaces the same routes and
+  commands as a compact row.
+- `app/AnalysisView` (in `App.tsx`) owns the `useAnalysis` controller and passes
+  it to `AnalysisPage`, so the shell's commands and the page's own controls drive
+  one state. Keep the hook behind that route component: calling it higher up
+  would start the engine loop on the landing page and the dashboard too.
 - pnpm is the only package manager, with `packageManager` pinned and a single lockfile.
 - `/analysis` is fed by `entities/analysis`: contract types, the action
   catalogue read from `contracts/actions.schema.json` through the `@contracts`
@@ -68,7 +78,7 @@ Add `typecheck`, `test`, `test:e2e`, `check:boundaries`, `format` and
 - `entities` (`src/entities/<name>/`) holds contracts, fixtures, data sources and
   pure domain logic.
 - `shared` (`src/shared/`) holds only domain-agnostic pieces that are genuinely
-  reused (today: `Modal`, `formatMoney`).
+  reused (today: `Modal`, `Logo`, `formatMoney`).
 - Allowed direction: `app -> features -> entities -> shared`.
   `pnpm check:boundaries` verifies it; run it if you touch imports between slices.
 - No deep imports into another slice; import from its public `index.ts` (use the
@@ -85,6 +95,9 @@ Add `typecheck`, `test`, `test:e2e`, `check:boundaries`, `format` and
   (in `entities/business`), not by importing fixtures directly. Scenarios
   (`entities/scenario`) are the exception: they have no async data source and are
   imported as a fixture because there is no Nessie-equivalent adapter for them.
+- Grid placement (`col-start`, `row-span`, ...) belongs to the composing parent,
+  not to the placed component: `TowerCard` owns its sticky behaviour and height,
+  `app/App.tsx` owns where it sits in the dashboard grid.
 - Styling: use Tailwind utility classes directly in the component's JSX. Reserve
   `@layer base` in `src/app/styles.css` for element resets (buttons, headings,
   focus) that would otherwise be repeated in every component; do not put
@@ -109,6 +122,9 @@ Add `typecheck`, `test`, `test:e2e`, `check:boundaries`, `format` and
 - The tower has 12 levels and 36 blocks; the physics does not compute risk.
 - Keyboard support, reduced motion, the no-WebGL fallback and responsive layout
   must be maintained.
+- The landing header carries no account context: `Demo con datos simulados`,
+  `Mariana Luna` and `Administradora` belong to the shell's top bar, and the
+  wordmark stays horizontally centred on `/` (an e2e assertion checks both).
 - Demo assets stay local; do not add external calls without authorization.
 - Do not change figures and formulas documented as part of a refactor.
 - Flow state (`SimulationFlowState`, in `features/scenario-simulation`) and
