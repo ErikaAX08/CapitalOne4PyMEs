@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CircleHelp, Gauge, Hand, Icon, RotateCcw } from "lucide-react";
+import { CircleHelp, Gauge, Hand, Icon, RotateCcw, Settings2 } from "lucide-react";
 import type { SimulationFlowState } from "@features/scenario-simulation";
 import type { SimulationOutput } from "@entities/simulation";
 import { Card, Badge, Button, Modal } from "@shared";
@@ -141,10 +141,6 @@ export function TowerCard({
           <h2 className="font-title mt-1 text-xl font-semibold tracking-[-0.02em]">
             Esta torre representa tu empresa
           </h2>
-          <p className="mt-1.5 max-w-[390px] text-[10px] leading-[1.5] text-body-muted">
-            Los cimientos financieros sostienen la operación y el crecimiento.
-            Si la base se debilita, los niveles superiores quedan en riesgo.
-          </p>
         </div>
         <Button
           variant="ghost"
@@ -178,30 +174,28 @@ export function TowerCard({
             Día {currentDay} de {simulationWeeks * 7}
           </span>
         )}
-        <label className="ml-auto flex h-8 items-center gap-1.5 rounded-lg border border-hairline bg-canvas px-2 text-[11px] text-body-muted focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-brand-blue/15">
-          <Gauge size={14} aria-hidden="true" />
-          <span>Giro</span>
-          <select
-            aria-label="Velocidad de giro de la torre"
-            className="cursor-pointer border-0 bg-transparent pr-1 font-medium text-body outline-none"
-            value={rotationSpeed}
-            onChange={(event) => setRotationSpeed(Number(event.target.value))}
-          >
-            {ROTATION_SPEEDS.map((speed) => (
-              <option key={speed.value} value={speed.value}>
-                {speed.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Button
-          variant="ghost"
-          size="compact"
-          className="h-8 px-2 text-[11px] text-body-muted"
-          onClick={() => setGuideOpen(true)}
-        >
-          <CircleHelp size={14} /> Guía de iconos
-        </Button>
+        <details className="group relative ml-auto">
+          <summary className="flex h-8 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-hairline bg-canvas px-2 text-[11px] font-medium text-body-muted hover:border-hairline-strong">
+            <Settings2 size={14} /> Vista
+          </summary>
+          <div className="absolute top-10 right-0 z-10 w-[190px] rounded-xl border border-hairline bg-canvas p-2 shadow-geist-floating">
+            <label className="flex min-h-9 items-center gap-2 rounded-lg px-2 text-[11px] text-body-muted focus-within:ring-2 focus-within:ring-brand-blue/15">
+              <Gauge size={14} aria-hidden="true" />
+              <span>Giro</span>
+              <select
+                aria-label="Velocidad de giro de la torre"
+                className="ml-auto cursor-pointer border-0 bg-transparent font-medium text-body outline-none"
+                value={rotationSpeed}
+                onChange={(event) => setRotationSpeed(Number(event.target.value))}
+              >
+                {ROTATION_SPEEDS.map((speed) => <option key={speed.value} value={speed.value}>{speed.label}</option>)}
+              </select>
+            </label>
+            <Button variant="ghost" size="compact" className="h-9 w-full justify-start px-2 text-[11px] text-body-muted" onClick={() => setGuideOpen(true)}>
+              <CircleHelp size={14} /> Guía de iconos
+            </Button>
+          </div>
+        </details>
       </div>
       <div className="relative min-h-[360px] flex-1 max-[700px]:h-[390px] max-[700px]:min-h-[390px] [&>.tower-3d]:absolute [&>.tower-3d]:inset-0">
         <ResilienceTower

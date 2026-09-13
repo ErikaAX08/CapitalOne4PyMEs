@@ -37,10 +37,12 @@ import {
   SimulationResult,
 } from "@features/scenario-simulation";
 import { IntroScreen } from "@features/onboarding";
+import { BusinessSignals } from "@features/financial-overview";
 import {
-  BusinessSignals,
-  FinancialOverview,
-} from "@features/financial-overview";
+  AssumptionsPanel,
+  ScenarioComparator,
+  SimulationHistory,
+} from "@features/dashboard-guidance";
 import { TechnicalExplanationDialog } from "@features/technical-explanation";
 import { TowerCard } from "@features/resilience-tower";
 import {
@@ -85,10 +87,9 @@ const EMPTY_OUTPUT: SimulationOutput = {
 /** The sections of the dashboard the shell's sidebar can scroll to. The
  *  identifiers are the ones the corresponding landmarks carry below. */
 const DASHBOARD_SECTIONS: ShellSection[] = [
-  { id: "resumen", label: "Resumen financiero", icon: ScanSearch },
+  { id: "decisiones", label: "Prueba una decisión", icon: Sparkles },
   { id: "estructura", label: "Estructura 3D", icon: Layers3 },
   { id: "gastos", label: "Gastos simulados", icon: Wallet },
-  { id: "decisiones", label: "Prueba una decisión", icon: Sparkles },
 ];
 /** The five PRD modules of the structural-fragility view, in reading order.
  *  The identifiers are the ones `AnalysisPage` puts on their wrappers. */
@@ -286,6 +287,19 @@ export default function App() {
         : EMPTY_OUTPUT,
     [data, flow.scenario, expenses],
   );
+  const reinforcedOutput = useMemo(
+    () =>
+      data.status === "ready"
+        ? simulateFinancialDecision(
+            data.business,
+            data.transactions,
+            flow.scenario,
+            ["advance25"],
+            expenses,
+          )
+        : EMPTY_OUTPUT,
+    [data, flow.scenario, expenses],
+  );
   function reset() {
     resetExpenses();
     dispatch({ type: "RESET" });
@@ -408,74 +422,23 @@ export default function App() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <FinancialOverview
-                  availableBalance={
-                    data.business.balance - output.simulatedExpenseTotal
-                  }
-                  hasExpenses={expenses.length > 0}
-                  expenseTotal={output.simulatedExpenseTotal}
-                  fragilityScore={shown.fragilityScore}
-                  survivalWeeks={shown.survivalWeeks}
-                  recommendedBuffer={shown.recommendedBuffer}
-                />
                 <div className="grid gap-5 max-[700px]:gap-[19px] min-[701px]:grid-cols-[minmax(0,1.28fr)_minmax(0,1fr)] min-[701px]:gap-[18px] min-[1001px]:gap-5">
-                  <div
-                    id="estructura"
-                    className="min-[701px]:col-start-1 min-[701px]:row-[1/4]"
-                  >
-                    <TowerCard
-                      flowState={flow.state}
-                      status={output.status}
-                      expenseBlocks={output.removedExpenseBlocks}
-                      instantResult={flow.skipAnimation}
-                      progress={active ? flow.progress : 0}
-                      output={output}
-                      resetKey={flow.resetKey}
-                      reduced={reduced}
-                      simulationWeeks={simulationWeeks}
-                      onReset={reset}
-                    />
-                  </div>
                   <section
-                    id="gastos"
-                    aria-label="Gastos simulados"
-                    className="flex flex-col gap-4"
+                    id="decisiones"
+                    aria-label="Prueba una decisión"
+                    className="min-[701px]:col-start-2 min-[701px]:row-start-1"
                   >
-                    <ExpensePanel
-                      expenses={expenses}
-                      onAdd={addExpense}
-                      onUndo={undoExpense}
-                      disabled={
-                        flow.state === "simulating" ||
-                        flow.state === "mitigating"
-                      }
-                    />
-                    {expenses.length > 0 && (
-                      <ExpenseFeedback
-                        isCritical={output.minimumProjectedBalance < 0}
-                        recommendation={output.recommendation}
-                      />
-                    )}
-                  </section>
-                  <BusinessSignals
-                    contextMessage={
-                      active || expenses.length > 0
-                        ? `${shown.survivalWeeks} semanas de operación estimadas en este escenario simulado.`
-                        : baseline.recommendation
-                    }
-                  />
-                  <section id="decisiones" aria-label="Prueba una decisión">
                     <div className="mb-4 flex items-end justify-between">
                       <div>
                         <span className="font-mono text-xs font-medium tracking-normal text-body-muted uppercase max-[700px]:text-[11px]">
                           Explora antes de actuar
                         </span>
                         <h2 className="font-title mt-1 text-2xl font-semibold tracking-[-0.04em] max-[700px]:text-xl">
-                          Prueba una decisión
+                          {active ? "Resultado de tu decisión" : "Prueba una decisión"}
                         </h2>
                       </div>
                       <span className="text-[11px] font-normal text-body-muted">
-                        Sin afectar tu negocio real
+                        Simulación
                       </span>
                     </div>
                     {flow.state === "simulating" ||
@@ -499,45 +462,87 @@ export default function App() {
                       />
                     ) : flow.state === "result" ||
                       flow.state === "recovered" ? (
-                      <SimulationResult
-                        recovered={flow.state === "recovered"}
-                        isContract={flow.scenario?.id === "contract"}
-                        status={output.status}
-                        minimumProjectedBalance={output.minimumProjectedBalance}
-                        recommendedBuffer={output.recommendedBuffer}
-                        recommendation={output.recommendation}
-                        fragilityBefore={
-                          flow.state === "recovered"
-                            ? beforeMitigation.fragilityScore
-                            : starting.fragilityScore
-                        }
-                        fragilityAfter={output.fragilityScore}
-                        survivalBefore={
-                          flow.state === "recovered"
-                            ? beforeMitigation.survivalWeeks
-                            : starting.survivalWeeks
-                        }
-                        survivalAfter={output.survivalWeeks}
-                        criticalWeek={output.criticalWeek}
-                        simulationWeeks={simulationWeeks}
-                        canMitigate={
-                          flow.scenario?.id === "contract" &&
-                          flow.state === "result"
-                        }
-                        onMitigate={() =>
-                          dispatch({ type: "START_MITIGATION" })
-                        }
-                        onReset={reset}
-                      />
+                      <>
+                        <SimulationResult
+                          recovered={flow.state === "recovered"}
+                          isContract={flow.scenario?.id === "contract"}
+                          status={output.status}
+                          minimumProjectedBalance={output.minimumProjectedBalance}
+                          recommendedBuffer={output.recommendedBuffer}
+                          recommendation={output.recommendation}
+                          fragilityBefore={flow.state === "recovered" ? beforeMitigation.fragilityScore : starting.fragilityScore}
+                          fragilityAfter={output.fragilityScore}
+                          survivalBefore={flow.state === "recovered" ? beforeMitigation.survivalWeeks : starting.survivalWeeks}
+                          survivalAfter={output.survivalWeeks}
+                          criticalWeek={output.criticalWeek}
+                          simulationWeeks={simulationWeeks}
+                          canMitigate={flow.scenario?.id === "contract" && flow.state === "result"}
+                          onMitigate={() => dispatch({ type: "START_MITIGATION" })}
+                          onReset={reset}
+                        />
+                        <ScenarioComparator
+                          current={starting}
+                          decision={beforeMitigation}
+                          reinforcement={reinforcedOutput}
+                          reinforced={flow.state === "recovered"}
+                        />
+                      </>
                     ) : (
-                      <ScenarioList
-                        scenarios={scenarios}
-                        onSelect={(s) =>
-                          dispatch({ type: "SELECT_SCENARIO", scenario: s })
-                        }
+                      <ScenarioList scenarios={scenarios} onSelect={(scenario) => dispatch({ type: "SELECT_SCENARIO", scenario })} />
+                    )}
+                  </section>
+                  <div
+                    id="estructura"
+                    className="min-[701px]:col-start-1 min-[701px]:row-[1/6]"
+                  >
+                    <TowerCard
+                      flowState={flow.state}
+                      status={output.status}
+                      expenseBlocks={output.removedExpenseBlocks}
+                      instantResult={flow.skipAnimation}
+                      progress={active ? flow.progress : 0}
+                      output={output}
+                      resetKey={flow.resetKey}
+                      reduced={reduced}
+                      simulationWeeks={simulationWeeks}
+                      onReset={reset}
+                    />
+                  </div>
+                  <BusinessSignals
+                    contextMessage={
+                      active || expenses.length > 0
+                        ? `${shown.survivalWeeks} semanas de operación estimadas en este escenario simulado.`
+                        : baseline.recommendation
+                    }
+                  />
+                  <section
+                    id="gastos"
+                    aria-label="Gastos simulados"
+                    className="flex flex-col gap-4 min-[701px]:col-start-2"
+                  >
+                    <ExpensePanel
+                      expenses={expenses}
+                      onAdd={addExpense}
+                      onUndo={undoExpense}
+                      disabled={
+                        flow.state === "simulating" ||
+                        flow.state === "mitigating"
+                      }
+                    />
+                    {expenses.length > 0 && (
+                      <ExpenseFeedback
+                        isCritical={output.minimumProjectedBalance < 0}
+                        recommendation={output.recommendation}
                       />
                     )}
                   </section>
+                  <SimulationHistory
+                    scenario={active ? flow.scenario : null}
+                    expenses={expenses}
+                    onUndoExpense={undoExpense}
+                    onClearScenario={() => dispatch({ type: "RESET" })}
+                  />
+                  <AssumptionsPanel simulationWeeks={simulationWeeks} />
                 </div>
                 <footer className="mt-3 flex justify-between border-t border-hairline p-[23px_0] text-[11px] text-body-muted max-[700px]:p-[18px_0] max-[700px]:leading-[1.7]">
                   <span className="flex items-center gap-[6px]">
