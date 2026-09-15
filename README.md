@@ -92,7 +92,7 @@ package manager: the repository root is language-neutral.
 | `services/engine` | `pyproject.toml` | `services/engine` |
 | `infra` | Terraform | `infra/envs/prod` |
 
-Front-end, which needs Node.js 20.19+ and pnpm:
+Front-end, which needs Node.js 22.13+ and pnpm:
 
 ```sh
 cd apps/web
