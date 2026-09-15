@@ -192,6 +192,18 @@ data "aws_iam_policy_document" "deploy" {
       "cloudfront:List*",
       "cloudfront:UpdateDistribution",
       "cloudfront:TagResource",
+
+      # The two CloudFront functions — the SPA router and the analysis cache-key
+      # normalizer. `DescribeFunction` does not start with Get or List, so it is
+      # not covered above and a plan that reads either function fails without it.
+      # Update and Publish ship a new version when the code changes, which for
+      # the normalizer means whenever contracts/actions.schema.json gains a
+      # parameter. `CreateFunction` stays out, for the same reason
+      # `lambda:CreateFunction` does: a deploy ships code, a human creates
+      # infrastructure.
+      "cloudfront:DescribeFunction",
+      "cloudfront:UpdateFunction",
+      "cloudfront:PublishFunction",
       "apigateway:GET",
       "apigateway:POST",
       "apigateway:PATCH",
@@ -235,18 +247,64 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
-    sid    = "ManageTheRolesItCreated"
+    sid    = "PassAndTagTheRolesItCreated"
     effect = "Allow"
 
+    # Neither action can widen a permission: passing a role is gated by the
+    # trust policy of the role being passed, and a tag grants nothing here
+    # because no policy in this account keys off one.
     actions = [
       "iam:PassRole",
-      "iam:PutRolePolicy",
       "iam:TagRole",
     ]
 
-    # Scoped by name so this role can never grant itself a policy or touch a
-    # role belonging to anything else in the account.
     resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-*"]
+  }
+
+  statement {
+    sid    = "WriteThePoliciesOfTheExecutionRolesOnly"
+    effect = "Allow"
+
+    actions = ["iam:PutRolePolicy"]
+
+    # Named one by one rather than matched by `${var.name_prefix}-*`.
+    #
+    # The wildcard was the bug. This role is `${var.name_prefix}-deploy`, which
+    # matches `${var.name_prefix}-*`, so the previous version of this statement
+    # let the deploy write an inline policy onto *itself* — `Action: "*"` on
+    # `Resource: "*"` is one PutRolePolicy call away, and from there the account
+    # is open: any resource, any region, for as long as it goes unnoticed. The
+    # comment that used to sit here claimed the opposite.
+    #
+    # The consequence of naming them is that a change to the deploy role's own
+    # policy — this file — no longer applies from the pipeline and has to be run
+    # by a human. That is the same rule the module already follows for creating
+    # the functions and for writing the SSM parameter: a deploy ships code, it
+    # does not rewrite its own permissions.
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-engine-role",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-domain-role",
+    ]
+  }
+
+  statement {
+    sid    = "NeverRewriteItsOwnPermissions"
+    effect = "Deny"
+
+    # Belt and braces. The Allow above is already scoped away from this role,
+    # but an explicit Deny cannot be overridden by any Allow, so the escalation
+    # stays closed even if someone later widens that list back to a wildcard.
+    actions = [
+      "iam:PutRolePolicy",
+      "iam:DeleteRolePolicy",
+      "iam:AttachRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:UpdateAssumeRolePolicy",
+      "iam:CreatePolicyVersion",
+      "iam:SetDefaultPolicyVersion",
+    ]
+
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-deploy"]
   }
 }
 
