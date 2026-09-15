@@ -21,12 +21,12 @@ export function TechnicalExplanationDialog({
         </p>
         <div className="mt-[14px] rounded-xl border border-hairline bg-surface-muted/60 p-3">
           <span className="text-[11px] text-body-subtle">
-            Diagrama de persistencia · ilustrativo
+            Diagrama ilustrativo
           </span>
           <svg
             viewBox="0 0 300 100"
             role="img"
-            aria-label="Diagrama ilustrativo de persistencia, sin cálculo topológico real"
+            aria-label="Diagrama ilustrativo de la señal estructural, sin cálculo real detrás"
             className="h-[105px] w-full"
           >
             <path
@@ -71,8 +71,8 @@ export function TechnicalExplanationDialog({
       <Alert variant="info" className="mt-[14px]">
         <CircleHelp size={20} className="mt-[2px] shrink-0 text-info" />
         <AlertDescription className="text-[11px] leading-[1.7] max-[700px]:text-[10px]">
-          La señal topológica detecta cambios estructurales; la simulación
-          financiera los traduce en pesos y semanas.
+          La señal estructural detecta cambios en la forma del negocio; la
+          simulación financiera los traduce en pesos y semanas.
         </AlertDescription>
       </Alert>
       <p className="my-4 text-[12px] leading-[1.7] text-body-muted max-[700px]:text-[11px]">
