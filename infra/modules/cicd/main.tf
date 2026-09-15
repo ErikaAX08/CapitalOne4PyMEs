@@ -221,6 +221,11 @@ data "aws_iam_policy_document" "deploy" {
       "budgets:ViewBudget",
       "cloudwatch:DescribeAlarms",
       "cloudwatch:ListTagsForResource",
+
+      # ListWebACLs supports no resource-level permission at all, so it can only
+      # be granted here. The statements that actually touch the web ACL are
+      # named and scoped below.
+      "wafv2:ListWebACLs",
       "sns:GetTopicAttributes",
       "sns:ListTagsForResource",
       "iam:GetRole",
@@ -244,6 +249,30 @@ data "aws_iam_policy_document" "deploy" {
     # hand, once, and Terraform must not be able to overwrite it.
     actions   = ["ssm:GetParameter"]
     resources = ["arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/fragility/*"]
+  }
+
+  statement {
+    sid    = "ManageTheWebAcl"
+    effect = "Allow"
+
+    # Update is granted where Create and Delete are not, on the same rule the
+    # rest of this policy follows: a deploy adjusts what exists, a human brings
+    # it into being. Changing a rate limit cannot widen anyone's access — the
+    # worst it can do is stop blocking, which the CloudWatch metrics on each
+    # rule make visible.
+    #
+    # Associate is here because CloudFront checks it when a distribution names
+    # a web ACL, even though the call that does the associating is
+    # UpdateDistribution.
+    actions = [
+      "wafv2:GetWebACL",
+      "wafv2:UpdateWebACL",
+      "wafv2:AssociateWebACL",
+      "wafv2:TagResource",
+      "wafv2:ListTagsForResource",
+    ]
+
+    resources = ["arn:aws:wafv2:${var.region}:${data.aws_caller_identity.current.account_id}:global/webacl/${var.name_prefix}-*/*"]
   }
 
   statement {

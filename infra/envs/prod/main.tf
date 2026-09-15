@@ -71,6 +71,15 @@ module "api" {
   domain_lambda_function_name = module.compute.domain_function_name
 }
 
+# --- Rate limiting ------------------------------------------------------------
+
+module "waf" {
+  source = "../../modules/waf"
+
+  name_prefix = var.name_prefix
+  enable_waf  = var.enable_waf
+}
+
 # --- The site -----------------------------------------------------------------
 
 module "site" {
@@ -78,6 +87,7 @@ module "site" {
 
   name_prefix = var.name_prefix
   bucket_name = var.site_bucket_name
+  web_acl_arn = module.waf.web_acl_arn
 
   api_origin_domain_name   = module.api.origin_domain_name
   analysis_cache_policy_id = module.api.analysis_cache_policy_id
