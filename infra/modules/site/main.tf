@@ -127,6 +127,11 @@ resource "aws_cloudfront_distribution" "site" {
   price_class         = var.price_class
   aliases             = local.custom_domain ? [var.domain_name] : []
 
+  # WAFv2 takes an ARN here despite the argument name, which predates it and
+  # still takes an id for WAF Classic. Null when the waf module is disabled,
+  # and CloudFront reads that as no web ACL rather than as an error.
+  web_acl_id = var.web_acl_arn
+
   origin {
     origin_id                = local.s3_origin_id
     domain_name              = aws_s3_bucket.site.bucket_regional_domain_name

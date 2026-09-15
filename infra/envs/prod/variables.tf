@@ -148,6 +148,19 @@ variable "notification_emails" {
   description = "Budget thresholds and alarms go here. No default: a guardrail nobody hears is not one."
 }
 
+variable "enable_waf" {
+  type        = bool
+  default     = true
+  description = <<-EOT
+    Per-IP rate limiting on the distribution, at about 7 USD a month.
+
+    On by default because the site URL is public. The reserved concurrency and
+    the stage throttle bound what the account can spend, but they do it per
+    stage rather than per client, so without this one caller saturating the
+    throttle takes the demo down for everyone.
+  EOT
+}
+
 variable "enable_cache_hit_rate_alarm" {
   type        = bool
   default     = false

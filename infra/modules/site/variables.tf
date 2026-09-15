@@ -25,6 +25,12 @@ variable "analysis_cache_policy_id" {
   description = "The deterministic-analysis cache policy, created by the api module."
 }
 
+variable "web_acl_arn" {
+  type        = string
+  default     = null
+  description = "WAFv2 web ACL for the distribution, created by the waf module. Null leaves the distribution unprotected, which is only right while the URL is private."
+}
+
 variable "analysis_function_arn" {
   type        = string
   description = "Viewer-request function that strips query parameters the engine ignores, so they cannot multiply the cache key. Created by the api module, which owns the contract it is generated from."
