@@ -31,27 +31,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: opentofu/setup-opentofu@v1
         with:
-          terraform_version: "1.10.5"
-          terraform_wrapper: false
+          tofu_version: "1.12.6"
+          tofu_wrapper: false
 
       - name: fmt
-        run: terraform fmt -recursive -check -diff infra/
+        run: tofu fmt -recursive -check -diff infra/
 
       # -backend=false is what lets validate run with no bucket and no
       # credentials. envs/prod pulls in all five modules, so this covers them.
       - name: validate — envs/prod
         working-directory: infra/envs/prod
         run: |
-          terraform init -backend=false -input=false
-          terraform validate
+          tofu init -backend=false -input=false
+          tofu validate
 
       - name: validate — bootstrap
         working-directory: infra/bootstrap
         run: |
-          terraform init -backend=false -input=false
-          terraform validate
+          tofu init -backend=false -input=false
+          tofu validate
 
       - uses: terraform-linters/setup-tflint@v4
         with:

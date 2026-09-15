@@ -12,7 +12,7 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Never cancel an apply mid-flight: a half-applied Terraform run is worse than a
+# Never cancel an apply mid-flight: a half-applied run is worse than a
 # queued one.
 concurrency:
   group: deploy-prod
@@ -81,9 +81,9 @@ jobs:
 
       # --- Artefacts ---------------------------------------------------------
       #
-      # The engine zip has to exist before `terraform plan`: Terraform hashes
-      # the file to decide whether the function changed, and a missing file is
-      # an error rather than a no-op.
+      # The engine zip has to exist before `tofu plan`: OpenTofu hashes the
+      # file to decide whether the function changed, and a missing file is an
+      # error rather than a no-op.
 
       - uses: actions/setup-python@v5
         with:
@@ -127,19 +127,19 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: deploy-${{ github.run_id }}
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: opentofu/setup-opentofu@v1
         with:
-          terraform_version: "1.10.5"
-          terraform_wrapper: false
+          tofu_version: "1.12.6"
+          tofu_wrapper: false
 
-      - name: terraform init
+      - name: tofu init
         working-directory: infra/envs/prod
-        run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+        run: tofu init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
 
-      - name: terraform apply
+      - name: tofu apply
         working-directory: infra/envs/prod
         run: |
-          terraform apply -input=false -auto-approve \
+          tofu apply -input=false -auto-approve \
             -var "state_bucket_name=${{ vars.TF_STATE_BUCKET }}" \
             -var "site_bucket_name=${{ vars.SITE_BUCKET }}" \
             -var 'notification_emails=["${{ vars.ALERT_EMAIL }}"]'
@@ -149,9 +149,9 @@ jobs:
         working-directory: infra/envs/prod
         run: |
           {
-            echo "site_bucket=$(terraform output -raw site_bucket_name)"
-            echo "distribution_id=$(terraform output -raw distribution_id)"
-            echo "site_url=$(terraform output -raw site_url)"
+            echo "site_bucket=$(tofu output -raw site_bucket_name)"
+            echo "distribution_id=$(tofu output -raw distribution_id)"
+            echo "site_url=$(tofu output -raw site_url)"
           } >> "$GITHUB_OUTPUT"
 
       # --- Publish -----------------------------------------------------------
