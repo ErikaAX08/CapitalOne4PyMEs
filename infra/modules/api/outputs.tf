@@ -18,6 +18,11 @@ output "analysis_cache_policy_id" {
   description = "Attached to the /v1/analysis* behaviour by the site module."
 }
 
+output "analysis_function_arn" {
+  value       = aws_cloudfront_function.normalize_analysis_query.arn
+  description = "Attached to the /v1/analysis* behaviour by the site module, on viewer-request, so it runs before the cache lookup."
+}
+
 output "access_log_group_name" {
   value       = aws_cloudwatch_log_group.access.name
   description = "Where the structured access log lands, with seven-day retention."

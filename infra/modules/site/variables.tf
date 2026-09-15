@@ -25,6 +25,11 @@ variable "analysis_cache_policy_id" {
   description = "The deterministic-analysis cache policy, created by the api module."
 }
 
+variable "analysis_function_arn" {
+  type        = string
+  description = "Viewer-request function that strips query parameters the engine ignores, so they cannot multiply the cache key. Created by the api module, which owns the contract it is generated from."
+}
+
 # --- Optional custom domain ---------------------------------------------------
 #
 # Off by default: the front-end calls /v1/* as same-origin relative paths, so

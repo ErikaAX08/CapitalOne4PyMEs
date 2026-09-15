@@ -156,6 +156,14 @@ resource "aws_lambda_permission" "domain" {
 # string identifies the answer and every parameter belongs in the cache key.
 # With an unseeded stochastic engine this would be a bug rather than the
 # optimization that carries the demo.
+#
+# It is only half the argument, though. "Every parameter that changes the answer
+# is in the key" does not give "every parameter in the key changes the answer",
+# and the gap between the two is a cache-buster: the engine ignores unknown
+# parameters, so `?seed=42&x=<counter>` is an unbounded supply of distinct keys
+# for one identical response. The normalizing function below closes the gap by
+# dropping those parameters before the cache lookup, which is what lets this
+# policy stay `all`.
 
 resource "aws_cloudfront_cache_policy" "analysis" {
   name        = "${var.name_prefix}-deterministic-analysis"
@@ -180,4 +188,34 @@ resource "aws_cloudfront_cache_policy" "analysis" {
     enable_accept_encoding_gzip   = true
     enable_accept_encoding_brotli = true
   }
+}
+
+# --- Normalizing the cache key ------------------------------------------------
+
+locals {
+  actions_schema = jsondecode(file(coalesce(
+    var.actions_schema_path,
+    "${path.module}/../../../contracts/actions.schema.json",
+  )))
+
+  # Every query parameter `request_from_query` reads, taken from the contract
+  # itself rather than restated here, plus the two the handler reads directly:
+  # `action` selects the parameter set, `cutoff_date` dates the run.
+  allowed_query_params = sort(distinct(concat(
+    ["action", "cutoff_date"],
+    [for p in local.actions_schema.run.parameters : p.id],
+    [for p in local.actions_schema.stress.parameters : p.id],
+    flatten([for a in values(local.actions_schema.actions) : [for p in a.parameters : p.id]]),
+  )))
+}
+
+resource "aws_cloudfront_function" "normalize_analysis_query" {
+  name    = "${var.name_prefix}-normalize-analysis-query"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  comment = "Drops query parameters the engine does not read, so they cannot become distinct cache keys."
+
+  code = templatefile("${path.module}/functions/normalize-analysis-query.js.tftpl", {
+    allowed = jsonencode({ for id in local.allowed_query_params : id => true })
+  })
 }
