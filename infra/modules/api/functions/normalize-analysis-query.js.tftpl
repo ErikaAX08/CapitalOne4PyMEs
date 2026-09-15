@@ -1,0 +1,45 @@
+// Cache-key normalization for /v1/analysis*.
+//
+// The analysis cache policy uses `query_string_behavior = "all"`, and it has to:
+// the response is a pure function of the query string, so every parameter that
+// changes the answer belongs in the key (docs/architecture.md §8).
+//
+// The flaw is the converse. `all` also puts every parameter that does *not*
+// change the answer into the key, and `engine/contracts.py request_from_query`
+// reads only the ids declared in contracts/actions.schema.json — anything else
+// is silently ignored. So `?seed=42&x=1` and `?seed=42&x=2` are two cache keys
+// for one byte-identical response, and a caller who appends a counter turns the
+// CDN from a memo table into a pass-through: every request a miss, every miss a
+// 2 GB Lambda invocation. On a link published to a newsletter that is the whole
+// budget, spent by one client in an afternoon.
+//
+// A viewer-request function runs before the cache lookup, so dropping the
+// unknown parameters here is what makes the key reflect the answer again. The
+// allowlist below is generated from actions.schema.json at plan time by
+// `templatefile`, so it cannot drift from what the engine actually reads.
+//
+// The same argument applies to repeated parameters: `?seed=42&seed=42` is a
+// third key for the same answer, and API Gateway would join the values with a
+// comma and hand the engine a 400. Only the first value survives.
+
+function handler(event) {
+    var request = event.request;
+    var query = request.querystring;
+    var allowed = ${allowed};
+
+    // Object.keys first: deleting from the object being iterated is not
+    // something the runtime promises to handle.
+    var names = Object.keys(query);
+
+    for (var i = 0; i < names.length; i++) {
+        var name = names[i];
+
+        if (allowed[name] !== true) {
+            delete query[name];
+        } else if (query[name].multiValue) {
+            query[name] = { value: query[name].multiValue[0].value };
+        }
+    }
+
+    return request;
+}

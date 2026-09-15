@@ -81,6 +81,7 @@ module "site" {
 
   api_origin_domain_name   = module.api.origin_domain_name
   analysis_cache_policy_id = module.api.analysis_cache_policy_id
+  analysis_function_arn    = module.api.analysis_function_arn
 
   domain_name     = var.domain_name
   route53_zone_id = var.route53_zone_id

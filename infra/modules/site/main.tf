@@ -179,6 +179,16 @@ resource "aws_cloudfront_distribution" "site" {
     # origin request policy is needed and none is attached: attaching one that
     # also forwards query strings is rejected as a conflict.
     cache_policy_id = var.analysis_cache_policy_id
+
+    # Runs before the cache lookup, which is the only place this can work: it
+    # drops the parameters the engine ignores so that `?seed=42&x=1` and
+    # `?seed=42&x=2` stop being two keys for one answer. Without it the policy
+    # above hands anyone with the URL an unlimited supply of cache misses, and
+    # every miss is a 2 GB Lambda invocation.
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = var.analysis_function_arn
+    }
   }
 
   # Everything else under /v1: the ledger and the company catalogue. Both are

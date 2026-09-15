@@ -38,6 +38,20 @@ variable "engine_cache_control" {
   description = "ENGINE_CACHE_CONTROL. Matches the cache policy's default_ttl."
 }
 
+variable "engine_reserved_concurrency" {
+  type        = number
+  default     = 10
+  description = <<-EOT
+    Hard cap on how many engine invocations can run at once, and therefore on
+    how fast the account can spend. Enforced by Lambda, unlike the budget in
+    `guardrails`, which only notifies and does so with hours of lag.
+
+    Set to -1 to remove the cap entirely. Do not: the function is reachable
+    from the public internet through CloudFront, and at 2 GB a sustained
+    request flood is the one failure mode that drains the credit in hours.
+  EOT
+}
+
 variable "engine_provisioned_concurrency" {
   type        = number
   default     = 0

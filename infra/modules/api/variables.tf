@@ -32,6 +32,12 @@ variable "domain_lambda_function_name" {
   description = "Name of the Go domain function, for the invoke permission."
 }
 
+variable "actions_schema_path" {
+  type        = string
+  default     = null
+  description = "contracts/actions.schema.json, the source the cache-key allowlist is generated from. Null resolves it relative to this module."
+}
+
 variable "log_retention_days" {
   type        = number
   default     = 7
@@ -40,12 +46,20 @@ variable "log_retention_days" {
 
 variable "throttling_rate_limit" {
   type        = number
-  default     = 50
-  description = "Steady-state requests per second. A bound on the bill, not on the demo: a jury generates single-digit RPS."
+  default     = 5
+  description = <<-EOT
+    Steady-state requests per second for the whole stage.
+
+    This was 50, which bounded nothing that mattered: sustained at 50 RPS the
+    2 GB engine spends the entire 100 USD credit in well under a day, and the
+    budget alert would arrive after the fact. A jury generates single-digit
+    RPS, and everything they touch is a CloudFront cache hit that never
+    reaches this stage at all, so 5 is the demo's real ceiling with headroom.
+  EOT
 }
 
 variable "throttling_burst_limit" {
   type        = number
-  default     = 100
-  description = "Burst capacity above the steady-state rate."
+  default     = 10
+  description = "Burst capacity above the steady-state rate. Absorbs the handful of parallel requests a page load makes."
 }

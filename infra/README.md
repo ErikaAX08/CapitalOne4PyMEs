@@ -48,17 +48,17 @@ carries a globally unique suffix. It arrives as partial configuration instead:
 
 ```sh
 cd infra/bootstrap
-terraform init && terraform apply -var 'state_bucket_name=fragility-tfstate-<suffix>'
+tofu init && tofu apply -var 'state_bucket_name=fragility-tfstate-<suffix>'
 
 cd ../envs/prod
 cp backend.hcl.example backend.hcl              # paste the bucket name
 cp terraform.tfvars.example terraform.tfvars    # the two bucket names and an email
-terraform init -backend-config=backend.hcl
-terraform plan
+tofu init -backend-config=backend.hcl
+tofu plan
 ```
 
 `backend.hcl` and `*.tfvars` are gitignored. The Python zip has to exist before
-`plan` — Terraform hashes it to decide whether the function changed, and a
+`plan` — OpenTofu hashes it to decide whether the function changed, and a
 missing file is an error, not a no-op:
 
 ```sh
@@ -135,7 +135,7 @@ Terraform declares the parameter and never learns its value:
 
 ```sh
 aws ssm put-parameter --overwrite \
-  --name "$(terraform output -raw database_parameter_name)" \
+  --name "$(tofu output -raw database_parameter_name)" \
   --type SecureString \
   --value 'postgres://…@….tsdb.cloud.timescale.com:…/tsdb?sslmode=require'
 ```

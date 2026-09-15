@@ -97,6 +97,16 @@ resource "aws_lambda_function" "engine" {
   # Provisioned concurrency needs a published version to point at.
   publish = true
 
+  # The ceiling on the bill, and the only one that is enforced rather than
+  # merely reported. The budget in `guardrails` sends an email; AWS Budgets
+  # refreshes a few times a day, so an alert can arrive hours after the money
+  # is gone. This cannot be exceeded at all: beyond it API Gateway gets a 429
+  # from Lambda and the account stops accruing cost, whatever the traffic.
+  #
+  # A jury generates single-digit RPS against a ~1 s function, so a handful of
+  # concurrent executions is the demo's real working set with room to spare.
+  reserved_concurrent_executions = var.engine_reserved_concurrency
+
   environment {
     variables = {
       ENGINE_CUTOFF_DATE   = var.engine_cutoff_date
