@@ -99,9 +99,15 @@ jobs:
         with:
           version: 11.22.0
 
+      # 24.6 rather than 20.19, and not by preference: `packageManager` pins
+      # pnpm 11.22.0, which refuses to start on anything below Node 22.13 — it
+      # reaches for `node:sqlite`, a builtin Node 20 does not have. `cache: pnpm`
+      # below runs `pnpm store path` as part of its own setup, so the job died
+      # before a single dependency was installed. This is also the version the
+      # project is developed on, and Node 20 is being retired from the runners.
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "20.19"
+          node-version: "24.6"
           cache: pnpm
           cache-dependency-path: apps/web/pnpm-lock.yaml
 
