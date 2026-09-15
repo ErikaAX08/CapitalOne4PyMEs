@@ -1,5 +1,14 @@
 # CapitalOne4PyMEs — Structural Fragility Engine for SMEs
 
+**Second place in the Capital One challenge at HackMTY 2026.** Submitted as
+**Stackly** by Erika Amastal, Ivan Torres, Alejandro Montano and Jose Horacio.
+
+- [Demo video](https://www.youtube.com/watch?v=ktUqFQUjHio)
+- [Live demo](https://d3ov5y7jcbbzbx.cloudfront.net)
+- [Devpost submission](https://devpost.com/software/stackly-g7ucqd)
+- [Submission write-up](docs/hackathon-submission.md) — the reasoning behind
+  every figure the demo shows
+
 A decision-support system for Mexican small and medium businesses. The user
 describes a decision — take on a project, extend credit, hire, buy equipment,
 take a loan — and the system computes which obligation would go uncovered, when,
