@@ -121,7 +121,16 @@ jobs:
       - name: lexicon — no forbidden vocabulary in the build
         working-directory: apps/web
         run: |
-          ! grep -rniE "topol[oó]gic|\bTDA\b|persistencia" dist/ \
+          # -I skips binary files. Without it this gate failed on
+          # dist/stackly-logo.png: GNU grep reported "binary file matches" on
+          # the PNG's compressed bytes, which is a coincidence of bytes and not
+          # vocabulary anybody can read. BSD grep does not match the same file,
+          # which is why the gate passed locally and failed on the runner.
+          #
+          # Nothing is lost by skipping binaries. Forbidden vocabulary rendered
+          # into an image is pixels, not bytes, and grep could never have caught
+          # it either way.
+          ! grep -rnIiE "topol[oó]gic|\bTDA\b|persistencia" dist/ \
             || { echo "Forbidden lexicon in the build"; exit 1; }
 
       # --- AWS ---------------------------------------------------------------
