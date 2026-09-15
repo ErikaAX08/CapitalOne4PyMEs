@@ -3,7 +3,8 @@
 **Second place in the Capital One challenge at HackMTY 2026.** Submitted as
 **Stackly** by Erika Amastal, Ivan Torres, Alejandro Montano and Jose Horacio.
 
-- [Demo video](https://www.youtube.com/watch?v=ktUqFQUjHio)
+[![Stackly — Demo](https://img.youtube.com/vi/ktUqFQUjHio/maxresdefault.jpg)](https://www.youtube.com/watch?v=ktUqFQUjHio)
+
 - [Live demo](https://d3ov5y7jcbbzbx.cloudfront.net)
 - [Devpost submission](https://devpost.com/software/stackly-g7ucqd)
 - [Submission write-up](docs/hackathon-submission.md) — the reasoning behind
@@ -91,7 +92,7 @@ package manager: the repository root is language-neutral.
 | `services/engine` | `pyproject.toml` | `services/engine` |
 | `infra` | Terraform | `infra/envs/prod` |
 
-Front-end, which needs Node.js 20.19+ and pnpm:
+Front-end, which needs Node.js 22.13+ and pnpm:
 
 ```sh
 cd apps/web
